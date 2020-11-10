@@ -2,6 +2,8 @@
 using System.Runtime.CompilerServices;
 using System.Threading;
 
+using UnityEngine;
+
 namespace Enderlook.Unity.Threading
 {
     /// <summary>
@@ -25,6 +27,11 @@ namespace Enderlook.Unity.Threading
         {
             if (continuation == null)
                 throw new ArgumentNullException(nameof(continuation));
+
+#if UNITY_EDITOR
+            if (ThreadSwitcher.IsExecutingMainThread)
+                Debug.Log("Already in main thread, this will do nothing.");
+#endif
 
             UnitySynchronizationContextUtility.UnitySynchronizationContext.Post(_ => continuation(), null);
         }

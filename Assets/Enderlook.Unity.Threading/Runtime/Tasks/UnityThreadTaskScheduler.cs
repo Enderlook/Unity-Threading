@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 
+using UnityEngine;
+
 namespace Enderlook.Unity.Threading.Tasks
 {
     /// <summary>
@@ -22,7 +24,12 @@ namespace Enderlook.Unity.Threading.Tasks
         private bool TryExecuteTaskMainThread(Task task)
         {
             if (ThreadSwitcher.IsExecutingMainThread)
+            {
+#if UNITY_EDITOR
+                Debug.Log("Already in main thread, this won't do anything meaningful.");
+#endif
                 return TryExecuteTask(task);
+            }
             else
                 return SwitchInSite(task).GetAwaiter().GetResult();
         }

@@ -37,7 +37,17 @@ namespace Enderlook.Unity.Threading
                 continuation();
             }
             else
-                Task.Run(continuation);
+            {
+                if (ThreadSwitcher.IsExecutingMainThread)
+                {
+#if UNITY_EDITOR
+                    Debug.Log("Already in a non-main thread, we don't need to change of thread so we will not.");
+#endif
+                    continuation();
+                }
+                else
+                    Task.Run(continuation);
+            }
         }
 
         /// <inheritdoc cref="IThreadSwitcher.GetAwaiter"/>
