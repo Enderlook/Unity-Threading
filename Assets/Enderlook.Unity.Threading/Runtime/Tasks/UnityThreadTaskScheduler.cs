@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,7 +16,11 @@ namespace Enderlook.Unity.Threading.Tasks
     {
         public static UnityThreadTaskScheduler Instance = new UnityThreadTaskScheduler();
 
+        private Func<object, Task<bool>> executeInMainThread;
+
         public override int MaximumConcurrencyLevel => 1;
+
+        public UnityThreadTaskScheduler() => executeInMainThread = ExecuteInMainThread;
 
         protected override void QueueTask(Task task) => TryExecuteTaskMainThread(task);
 
@@ -29,6 +34,7 @@ namespace Enderlook.Unity.Threading.Tasks
                 return TryExecuteTask(task);
             else
             {
+                //return SwitchInSite(task).GetAwaiter().GetResult();
                 if (JobsUtility.IsExecutingJob)
                 {
                     if (Application.platform == RuntimePlatform.WebGLPlayer)
@@ -38,21 +44,17 @@ namespace Enderlook.Unity.Threading.Tasks
                         return SwitchInSiteNoReturn(task).GetAwaiter().GetResult();
                     }
                     else
-                        return Task.Run(async () =>
-                        {
-                            await ThreadSwitcher.ResumeUnityAsync;
-                            return TryExecuteTask(task);
-                        }).GetAwaiter().GetResult();
+                        return Task.Factory.StartNew(executeInMainThread, task).GetAwaiter().GetResult().GetAwaiter().GetResult();
                 }
                 else
                     return SwitchInSite(task).GetAwaiter().GetResult();
             }
         }
 
-        private async ValueTask<bool> SwitchInSiteNoReturn(Task task)
+        private async Task<bool> ExecuteInMainThread(object task)
         {
             await ThreadSwitcher.ResumeUnityAsync;
-            return TryExecuteTask(task);
+            return TryExecuteTask((Task)task);
         }
 
         private async ValueTask<bool> SwitchInSite(Task task)
@@ -61,6 +63,12 @@ namespace Enderlook.Unity.Threading.Tasks
             bool result = TryExecuteTask(task);
             await ThreadSwitcher.ResumeTaskAsync;
             return result;
+        }
+
+        private async ValueTask<bool> SwitchInSiteNoReturn(Task task)
+        {
+            await ThreadSwitcher.ResumeUnityAsync;
+            return TryExecuteTask(task);
         }
 
         protected override IEnumerable<Task> GetScheduledTasks() => Enumerable.Empty<Task>();
