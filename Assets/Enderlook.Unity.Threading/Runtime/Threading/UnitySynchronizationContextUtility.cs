@@ -4,7 +4,7 @@ using UnityEditor;
 
 using UnityEngine;
 
-namespace Assets.Enderlook.Unity.Threading
+namespace Enderlook.Unity.Threading
 {
     /// <summary>
     /// A helper class to gather the thread id and synchronization context of Unity main thread.
