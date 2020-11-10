@@ -1,5 +1,7 @@
 ﻿using System.Threading;
 
+using UnityEditor;
+
 using UnityEngine;
 
 namespace Assets.Enderlook.Unity.Threading
@@ -30,5 +32,15 @@ namespace Assets.Enderlook.Unity.Threading
             UnitySynchronizationContext = SynchronizationContext.Current;
             UnityThreadId = Thread.CurrentThread.ManagedThreadId;
         }
+
+        /// <summary>
+        /// Determines if we are in the unity synchronization context.
+        /// </summary>
+        public static bool IsInUnitySynchronizationContext => SynchronizationContext.Current == UnitySynchronizationContext;
+
+        /// <summary>
+        /// Determines if we are in the unity thread.
+        /// </summary>
+        public static bool IsInUnityThread => Thread.CurrentThread.ManagedThreadId == UnityThreadId;
     }
 }
