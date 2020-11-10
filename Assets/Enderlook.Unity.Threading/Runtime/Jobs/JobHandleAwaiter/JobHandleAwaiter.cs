@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Runtime.CompilerServices;
 
 using Unity.Jobs;
@@ -12,7 +13,7 @@ namespace Enderlook.Unity.Threading.Jobs
     {
         // https://gist.github.com/distantcam/64cf44d84441e5c45e197f7d90c6df3e
 
-        private readonly JobHandle jobHandle;
+        internal readonly JobHandle jobHandle;
 
         /// <summary>
         /// Creates an awaiter for the given <see cref="JobHandle"/>.
@@ -55,5 +56,17 @@ namespace Enderlook.Unity.Threading.Jobs
         /// Does nothing.
         /// </summary>
         public void GetResult() { }
-    }
+
+        /// <summary>
+        /// Convert a this awaiter into an enumerator.
+        /// </summary>
+        /// <returns>Enumerator which wraps the awaiter.</returns>
+        public IEnumerator AsIEnumerator()
+        {
+            while (!jobHandle.IsCompleted)
+                yield return null;
+
+            jobHandle.Complete();
+        }
+}
 }

@@ -1,4 +1,6 @@
-﻿using Unity.Jobs;
+﻿using System.Collections;
+
+using Unity.Jobs;
 
 namespace Enderlook.Unity.Threading.Jobs
 {
@@ -13,5 +15,18 @@ namespace Enderlook.Unity.Threading.Jobs
         /// <param name="jobHandle">Job handle to wrap.</param>
         /// <returns>Task wrapper of the job handle.</returns>
         public static JobHandleAwaiter GetAwaiter(this JobHandle jobHandle) => new JobHandleAwaiter(jobHandle);
+
+        /// <summary>
+        /// Convert a job handle into an enumerator.
+        /// </summary>
+        /// <param name="jobHandle">Job handle to convert.</param>
+        /// <returns>Enumerator which wraps the job handle.</returns>
+        public static IEnumerator AsIEnumerator(this JobHandle jobHandle)
+        {
+            while (!jobHandle.IsCompleted)
+                yield return null;
+
+            jobHandle.Complete();
+        }
     }
 }
