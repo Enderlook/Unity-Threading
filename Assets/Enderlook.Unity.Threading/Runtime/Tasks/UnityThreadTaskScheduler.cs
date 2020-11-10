@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
-using Unity.Jobs.LowLevel.Unsafe;
-
-using UnityEngine;
 
 namespace Enderlook.Unity.Threading.Tasks
 {
@@ -16,11 +11,7 @@ namespace Enderlook.Unity.Threading.Tasks
     {
         public static UnityThreadTaskScheduler Instance = new UnityThreadTaskScheduler();
 
-        private Func<object, Task<bool>> executeInMainThread;
-
         public override int MaximumConcurrencyLevel => 1;
-
-        public UnityThreadTaskScheduler() => executeInMainThread = ExecuteInMainThread;
 
         protected override void QueueTask(Task task) => TryExecuteTaskMainThread(task);
 
@@ -33,28 +24,7 @@ namespace Enderlook.Unity.Threading.Tasks
             if (ThreadSwitcher.IsExecutingMainThread)
                 return TryExecuteTask(task);
             else
-            {
-                //return SwitchInSite(task).GetAwaiter().GetResult();
-                if (JobsUtility.IsExecutingJob)
-                {
-                    if (Application.platform == RuntimePlatform.WebGLPlayer)
-                    {
-                        // We are in a problem. WebGL doesn't have multithreading, and so we can't run a task to run it.
-                        Debug.LogWarning("Attempted to run in main thread from a Unity Job in WebGL platform. Due lack of multithreading a fallback will run this code and all subsequent code of the job in the main thread.");
-                        return SwitchInSiteNoReturn(task).GetAwaiter().GetResult();
-                    }
-                    else
-                        return Task.Factory.StartNew(executeInMainThread, task).GetAwaiter().GetResult().GetAwaiter().GetResult();
-                }
-                else
-                    return SwitchInSite(task).GetAwaiter().GetResult();
-            }
-        }
-
-        private async Task<bool> ExecuteInMainThread(object task)
-        {
-            await ThreadSwitcher.ResumeUnityAsync;
-            return TryExecuteTask((Task)task);
+                return SwitchInSite(task).GetAwaiter().GetResult();
         }
 
         private async ValueTask<bool> SwitchInSite(Task task)
@@ -63,12 +33,6 @@ namespace Enderlook.Unity.Threading.Tasks
             bool result = TryExecuteTask(task);
             await ThreadSwitcher.ResumeTaskAsync;
             return result;
-        }
-
-        private async ValueTask<bool> SwitchInSiteNoReturn(Task task)
-        {
-            await ThreadSwitcher.ResumeUnityAsync;
-            return TryExecuteTask(task);
         }
 
         protected override IEnumerable<Task> GetScheduledTasks() => Enumerable.Empty<Task>();
