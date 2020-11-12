@@ -13,6 +13,8 @@ namespace Enderlook.Unity.Threading
     {
         // https://stackoverflow.com/a/58470597/7655838 from https://stackoverflow.com/questions/58469468/what-does-unitymainthreaddispatcher-do
 
+        private bool hasSwitched;
+
         /// <inheritdoc cref="IThreadSwitcher.GetAwaiter"/>
         public ThreadSwitcherUnity GetAwaiter() => this;
 
@@ -20,7 +22,7 @@ namespace Enderlook.Unity.Threading
         public bool IsCompleted => SynchronizationContext.Current == UnitySynchronizationContextUtility.UnitySynchronizationContext;
 
         /// <inheritdoc cref="IThreadSwitcher.GetResult"/>
-        public void GetResult() { }
+        public bool GetResult() => hasSwitched;
 
         /// <inheritdoc cref="INotifyCompletion.OnCompleted(Action)"/>
         public void OnCompleted(Action continuation)
@@ -28,8 +30,9 @@ namespace Enderlook.Unity.Threading
             if (continuation == null)
                 throw new ArgumentNullException(nameof(continuation));
 
+            hasSwitched = !ThreadSwitcher.IsExecutingMainThread;
 #if UNITY_EDITOR
-            if (ThreadSwitcher.IsExecutingMainThread)
+            if (!hasSwitched)
                 Debug.Log("Already in main thread, this will do nothing.");
 #endif
 

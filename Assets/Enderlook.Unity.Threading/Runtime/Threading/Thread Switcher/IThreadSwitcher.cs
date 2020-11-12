@@ -23,6 +23,7 @@ namespace Enderlook.Unity.Threading
         /// <summary>
         /// Get the result of the task.
         /// </summary>
-        void GetResult();
+        /// <returns>Whenever we switched of thread or not (either because we already were in the requested thread or it was not possible, for example: in WebGL platform threading is not supported).</returns>
+        bool GetResult();
     }
 }

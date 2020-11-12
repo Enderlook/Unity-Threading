@@ -16,6 +16,8 @@ namespace Enderlook.Unity.Threading
 
         // Alternatively we may do something like https://github.com/svermeulen/Unity3dAsyncAwaitUtil/blob/master/UnityProject/Assets/Plugins/AsyncAwaitUtil/Source/WaitForBackgroundThread.cs
 
+        private bool hasSwitched;
+
         /// <inheritdoc cref="IThreadSwitcher.GetAwaiter"/>
         public ThreadSwitcherBackground GetAwaiter() => this;
 
@@ -23,7 +25,7 @@ namespace Enderlook.Unity.Threading
         public bool IsCompleted => SynchronizationContext.Current == null;
 
         /// <inheritdoc cref="IThreadSwitcher.GetResult"/>
-        public void GetResult() { }
+        public bool GetResult() => hasSwitched;
 
         /// <inheritdoc cref="INotifyCompletion.OnCompleted(Action)"/>
         public void OnCompleted(Action continuation)
@@ -33,12 +35,14 @@ namespace Enderlook.Unity.Threading
 
             if (Application.platform == RuntimePlatform.WebGLPlayer)
             {
+                // We don't need to set `hasSwitched` to false because it's already false
                 Debug.LogWarning("Threading is not supported on WebGL platform. A fallback to main thread has been used. Be warned that this may produce deadlocks very easelly.");
                 continuation();
             }
             else
             {
-                if (ThreadSwitcher.IsExecutingMainThread)
+                hasSwitched = ThreadSwitcher.IsExecutingMainThread;
+                if (hasSwitched)
                     Task.Run(continuation);
                 else
                 {
