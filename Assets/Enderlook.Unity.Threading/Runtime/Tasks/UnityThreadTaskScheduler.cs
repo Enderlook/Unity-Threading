@@ -38,7 +38,7 @@ namespace Enderlook.Unity.Threading.Tasks
         {
             await ThreadSwitcher.ResumeUnityAsync;
             bool result = TryExecuteTask(task);
-            await ThreadSwitcher.ResumeTaskAsync;
+            await ThreadSwitcher.ResumeBackgroundAsync;
             return result;
         }
 

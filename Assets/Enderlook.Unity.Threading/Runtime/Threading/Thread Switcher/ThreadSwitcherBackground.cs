@@ -10,14 +10,14 @@ namespace Enderlook.Unity.Threading
     /// <summary>
     /// Defines a switcher to jump to a task thread
     /// </summary>
-    public struct ThreadSwitcherTask : IThreadSwitcher
+    public struct ThreadSwitcherBackground : IThreadSwitcher
     {
         // https://stackoverflow.com/a/58470597/7655838 from https://stackoverflow.com/questions/58469468/what-does-unitymainthreaddispatcher-do
 
         // Alternatively we may do something like https://github.com/svermeulen/Unity3dAsyncAwaitUtil/blob/master/UnityProject/Assets/Plugins/AsyncAwaitUtil/Source/WaitForBackgroundThread.cs
 
         /// <inheritdoc cref="IThreadSwitcher.GetAwaiter"/>
-        public ThreadSwitcherTask GetAwaiter() => this;
+        public ThreadSwitcherBackground GetAwaiter() => this;
 
         /// <inheritdoc cref="IThreadSwitcher.IsCompleted"/>
         public bool IsCompleted => SynchronizationContext.Current == null;
