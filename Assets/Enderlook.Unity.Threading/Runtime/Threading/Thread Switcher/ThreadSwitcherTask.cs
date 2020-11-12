@@ -39,14 +39,14 @@ namespace Enderlook.Unity.Threading
             else
             {
                 if (ThreadSwitcher.IsExecutingMainThread)
+                    Task.Run(continuation);
+                else
                 {
 #if UNITY_EDITOR
                     Debug.Log("Already in a non-main thread, we don't need to change of thread so we will not.");
 #endif
                     continuation();
                 }
-                else
-                    Task.Run(continuation);
             }
         }
 
