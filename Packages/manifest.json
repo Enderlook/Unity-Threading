@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.coffee.git-dependency-resolver": "https://github.com/mob-sakai/GitDependencyResolverForUnity.git#2.0.0",
     "com.unity.collab-proxy": "1.2.16",
     "com.unity.ext.nunit": "1.0.0",
     "com.unity.ide.rider": "1.1.0",
@@ -40,5 +41,11 @@
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0"
+  },
+  "lock": {
+    "com.coffee.git-dependency-resolver": {
+      "hash": "d4fc38c92fb139b4184912f20556ab27a3b519fa",
+      "revision": "2.0.0"
+    }
   }
 }

@@ -1,0 +1,34 @@
+{
+    "dependencies": [
+        {
+            "name": "com.enderlook.threading",
+            "hash": "1e4a655e0a80003506cb1a691abe6bad7e26b872",
+            "url": "https://github.com/Enderlook/Unity-Net-Packages?path=Packages/com.enderlook.threading#com.enderlook.threading/v0.1.0"
+        },
+        {
+            "name": "com.enderlook.net_compatibility",
+            "hash": "7be4e4fc8ac7bdf16bd89d10c453b180bc466381",
+            "url": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.enderlook.net_compatibility#com.enderlook.net_compatibility/v0.5.0"
+        },
+        {
+            "name": "com.system.memory",
+            "hash": "b0ec3817f35dedf57c54f6aaafa2485c31e69b35",
+            "url": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.system.memory#com.system.memory/v4.5.4"
+        },
+        {
+            "name": "com.system.buffers",
+            "hash": "da4d5dafc3e347ebfa81b12336ee16092a855936",
+            "url": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.system.buffers#com.system.buffers/v4.5.1"
+        },
+        {
+            "name": "com.system.runtime.compiler_services.unsafe",
+            "hash": "4e1388856d84de15006350d375973450c3eb04dd",
+            "url": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.system.runtime.compiler_services.unsafe#com.system.runtime.compiler_services.unsafe/v4.5.3"
+        },
+        {
+            "name": "com.system.threading.tasks.extensions",
+            "hash": "de13146d8e94de8e19729ff2e9c8ace5b0a72639",
+            "url": "https://github.com/Enderlook/Unity-Net-Packages?path=Packages/com.system.threading.tasks.extensions#com.system.threading.tasks.extensions/v4.5.4"
+        }
+    ]
+}

@@ -1,5 +1,4 @@
-﻿
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Enderlook.Unity.Threading.Jobs
 {
