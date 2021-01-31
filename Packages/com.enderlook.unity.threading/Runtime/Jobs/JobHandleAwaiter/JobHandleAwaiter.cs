@@ -47,6 +47,7 @@ namespace Enderlook.Unity.Threading.Jobs
         /// <summary>
         /// Determines the action to run after the job handle has completed.
         /// </summary>
+        /// <typeparam name="T">Type of action to execute.</typeparam>
         /// <param name="continuation">Action to run.</param>
         public void OnCompleted<T>(T continuation) where T : IAction
         {

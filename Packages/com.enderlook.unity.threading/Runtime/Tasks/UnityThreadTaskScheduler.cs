@@ -17,9 +17,7 @@ namespace Enderlook.Unity.Threading.Tasks
 
         protected override void QueueTask(Task task) => TryExecuteTaskMainThread(task);
 
-        protected override bool TryExecuteTaskInline(
-            Task task,
-            bool taskWasPreviouslyQueued) => TryExecuteTaskMainThread(task);
+        protected override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued) => TryExecuteTaskMainThread(task);
 
         private bool TryExecuteTaskMainThread(Task task)
         {
