@@ -71,5 +71,5 @@ namespace Enderlook.Unity.Threading.Jobs
 
             jobHandle.Complete();
         }
-}
+    }
 }
