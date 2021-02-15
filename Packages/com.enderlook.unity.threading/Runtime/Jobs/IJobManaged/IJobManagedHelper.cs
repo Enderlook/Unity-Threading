@@ -26,6 +26,16 @@ namespace Enderlook.Unity.Threading.Jobs
                 return new JobWithHandle(GCHandle.Alloc(job, GCHandleType.Pinned)).Schedule(dependsOn);
         }
 
+        /// <summary>
+        /// Schedules and automatically watches the completition of this job.<br/>
+        /// Useful for fire and forget.
+        /// </summary>
+        /// <param name="job">Job to schedule and watch.</param>
+        /// <param name="dependsOn">Another job that must be executed before executing <paramref name="job"/>.</param>
+        /// <returns>Job handle of the scheduled task.</returns>
+        public static JobHandle ScheduleAndWatch(this IJobManaged job, JobHandle dependsOn = default)
+            => job.Schedule(dependsOn).WatchCompletition();
+
         /// <inheritdoc cref="IJobExtensions.Schedule{T}(T, JobHandle)"/>
         /// <remarks>Useful when compiler finds ambiguity.</remarks>
         public static JobHandle ScheduleManaged<T>(this T job, JobHandle dependsOn = default)
@@ -49,6 +59,18 @@ namespace Enderlook.Unity.Threading.Jobs
                 return new JobWithHandle<T>(GCHandle.Alloc(box, GCHandleType.Pinned)).Schedule(dependsOn);
             }
         }
+
+        /// <summary>
+        /// Schedules and automatically watches the completition of this job.<br/>
+        /// Useful for fire and forget.
+        /// </summary>
+        /// <typeparam name="T">Type of job.</typeparam>
+        /// <param name="job">Job to schedule and watch.</param>
+        /// <param name="dependsOn">Another job that must be executed before executing <paramref name="job"/>.</param>
+        /// <returns>Job handle of the scheduled task.</returns>
+        public static JobHandle ScheduleAndWatch<T>(this T job, JobHandle dependsOn = default)
+            where T : struct, IJobManaged
+            => job.Schedule(dependsOn).WatchCompletition();
 
         private readonly struct JobWithHandle : IJob
         {
