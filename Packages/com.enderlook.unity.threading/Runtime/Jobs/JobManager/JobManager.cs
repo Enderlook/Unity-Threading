@@ -68,8 +68,12 @@ namespace Enderlook.Unity.Threading.Jobs
         /// Useful for fire and forget.
         /// </summary>
         /// <param name="jobHandle">Job handle to watch completition.</param>
-        public static void WatchCompletition(this JobHandle jobHandle)
-            => JobHandleCompleter.Add(jobHandle);
+        /// <returns><paramref name="jobHandle"/>.</returns>
+        public static JobHandle WatchCompletition(this JobHandle jobHandle)
+        {
+            JobHandleCompleter.Add(jobHandle);
+            return jobHandle;
+        }
 
         /// <summary>
         /// Schedules and automatically watches the completition of this job.<br/>
@@ -81,10 +85,6 @@ namespace Enderlook.Unity.Threading.Jobs
         /// <returns>Job handle of the scheduled task.</returns>
         public static JobHandle ScheduleAndWatch<T>(this T job, JobHandle dependsOn = default)
             where T : unmanaged, IJob
-        {
-            JobHandle jobHandle = job.Schedule(dependsOn);
-            jobHandle.WatchCompletition();
-            return jobHandle;
-        }
+            => job.Schedule(dependsOn).WatchCompletition();
     }
 }
