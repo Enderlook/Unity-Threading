@@ -78,7 +78,13 @@ namespace Enderlook.Unity.Threading.Jobs
         /// <typeparam name="T">Type of job.</typeparam>
         /// <param name="job">Job to schedule and watch.</param>
         /// <param name="dependsOn">Another job that must be executed before executing <paramref name="job"/>.</param>
-        public static void ScheduleAndWatch<T>(this T job, JobHandle dependsOn = default)
-            where T : unmanaged, IJob => job.Schedule(dependsOn).WatchCompletition();
+        /// <returns>Job handle of the scheduled task.</returns>
+        public static JobHandle ScheduleAndWatch<T>(this T job, JobHandle dependsOn = default)
+            where T : unmanaged, IJob
+        {
+            JobHandle jobHandle = job.Schedule(dependsOn);
+            jobHandle.WatchCompletition();
+            return jobHandle;
+        }
     }
 }
