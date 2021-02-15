@@ -13,8 +13,6 @@ namespace Enderlook.Unity.Threading
     {
         // https://stackoverflow.com/a/58470597/7655838 from https://stackoverflow.com/questions/58469468/what-does-unitymainthreaddispatcher-do
 
-        private static readonly SendOrPostCallback callback = (obj) => ((Action)obj)();
-
         private bool hasSwitched;
 
         /// <inheritdoc cref="IThreadSwitcher.GetAwaiter"/>
@@ -41,7 +39,7 @@ namespace Enderlook.Unity.Threading
                 continuation();
             }
             else
-                UnitySynchronizationContextUtility.UnitySynchronizationContext.Post(callback, continuation);
+                UnitySynchronizationContextUtility.UnitySynchronizationContext.Post(ThreadSwitcher.callback, continuation);
         }
 
         /// <inheritdoc cref="IThreadSwitcher.GetAwaiter"/>
