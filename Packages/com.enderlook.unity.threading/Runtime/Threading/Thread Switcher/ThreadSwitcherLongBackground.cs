@@ -41,6 +41,7 @@ namespace Enderlook.Unity.Threading
             }
             else
             {
+                hasSwitched = true;
                 // We always spawn a new thread regardless if we are already in a background thread
                 // because maybe that thread is from a pool and so it's not suitable for long running tasks.
                 Task.Factory.StartNew(continuation, TaskCreationOptions.LongRunning);
