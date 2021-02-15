@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+
+using Unity.Jobs;
 
 using UnityEngine;
 
@@ -13,14 +15,18 @@ namespace Enderlook.Unity.Threading.Coroutines
     {
         // https://github.com/svermeulen/Unity3dAsyncAwaitUtil/blob/master/UnityProject/Assets/Plugins/AsyncAwaitUtil/Source/Awaiters.cs
 
+        /// <inheritdoc cref="WaitForEndOfFrame"/>
         public static readonly WaitForEndOfFrame ForEndOfFrame = new WaitForEndOfFrame();
 
+        /// <inheritdoc cref="WaitForFixedUpdate"/>
         public static readonly WaitForFixedUpdate ForFixedUpdate = new WaitForFixedUpdate();
 
-        public static readonly WaitforUpdate ForUpdate = new WaitforUpdate();
+        /// <inheritdoc cref="WaitForUpdate"/>
+        public static readonly WaitForUpdate ForUpdate = new WaitForUpdate();
 
         private static readonly Dictionary<float, WaitForSeconds> waitForSeconds = new Dictionary<float, WaitForSeconds>();
 
+        /// <inheritdoc cref="WaitForSeconds"/>
         public static WaitForSeconds ForSeconds(float seconds)
         {
             if (!waitForSeconds.TryGetValue(seconds, out WaitForSeconds wait))
@@ -33,6 +39,7 @@ namespace Enderlook.Unity.Threading.Coroutines
 
         private static readonly Dictionary<float, WaitForSecondsRealtime> waitForSecondsRealTime = new Dictionary<float, WaitForSecondsRealtime>();
 
+        /// <inheritdoc cref="WaitForSecondsRealtime"/>
         public static WaitForSecondsRealtime ForSecondsRealTime(float seconds)
         {
             if (!waitForSecondsRealTime.TryGetValue(seconds, out WaitForSecondsRealtime wait))
@@ -43,28 +50,34 @@ namespace Enderlook.Unity.Threading.Coroutines
             return wait;
         }
 
-        // TODO: shall we pool WaitUntil and WaitWhile?
+        // TODO: shall we pool them?
 
-        private static readonly ConditionalWeakTable<Func<bool>, WaitUntil> waitUntils = new ConditionalWeakTable<Func<bool>, WaitUntil>();
-
-        private static readonly ConditionalWeakTable<Func<bool>, WaitWhile> waitWhiles = new ConditionalWeakTable<Func<bool>, WaitWhile>();
-
+        /// <inheritdoc cref="WaitUntil"/>
         public static WaitUntil Until(Func<bool> predicate)
-        {
-            if (waitUntils.TryGetValue(predicate, out WaitUntil value))
-                return value;
-            value = new WaitUntil(predicate);
-            waitUntils.Add(predicate, value);
-            return value;
-        }
+            => new WaitUntil(predicate);
 
+        /// <inheritdoc cref="WaitWhile"/>
         public static WaitWhile While(Func<bool> predicate)
-        {
-            if (waitWhiles.TryGetValue(predicate, out WaitWhile value))
-                return value;
-            value = new WaitWhile(predicate);
-            waitWhiles.Add(predicate, value);
-            return value;
-        }
+            => new WaitWhile(predicate);
+
+        /// <inheritdoc cref="WaitForJobComplete"/>
+        public static WaitForJobComplete For(JobHandle handle)
+            => new WaitForJobComplete(handle);
+
+        /// <inheritdoc cref="WaitForTaskComplete"/>
+        public static WaitForTaskComplete For(Task task)
+            => new WaitForTaskComplete(task);
+
+        /// <inheritdoc cref="WaitForTaskComplete{T}"/>
+        public static WaitForTaskComplete<T> For<T>(Task<T> task)
+            => new WaitForTaskComplete<T>(task);
+
+        /// <inheritdoc cref="WaitForValueTaskComplete"/>
+        public static WaitForValueTaskComplete For(ValueTask task)
+            => new WaitForValueTaskComplete(task);
+
+        /// <inheritdoc cref="WaitForValueTaskComplete{T}"/>
+        public static WaitForValueTaskComplete<T> For<T>(ValueTask<T> task)
+            => new WaitForValueTaskComplete<T>(task);
     }
 }

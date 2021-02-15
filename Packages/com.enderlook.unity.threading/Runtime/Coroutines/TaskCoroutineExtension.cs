@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 
@@ -31,15 +30,13 @@ namespace Enderlook.Unity.Threading.Coroutines
         /// </summary>
         /// <param name="task">Task to convert.</param>
         /// <returns>Enumerator which wraps the task.</returns>
-        public static IEnumerator<T> AsIEnumerator<T>(this Task<T> task)
+        public static IEnumerator AsIEnumerator<T>(this Task<T> task)
         {
             while (!task.IsCompleted)
-                yield return default;
+                yield return null;
 
             if (task.IsFaulted)
                 ExceptionDispatchInfo.Capture(task.Exception).Throw();
-
-            yield return task.Result;
         }
 
         /// <summary>
@@ -61,15 +58,47 @@ namespace Enderlook.Unity.Threading.Coroutines
         /// </summary>
         /// <param name="task">Task to convert.</param>
         /// <returns>Enumerator which wraps the task.</returns>
-        public static IEnumerator<T> AsIEnumerator<T>(this ValueTask<T> task)
+        public static IEnumerator AsIEnumerator<T>(this ValueTask<T> task)
         {
             while (!task.IsCompleted)
-                yield return default;
+                yield return null;
 
             if (task.IsFaulted)
                 ExceptionDispatchInfo.Capture(task.AsTask().Exception).Throw();
-
-            yield return task.Result;
         }
+
+        /// <summary>
+        /// Wait task to complete.
+        /// </summary>
+        /// <param name="task">Task to complete.</param>
+        /// <returns>Waiter for the task to complete.</returns>
+        public static WaitForTaskComplete Wait(this Task task)
+            => new WaitForTaskComplete(task);
+
+        /// <summary>
+        /// Wait task to complete.
+        /// </summary>
+        /// <typeparam name="T">Type of element returned by the task.</typeparam>
+        /// <param name="task">Task to complete.</param>
+        /// <returns>Waiter for the task to complete.</returns>
+        public static WaitForTaskComplete<T> Wait<T>(this Task<T> task)
+            => new WaitForTaskComplete<T>(task);
+
+        /// <summary>
+        /// Wait task to complete.
+        /// </summary>
+        /// <param name="task">Task to complete.</param>
+        /// <returns>Waiter for the task to complete.</returns>
+        public static WaitForValueTaskComplete Wait(this ValueTask task)
+            => new WaitForValueTaskComplete(task);
+
+        /// <summary>
+        /// Wait task to complete.
+        /// </summary>
+        /// <typeparam name="T">Type of element returned by the task.</typeparam>
+        /// <param name="task">Task to complete.</param>
+        /// <returns>Waiter for the task to complete.</returns>
+        public static WaitForValueTaskComplete<T> Wait<T>(this ValueTask<T> task)
+            => new WaitForValueTaskComplete<T>(task);
     }
 }

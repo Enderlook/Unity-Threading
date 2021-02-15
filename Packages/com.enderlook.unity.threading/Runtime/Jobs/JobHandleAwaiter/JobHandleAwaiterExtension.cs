@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using Enderlook.Unity.Threading.Coroutines;
+
+using System.Collections;
 
 using Unity.Jobs;
 
@@ -28,5 +30,13 @@ namespace Enderlook.Unity.Threading.Jobs
 
             jobHandle.Complete();
         }
+
+        /// <summary>
+        /// Wait job to complete.
+        /// </summary>
+        /// <param name="handle">Job to complete.</param>
+        /// <returns>Waiter for the job to complete.</returns>
+        public static WaitForJobComplete Wait(this JobHandle handle)
+            => new WaitForJobComplete(handle);
     }
 }
