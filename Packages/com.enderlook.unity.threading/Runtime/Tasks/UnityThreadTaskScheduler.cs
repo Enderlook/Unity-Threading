@@ -34,9 +34,9 @@ namespace Enderlook.Unity.Threading.Tasks
 
         private async ValueTask<bool> SwitchInSite(Task task)
         {
-            await ThreadSwitcher.ResumeUnityAsync;
+            await ThreadSwitcher.ToUnity;
             bool result = TryExecuteTask(task);
-            await ThreadSwitcher.ResumeBackgroundAsync;
+            await ThreadSwitcher.ToBackground;
             return result;
         }
 

@@ -16,19 +16,19 @@ namespace Enderlook.Unity.Threading
         /// Switches to a background pool thread.
         /// </summary>
         /// <returns>Object which switched to the thread.</returns>
-        public static ThreadSwitcherBackground ResumeBackgroundAsync => new ThreadSwitcherBackground();
+        public static ThreadSwitcherBackground ToBackground => new ThreadSwitcherBackground();
 
         /// <summary>
         /// Switches to a background long duration thread.
         /// </summary>
         /// <returns>Object which switched to the thread.</returns>
-        public static ThreadSwitcherLongBackground ResumeLongBackgroundAsync => new ThreadSwitcherLongBackground();
+        public static ThreadSwitcherLongBackground ToLongBackground => new ThreadSwitcherLongBackground();
 
         /// <summary>
         /// Switch to the Unity thread.
         /// </summary>
         /// <returns>Object which switched to the thread.</returns>
-        public static ThreadSwitcherUnity ResumeUnityAsync => new ThreadSwitcherUnity();
+        public static ThreadSwitcherUnity ToUnity => new ThreadSwitcherUnity();
 
         /// <summary>
         /// Check if we are currently running in main thread.
