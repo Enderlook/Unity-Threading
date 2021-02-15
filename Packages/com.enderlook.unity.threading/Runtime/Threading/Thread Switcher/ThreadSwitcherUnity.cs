@@ -7,11 +7,13 @@ using UnityEngine;
 namespace Enderlook.Unity.Threading
 {
     /// <summary>
-    /// Defines a switcher to jump to the Unity thread
+    /// Defines a switcher to jump to the Unity thread.
     /// </summary>
     public struct ThreadSwitcherUnity : IThreadSwitcher
     {
         // https://stackoverflow.com/a/58470597/7655838 from https://stackoverflow.com/questions/58469468/what-does-unitymainthreaddispatcher-do
+
+        private static readonly SendOrPostCallback callback = (obj) => ((Action)obj)();
 
         private bool hasSwitched;
 
@@ -31,12 +33,15 @@ namespace Enderlook.Unity.Threading
                 throw new ArgumentNullException(nameof(continuation));
 
             hasSwitched = !ThreadSwitcher.IsExecutingMainThread;
-#if UNITY_EDITOR
             if (!hasSwitched)
+            {
+#if UNITY_EDITOR
                 Debug.Log("Already in main thread, this will do nothing.");
 #endif
-
-            UnitySynchronizationContextUtility.UnitySynchronizationContext.Post(_ => continuation(), null);
+                continuation();
+            }
+            else
+                UnitySynchronizationContextUtility.UnitySynchronizationContext.Post(callback, continuation);
         }
 
         /// <inheritdoc cref="IThreadSwitcher.GetAwaiter"/>

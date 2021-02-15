@@ -8,9 +8,9 @@ using UnityEngine;
 namespace Enderlook.Unity.Threading
 {
     /// <summary>
-    /// Defines a switcher to jump to a pooled task thread.
+    /// Defines a switcher to jump to a long task thread.
     /// </summary>
-    public struct ThreadSwitcherBackground : IThreadSwitcher
+    public struct ThreadSwitcherLongBackground : IThreadSwitcher
     {
         // https://stackoverflow.com/a/58470597/7655838 from https://stackoverflow.com/questions/58469468/what-does-unitymainthreaddispatcher-do
 
@@ -19,7 +19,7 @@ namespace Enderlook.Unity.Threading
         private bool hasSwitched;
 
         /// <inheritdoc cref="IThreadSwitcher.GetAwaiter"/>
-        public ThreadSwitcherBackground GetAwaiter() => this;
+        public ThreadSwitcherLongBackground GetAwaiter() => this;
 
         /// <inheritdoc cref="IThreadSwitcher.IsCompleted"/>
         public bool IsCompleted => SynchronizationContext.Current == null;
@@ -41,16 +41,9 @@ namespace Enderlook.Unity.Threading
             }
             else
             {
-                hasSwitched = ThreadSwitcher.IsExecutingMainThread;
-                if (hasSwitched)
-                    Task.Factory.StartNew(continuation);
-                else
-                {
-#if UNITY_EDITOR
-                    Debug.Log("Already in a non-main thread, we don't need to change of thread so we will not.");
-#endif
-                    continuation();
-                }
+                // We always spawn a new thread regardless if we are already in a background thread
+                // because maybe that thread is from a pool and so it's not suitable for long running tasks.
+                Task.Factory.StartNew(continuation, TaskCreationOptions.LongRunning);
             }
         }
 

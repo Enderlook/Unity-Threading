@@ -8,10 +8,16 @@
         // https://stackoverflow.com/a/58470597/7655838 from https://stackoverflow.com/questions/58469468/what-does-unitymainthreaddispatcher-do
 
         /// <summary>
-        /// Switches to a background thread.
+        /// Switches to a background pool thread.
         /// </summary>
         /// <returns>Object which switched to the thread.</returns>
         public static ThreadSwitcherBackground ResumeBackgroundAsync => new ThreadSwitcherBackground();
+
+        /// <summary>
+        /// Switches to a background long duration thread.
+        /// </summary>
+        /// <returns>Object which switched to the thread.</returns>
+        public static ThreadSwitcherBackground ResumeLongBackgroundAsync => new ThreadSwitcherBackground();
 
         /// <summary>
         /// Switch to the Unity thread.
