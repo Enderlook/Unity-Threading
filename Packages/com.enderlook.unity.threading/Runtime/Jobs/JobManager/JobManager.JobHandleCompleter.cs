@@ -6,14 +6,14 @@ namespace Enderlook.Unity.Threading.Jobs
 {
     public static partial class JobManager
     {
-        private class JobHandleCompleter
+        private static class JobHandleCompleter
         {
             private const int GROW_FACTOR = 2;
             private const int DEFAULT_CAPACITY = 4;
-            private JobHandle[] jobHandles = new JobHandle[DEFAULT_CAPACITY];
-            private int size;
+            private static JobHandle[] jobHandles = new JobHandle[DEFAULT_CAPACITY];
+            private static int size;
 
-            public void Add(JobHandle jobHandle)
+            public static void Add(JobHandle jobHandle)
             {
                 if (jobHandle.IsCompleted)
                     jobHandle.Complete();
@@ -25,12 +25,11 @@ namespace Enderlook.Unity.Threading.Jobs
                         Array.Copy(jobHandles, newJobHandles, jobHandles.Length);
                     }
 
-                    int index = size++;
-                    jobHandles[index] = jobHandle;
+                    jobHandles[size++] = jobHandle;
                 }
             }
 
-            public void Update()
+            public static void Update()
             {
                 int j = 0;
                 for (int i = 0; i < size; i++)
