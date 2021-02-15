@@ -13,8 +13,6 @@ namespace Enderlook.Unity.Threading.Jobs
     {
         private static JobTasksManager actionTaskManager = new JobTasksManager();
 
-        private static JobHandleCompleter completer = new JobHandleCompleter();
-
         private static Dictionary<Type, (object Instance, Delegate Add, Action Update)> managers = new Dictionary<Type, (object Instance, Delegate Add, Action Update)>();
 
         private static object[] parameters = new object[3];
@@ -24,9 +22,9 @@ namespace Enderlook.Unity.Threading.Jobs
         private static void Initialize() => EditorApplication.update += Update;
 #endif
 
-        private static void Update()
+        internal static void Update()
         {
-            completer.Update();
+            JobHandleCompleter.Update();
             actionTaskManager.Update();
             foreach ((object Instance, Delegate Add, Action Update) manager in managers.Values)
                 manager.Update();
@@ -70,6 +68,17 @@ namespace Enderlook.Unity.Threading.Jobs
         /// Useful for fire and forget.
         /// </summary>
         /// <param name="jobHandle">Job handle to watch completition.</param>
-        public static void AutoComplete(this JobHandle jobHandle) => completer.Add(jobHandle);
+        public static void WatchCompletition(this JobHandle jobHandle)
+            => JobHandleCompleter.Add(jobHandle);
+
+        /// <summary>
+        /// Schedules and automatically watches the completition of this job.<br/>
+        /// Useful for fire and forget.
+        /// </summary>
+        /// <typeparam name="T">Type of job.</typeparam>
+        /// <param name="job">Job to schedule and watch.</param>
+        /// <param name="dependsOn">Another job that must be executed before executing <paramref name="job"/>.</param>
+        public static void ScheduleAndWatch<T>(this T job, JobHandle dependsOn = default)
+            where T : unmanaged, IJob => job.Schedule(dependsOn).WatchCompletition();
     }
 }
