@@ -30,7 +30,7 @@ namespace Enderlook.Unity.Threading
             if (continuation == null)
                 throw new ArgumentNullException(nameof(continuation));
 
-            hasSwitched = !ThreadSwitcher.IsExecutingMainThread;
+            hasSwitched = !Switch.IsInMainThread;
             if (!hasSwitched)
             {
 #if UNITY_EDITOR
@@ -39,7 +39,7 @@ namespace Enderlook.Unity.Threading
                 continuation();
             }
             else
-                UnitySynchronizationContextUtility.UnitySynchronizationContext.Post(ThreadSwitcher.callback, continuation);
+                UnitySynchronizationContextUtility.UnitySynchronizationContext.Post(Switch.callback, continuation);
         }
 
         /// <inheritdoc cref="IThreadSwitcher.GetAwaiter"/>

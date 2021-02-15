@@ -21,7 +21,7 @@ namespace Enderlook.Unity.Threading.Tasks
 
         private bool TryExecuteTaskMainThread(Task task)
         {
-            if (ThreadSwitcher.IsExecutingMainThread)
+            if (Switch.IsInMainThread)
             {
 #if UNITY_EDITOR
                 Debug.Log("Already in main thread, this won't do anything meaningful.");
@@ -34,9 +34,9 @@ namespace Enderlook.Unity.Threading.Tasks
 
         private async ValueTask<bool> SwitchInSite(Task task)
         {
-            await ThreadSwitcher.ToUnity;
+            await Switch.ToUnity;
             bool result = TryExecuteTask(task);
-            await ThreadSwitcher.ToBackground;
+            await Switch.ToBackground;
             return result;
         }
 

@@ -41,7 +41,7 @@ namespace Enderlook.Unity.Threading
             }
             else
             {
-                hasSwitched = ThreadSwitcher.IsExecutingMainThread;
+                hasSwitched = Switch.IsInMainThread;
                 if (hasSwitched)
                     Task.Factory.StartNew(continuation);
                 else
