@@ -21,6 +21,12 @@ namespace Enderlook.Unity.Threading.Jobs
                 JobHandle.Complete();
                 OnJobComplete();
             }
+
+            public JobTask(JobHandle jobHandle, Action onJobComplete)
+            {
+                JobHandle = jobHandle;
+                OnJobComplete = onJobComplete;
+            }
         }
 
         private struct JobTask<TAction> where TAction : IAction
@@ -35,6 +41,12 @@ namespace Enderlook.Unity.Threading.Jobs
             {
                 JobHandle.Complete();
                 OnJobComplete.Invoke();
+            }
+
+            public JobTask(JobHandle jobHandle, TAction onJobComplete)
+            {
+                JobHandle = jobHandle;
+                OnJobComplete = onJobComplete;
             }
         }
     }

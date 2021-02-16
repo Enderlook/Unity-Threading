@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Enderlook.Collections.LowLevel;
 
 using Unity.Jobs;
 
@@ -8,39 +8,27 @@ namespace Enderlook.Unity.Threading.Jobs
     {
         private static class JobHandleCompleter
         {
-            private const int GROW_FACTOR = 2;
-            private const int DEFAULT_CAPACITY = 4;
-            private static JobHandle[] jobHandles = new JobHandle[DEFAULT_CAPACITY];
-            private static int size;
+            private static DynamicPooledArray<JobHandle> jobHandles = DynamicPooledArray<JobHandle>.Create();
 
             public static void Add(JobHandle jobHandle)
             {
                 if (jobHandle.IsCompleted)
                     jobHandle.Complete();
                 else
-                {
-                    if (jobHandles.Length == size)
-                    {
-                        JobHandle[] newJobHandles = new JobHandle[jobHandles.Length * GROW_FACTOR];
-                        Array.Copy(jobHandles, newJobHandles, jobHandles.Length);
-                    }
-
-                    jobHandles[size++] = jobHandle;
-                }
+                    jobHandles.Add(jobHandle);
             }
 
             public static void Update()
             {
-                int j = 0;
-                for (int i = 0; i < size; i++)
+                for (int i = jobHandles.Count - 1; i > 0; i--)
                 {
                     JobHandle jobHandle = jobHandles[i];
                     if (jobHandle.IsCompleted)
+                    {
                         jobHandle.Complete();
-                    else
-                        jobHandles[j++] = jobHandle;
+                        jobHandles.RemoveAt(i);
+                    }
                 }
-                size = j;
             }
         }
     }
