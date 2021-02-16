@@ -7,8 +7,6 @@ using System.Runtime.CompilerServices;
 
 using Unity.Jobs;
 
-using UnityEngine;
-
 namespace Enderlook.Unity.Threading.Jobs
 {
     /// <summary>
@@ -24,7 +22,11 @@ namespace Enderlook.Unity.Threading.Jobs
         /// Creates an awaiter for the given <see cref="JobHandle"/>.
         /// </summary>
         /// <param name="jobHandle">Job handle to await for.</param>
-        public JobHandleAwaiter(JobHandle jobHandle) => this.jobHandle = jobHandle;
+        public JobHandleAwaiter(JobHandle jobHandle)
+        {
+            jobHandle.WatchCompletition();
+            this.jobHandle = jobHandle;
+        }
 
         /// <summary>
         /// Return self.
@@ -41,22 +43,14 @@ namespace Enderlook.Unity.Threading.Jobs
         /// Determines the action to run after the job handle has completed.
         /// </summary>
         /// <param name="continuation">Action to run.</param>
-        public void OnCompleted(Action continuation)
-        {
-            jobHandle.Complete();
-            continuation();
-        }
+        public void OnCompleted(Action continuation) => jobHandle.OnComplete(continuation);
 
         /// <summary>
         /// Determines the action to run after the job handle has completed.
         /// </summary>
         /// <typeparam name="T">Type of action to execute.</typeparam>
         /// <param name="continuation">Action to run.</param>
-        public void OnCompleted<T>(T continuation) where T : IAction
-        {
-            jobHandle.Complete();
-            continuation.Invoke();
-        }
+        public void OnCompleted<T>(T continuation) where T : IAction => jobHandle.OnComplete(continuation);
 
         /// <summary>
         /// Does nothing.
