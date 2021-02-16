@@ -2,6 +2,7 @@
 using Enderlook.Threading;
 
 using System;
+using System.Runtime.CompilerServices;
 
 using Unity.Jobs;
 
@@ -15,6 +16,9 @@ namespace Enderlook.Unity.Threading.Jobs
 
             public void Add(JobHandle jobHandle, Action onJobComplete, bool canCompleteImmediately = true)
             {
+                if (onJobComplete is null)
+                    ThrowArgumentNullException();
+
                 JobTask jobTask = new JobTask(jobHandle, onJobComplete);
 
                 if (jobTask.IsCompleted && canCompleteImmediately)
@@ -25,6 +29,9 @@ namespace Enderlook.Unity.Threading.Jobs
 
                 jobTasks.Add(jobTask);
             }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private void ThrowArgumentNullException() => throw new ArgumentNullException("onJobComplete");
 
             public void Update()
             {
