@@ -10,11 +10,11 @@ namespace Enderlook.Unity.Threading.Jobs
 {
     public static partial class JobManager
     {
-        private class JobTasksManager
+        private static class JobTasksManager
         {
-            private DynamicArray<JobTask> jobTasks = DynamicArray<JobTask>.Create();
+            private static readonly DynamicArray<JobTask> jobTasks = DynamicArray<JobTask>.Create();
 
-            public void Add(JobHandle jobHandle, Action onJobComplete, bool canCompleteImmediately = true)
+            public static void Add(JobHandle jobHandle, Action onJobComplete, bool canCompleteImmediately = true)
             {
                 if (onJobComplete is null)
                     ThrowArgumentNullException();
@@ -31,9 +31,9 @@ namespace Enderlook.Unity.Threading.Jobs
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            private void ThrowArgumentNullException() => throw new ArgumentNullException("onJobComplete");
+            private static void ThrowArgumentNullException() => throw new ArgumentNullException("onJobComplete");
 
-            public void Update()
+            public static void Update()
             {
                 for (int i = jobTasks.Count - 1; i > 0; i--)
                 {
@@ -47,11 +47,13 @@ namespace Enderlook.Unity.Threading.Jobs
             }
         }
 
-        private class JobTasksManager<TAction> where TAction : IAction
+        private static class JobTasksManager<TAction> where TAction : IAction
         {
-            private DynamicArray<JobTask<TAction>> jobTasks = DynamicArray<JobTask<TAction>>.Create();
+            private static DynamicArray<JobTask<TAction>> jobTasks = DynamicArray<JobTask<TAction>>.Create();
 
-            public void Add(JobHandle jobHandle, TAction onJobComplete, bool canCompleteImmediately = true)
+            static JobTasksManager() => updaters.Add(Update);
+
+            public static void Add(JobHandle jobHandle, TAction onJobComplete, bool canCompleteImmediately = true)
             {
                 JobTask<TAction> jobTask = new JobTask<TAction>(jobHandle, onJobComplete);
 
@@ -64,7 +66,7 @@ namespace Enderlook.Unity.Threading.Jobs
                 jobTasks.Add(jobTask);
             }
 
-            public void Update()
+            public static void Update()
             {
                 for (int i = jobTasks.Count - 1; i > 0; i--)
                 {

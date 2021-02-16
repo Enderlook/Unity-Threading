@@ -1,7 +1,7 @@
-﻿using Enderlook.Threading;
+﻿using Enderlook.Collections.LowLevel;
+using Enderlook.Threading;
 
 using System;
-using System.Collections.Generic;
 
 using Unity.Jobs;
 
@@ -11,11 +11,7 @@ namespace Enderlook.Unity.Threading.Jobs
 {
     public static partial class JobManager
     {
-        private static JobTasksManager actionTaskManager = new JobTasksManager();
-
-        private static Dictionary<Type, (object Instance, Delegate Add, Action Update)> managers = new Dictionary<Type, (object Instance, Delegate Add, Action Update)>();
-
-        private static object[] parameters = new object[3];
+        internal static readonly DynamicArray<Action> updaters = DynamicArray<Action>.Create();
 
 #if UNITY_EDITOR
         [InitializeOnLoadMethod]
@@ -25,9 +21,9 @@ namespace Enderlook.Unity.Threading.Jobs
         internal static void Update()
         {
             JobHandleCompleter.Update();
-            actionTaskManager.Update();
-            foreach ((object Instance, Delegate Add, Action Update) manager in managers.Values)
-                manager.Update();
+            JobTasksManager.Update();
+            foreach (Action action in updaters)
+                action();
         }
 
         /// <summary>
@@ -38,7 +34,7 @@ namespace Enderlook.Unity.Threading.Jobs
         /// <param name="onJobComplete">Action to execute when job handle completes.</param>
         /// <param name="canCompleteImmediately">If the job handle is already completed, this value determines if the action should run immediately or later (which may be in this or in the next frame).</param>
         public static void OnComplete(this JobHandle jobHandle, Action onJobComplete, bool canCompleteImmediately = true)
-            => actionTaskManager.Add(jobHandle, onJobComplete, canCompleteImmediately);
+            => JobTasksManager.Add(jobHandle, onJobComplete, canCompleteImmediately);
 
         /// <summary>
         /// Enqueues an action to be execute when the job handle <paramref name="jobHandle"/> completes.<br/>
@@ -48,20 +44,7 @@ namespace Enderlook.Unity.Threading.Jobs
         /// <param name="onJobComplete">Action to execute when job handle completes.</param>
         /// <param name="canCompleteImmediately">If the job handle is already completed, this value determines if the action should run immediately or later (which may be in this or in the next frame).</param>
         public static void OnComplete<TAction>(this JobHandle jobHandle, TAction onJobComplete, bool canCompleteImmediately = true)
-            where TAction : IAction
-        {
-            if (!managers.TryGetValue(typeof(TAction), out (object Instance, Delegate Add, Action Update) value))
-            {
-                JobTasksManager<TAction> instance = new JobTasksManager<TAction>();
-                value.Instance = instance;
-                value.Add = (Action<JobHandle, TAction, bool>)instance.Add;
-                value.Update = instance.Update;
-            }
-            parameters[0] = jobHandle;
-            parameters[1] = onJobComplete;
-            parameters[2] = canCompleteImmediately;
-            value.Add.DynamicInvoke(parameters);
-        }
+            where TAction : IAction => JobTasksManager<TAction>.Add(jobHandle, onJobComplete, canCompleteImmediately);
 
         /// <summary>
         /// Automatically watches the completition of this job handle.<br/>
