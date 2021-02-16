@@ -1,10 +1,13 @@
 ﻿using Enderlook.Threading;
+using Enderlook.Unity.Threading.Coroutines;
 
 using System;
 using System.Collections;
 using System.Runtime.CompilerServices;
 
 using Unity.Jobs;
+
+using UnityEngine;
 
 namespace Enderlook.Unity.Threading.Jobs
 {
@@ -71,5 +74,9 @@ namespace Enderlook.Unity.Threading.Jobs
 
             jobHandle.Complete();
         }
+
+        /// <inheritdoc cref="WaitForJobComplete.Create(JobHandle)"/>
+        public WaitForJobComplete Wait()
+            => WaitForJobComplete.Create(jobHandle);
     }
 }

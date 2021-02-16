@@ -1,6 +1,4 @@
-﻿using Unity.Jobs;
-
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Enderlook.Unity.Threading.Coroutines
 {
@@ -11,6 +9,9 @@ namespace Enderlook.Unity.Threading.Coroutines
     {
         // https://github.com/svermeulen/Unity3dAsyncAwaitUtil/blob/master/UnityProject/Assets/Plugins/AsyncAwaitUtil/Source/WaitForUpdate.cs
 
+        /// <inheritdoc cref="CustomYieldInstruction.keepWaiting"/>
         public override bool keepWaiting => false;
+
+        internal WaitForUpdate() { }
     }
 }

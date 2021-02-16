@@ -1,4 +1,6 @@
-﻿using System.Runtime.ExceptionServices;
+﻿using Enderlook.Collections.LowLevel;
+
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 
 using UnityEngine;
@@ -6,22 +8,25 @@ using UnityEngine;
 namespace Enderlook.Unity.Threading.Coroutines
 {
     /// <summary>
-    /// Wait until the task is completed.
+    /// Suspend the coroutine execution until the suplied task is completed.
     /// </summary>
+    /// <typeparam name="T">Return type of task.</typeparam>
     public sealed class WaitForTaskComplete<T> : CustomYieldInstruction
     {
-        private readonly Task<T> task;
+        private static readonly DynamicStack<WaitForTaskComplete<T>> pool = DynamicStack<WaitForTaskComplete<T>>.Create(Wait.POOL_CAPACITY);
 
-        /// <summary>
-        /// Wait for the task to complete.
-        /// </summary>
-        /// <param name="task">Task to wait.</param>
-        public WaitForTaskComplete(Task<T> task) => this.task = task;
+        private Task<T> task;
+
+        private WaitForTaskComplete(Task<T> task) => this.task = task;
 
         public override bool keepWaiting {
             get {
                 if (task.IsCompleted)
                 {
+                    Task<T> task = this.task;
+                    this.task = default;
+                    if (pool.Count < Wait.POOL_CAPACITY)
+                        pool.Push(this);
                     if (task.IsFaulted)
                         ExceptionDispatchInfo.Capture(task.Exception).Throw();
                     return false;
@@ -31,10 +36,23 @@ namespace Enderlook.Unity.Threading.Coroutines
         }
 
         /// <summary>
-        /// Wrap a <see cref="Task{T}"/>.
+        /// Suspend the coroutine execution until the suplied task is completed.<br/>
+        /// Object is drawn from a pool.
         /// </summary>
-        /// <param name="task">Handle to wrap.</param>
+        /// <param name="task">Task to wait.</param>
+        /// <returns>A waiter.</returns>
+        internal static WaitForTaskComplete<T> Create(Task<T> task)
+        {
+            if (pool.TryPop(out WaitForTaskComplete<T> result))
+            {
+                result.task = task;
+                return result;
+            }
+            return new WaitForTaskComplete<T>(task);
+        }
+
+        /// <inheritdoc cref="Create(Task{T})"/>
         public static implicit operator WaitForTaskComplete<T>(Task<T> task)
-            => new WaitForTaskComplete<T>(task);
+            => Create(task);
     }
 }

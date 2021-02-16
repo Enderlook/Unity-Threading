@@ -67,38 +67,20 @@ namespace Enderlook.Unity.Threading.Coroutines
                 ExceptionDispatchInfo.Capture(task.AsTask().Exception).Throw();
         }
 
-        /// <summary>
-        /// Wait task to complete.
-        /// </summary>
-        /// <param name="task">Task to complete.</param>
-        /// <returns>Waiter for the task to complete.</returns>
+        /// <inheritdoc cref="WaitForTaskComplete.Create(Task)"/>
         public static WaitForTaskComplete Wait(this Task task)
-            => new WaitForTaskComplete(task);
+            => WaitForTaskComplete.Create(task);
 
-        /// <summary>
-        /// Wait task to complete.
-        /// </summary>
-        /// <typeparam name="T">Type of element returned by the task.</typeparam>
-        /// <param name="task">Task to complete.</param>
-        /// <returns>Waiter for the task to complete.</returns>
+        /// <inheritdoc cref="WaitForTaskComplete{T}.Create(Task{T})"/>
         public static WaitForTaskComplete<T> Wait<T>(this Task<T> task)
-            => new WaitForTaskComplete<T>(task);
+            => WaitForTaskComplete<T>.Create(task);
 
-        /// <summary>
-        /// Wait task to complete.
-        /// </summary>
-        /// <param name="task">Task to complete.</param>
-        /// <returns>Waiter for the task to complete.</returns>
+        /// <inheritdoc cref="WaitForValueTaskComplete.Create(ValueTask)"/>
         public static WaitForValueTaskComplete Wait(this ValueTask task)
-            => new WaitForValueTaskComplete(task);
+            => WaitForValueTaskComplete.Create(task);
 
-        /// <summary>
-        /// Wait task to complete.
-        /// </summary>
-        /// <typeparam name="T">Type of element returned by the task.</typeparam>
-        /// <param name="task">Task to complete.</param>
-        /// <returns>Waiter for the task to complete.</returns>
+        /// <inheritdoc cref="WaitForValueTaskComplete{T}.Create(ValueTask{T})"/>
         public static WaitForValueTaskComplete<T> Wait<T>(this ValueTask<T> task)
-            => new WaitForValueTaskComplete<T>(task);
+            => WaitForValueTaskComplete<T>.Create(task);
     }
 }

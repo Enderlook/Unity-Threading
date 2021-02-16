@@ -31,12 +31,8 @@ namespace Enderlook.Unity.Threading.Jobs
             jobHandle.Complete();
         }
 
-        /// <summary>
-        /// Wait job to complete.
-        /// </summary>
-        /// <param name="handle">Job to complete.</param>
-        /// <returns>Waiter for the job to complete.</returns>
+        /// <inheritdoc cref="WaitForJobComplete.Create(JobHandle)"/>
         public static WaitForJobComplete Wait(this JobHandle handle)
-            => new WaitForJobComplete(handle);
+            => WaitForJobComplete.Create(handle);
     }
 }

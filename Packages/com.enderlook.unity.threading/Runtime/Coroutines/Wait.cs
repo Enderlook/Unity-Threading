@@ -13,6 +13,8 @@ namespace Enderlook.Unity.Threading.Coroutines
     /// </summary>
     public static class Wait
     {
+        internal const int POOL_CAPACITY = 100;
+
         // https://github.com/svermeulen/Unity3dAsyncAwaitUtil/blob/master/UnityProject/Assets/Plugins/AsyncAwaitUtil/Source/Awaiters.cs
 
         /// <inheritdoc cref="WaitForEndOfFrame"/>
@@ -52,32 +54,32 @@ namespace Enderlook.Unity.Threading.Coroutines
 
         // TODO: shall we pool them?
 
-        /// <inheritdoc cref="WaitUntil"/>
-        public static WaitUntil Until(Func<bool> predicate)
-            => new WaitUntil(predicate);
+        /// <inheritdoc cref="WaitUntilPooled.Create(Func{bool})"/>
+        public static WaitUntilPooled Until(Func<bool> predicate)
+            => WaitUntilPooled.Create(predicate);
 
-        /// <inheritdoc cref="WaitWhile"/>
-        public static WaitWhile While(Func<bool> predicate)
-            => new WaitWhile(predicate);
+        /// <inheritdoc cref="WaitWhile.Create(Func{bool})"/>
+        public static WaitWhilePooled While(Func<bool> predicate)
+            => WaitWhilePooled.Create(predicate);
 
-        /// <inheritdoc cref="WaitForJobComplete"/>
+        /// <inheritdoc cref="WaitForJobComplete.Create(JobHandle)"/>
         public static WaitForJobComplete For(JobHandle handle)
-            => new WaitForJobComplete(handle);
+            => WaitForJobComplete.Create(handle);
 
-        /// <inheritdoc cref="WaitForTaskComplete"/>
+        /// <inheritdoc cref="WaitForTaskComplete.Create(Task)"/>
         public static WaitForTaskComplete For(Task task)
-            => new WaitForTaskComplete(task);
+            => WaitForTaskComplete.Create(task);
 
-        /// <inheritdoc cref="WaitForTaskComplete{T}"/>
+        /// <inheritdoc cref="WaitForTaskComplete{T}.Create(Task{T})"/>
         public static WaitForTaskComplete<T> For<T>(Task<T> task)
-            => new WaitForTaskComplete<T>(task);
+            => WaitForTaskComplete<T>.Create(task);
 
-        /// <inheritdoc cref="WaitForValueTaskComplete"/>
+        /// <inheritdoc cref="WaitForValueTaskComplete.Create(ValueTask)"/>
         public static WaitForValueTaskComplete For(ValueTask task)
-            => new WaitForValueTaskComplete(task);
+            => WaitForValueTaskComplete.Create(task);
 
-        /// <inheritdoc cref="WaitForValueTaskComplete{T}"/>
+        /// <inheritdoc cref="WaitForValueTaskComplete{T}.Create(ValueTask{T})"/>
         public static WaitForValueTaskComplete<T> For<T>(ValueTask<T> task)
-            => new WaitForValueTaskComplete<T>(task);
+            => WaitForValueTaskComplete<T>.Create(task);
     }
 }
