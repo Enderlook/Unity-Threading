@@ -23,7 +23,7 @@ namespace Enderlook.Unity.Threading.Tasks
         {
             if (Switch.IsInMainThread)
             {
-#if UNITY_EDITOR
+#if DEBUG
                 Debug.Log("Already in main thread, this won't do anything meaningful.");
 #endif
                 return TryExecuteTask(task);

@@ -33,7 +33,7 @@ namespace Enderlook.Unity.Threading
             hasSwitched = !Switch.IsInMainThread;
             if (!hasSwitched)
             {
-#if UNITY_EDITOR
+#if DEBUG
                 Debug.Log("Already in main thread, this will do nothing.");
 #endif
                 continuation();
