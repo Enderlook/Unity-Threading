@@ -4,7 +4,7 @@ using Unity.Jobs;
 
 namespace Enderlook.Unity.Threading.Jobs
 {
-    public static partial class IJobManagedHelper
+    public static partial class IManagedJobExtensions
     {
         /// <inheritdoc cref="IJobExtensions.Schedule{T}(T, JobHandle)"/>
         public static JobHandle Schedule(this Action job, JobHandle dependsOn = default)
@@ -244,7 +244,7 @@ namespace Enderlook.Unity.Threading.Jobs
         public static JobHandle ScheduleAndWatch<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> job, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8, T9 p9, T10 p10, T11 p11, T12 p12, T13 p13, T14 p14, T15 p15, T16 p16, JobHandle dependsOn = default)
             => job.Schedule(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, dependsOn).WatchCompletition();
 
-        private readonly struct JobAction : IJobManaged
+        private readonly struct JobAction : IManagedJob
         {
             private readonly Action action;
 
@@ -253,7 +253,7 @@ namespace Enderlook.Unity.Threading.Jobs
             public void Execute() => action();
         }
 
-        private readonly struct JobAction<T1> : IJobManaged
+        private readonly struct JobAction<T1> : IManagedJob
         {
             private readonly Action<T1> action;
             private readonly T1 p1;
@@ -267,7 +267,7 @@ namespace Enderlook.Unity.Threading.Jobs
             public void Execute() => action(p1);
         }
 
-        private readonly struct JobAction<T1, T2> : IJobManaged
+        private readonly struct JobAction<T1, T2> : IManagedJob
         {
             private readonly Action<T1, T2> action;
             private readonly T1 p1;
@@ -283,7 +283,7 @@ namespace Enderlook.Unity.Threading.Jobs
             public void Execute() => action(p1, p2);
         }
 
-        private readonly struct JobAction<T1, T2, T3> : IJobManaged
+        private readonly struct JobAction<T1, T2, T3> : IManagedJob
         {
             private readonly Action<T1, T2, T3> action;
             private readonly T1 p1;
@@ -301,7 +301,7 @@ namespace Enderlook.Unity.Threading.Jobs
             public void Execute() => action(p1, p2, p3);
         }
 
-        private readonly struct JobAction<T1, T2, T3, T4> : IJobManaged
+        private readonly struct JobAction<T1, T2, T3, T4> : IManagedJob
         {
             private readonly Action<T1, T2, T3, T4> action;
             private readonly T1 p1;
@@ -321,7 +321,7 @@ namespace Enderlook.Unity.Threading.Jobs
             public void Execute() => action(p1, p2, p3, p4);
         }
 
-        private readonly struct JobAction<T1, T2, T3, T4, T5> : IJobManaged
+        private readonly struct JobAction<T1, T2, T3, T4, T5> : IManagedJob
         {
             private readonly Action<T1, T2, T3, T4, T5> action;
             private readonly T1 p1;
@@ -343,7 +343,7 @@ namespace Enderlook.Unity.Threading.Jobs
             public void Execute() => action(p1, p2, p3, p4, p5);
         }
 
-        private readonly struct JobAction<T1, T2, T3, T4, T5, T6> : IJobManaged
+        private readonly struct JobAction<T1, T2, T3, T4, T5, T6> : IManagedJob
         {
             private readonly Action<T1, T2, T3, T4, T5, T6> action;
             private readonly T1 p1;
@@ -367,7 +367,7 @@ namespace Enderlook.Unity.Threading.Jobs
             public void Execute() => action(p1, p2, p3, p4, p5, p6);
         }
 
-        private readonly struct JobAction<T1, T2, T3, T4, T5, T6, T7> : IJobManaged
+        private readonly struct JobAction<T1, T2, T3, T4, T5, T6, T7> : IManagedJob
         {
             private readonly Action<T1, T2, T3, T4, T5, T6, T7> action;
             private readonly T1 p1;
@@ -393,7 +393,7 @@ namespace Enderlook.Unity.Threading.Jobs
             public void Execute() => action(p1, p2, p3, p4, p5, p6, p7);
         }
 
-        private readonly struct JobAction<T1, T2, T3, T4, T5, T6, T7, T8> : IJobManaged
+        private readonly struct JobAction<T1, T2, T3, T4, T5, T6, T7, T8> : IManagedJob
         {
             private readonly Action<T1, T2, T3, T4, T5, T6, T7, T8> action;
             private readonly T1 p1;
@@ -421,7 +421,7 @@ namespace Enderlook.Unity.Threading.Jobs
             public void Execute() => action(p1, p2, p3, p4, p5, p6, p7, p8);
         }
 
-        private readonly struct JobAction<T1, T2, T3, T4, T5, T6, T7, T8, T9> : IJobManaged
+        private readonly struct JobAction<T1, T2, T3, T4, T5, T6, T7, T8, T9> : IManagedJob
         {
             private readonly Action<T1, T2, T3, T4, T5, T6, T7, T8, T9> action;
             private readonly T1 p1;
@@ -451,7 +451,7 @@ namespace Enderlook.Unity.Threading.Jobs
             public void Execute() => action(p1, p2, p3, p4, p5, p6, p7, p8, p9);
         }
 
-        private readonly struct JobAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> : IJobManaged
+        private readonly struct JobAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> : IManagedJob
         {
             private readonly Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> action;
             private readonly T1 p1;
@@ -483,7 +483,7 @@ namespace Enderlook.Unity.Threading.Jobs
             public void Execute() => action(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
         }
 
-        private readonly struct JobAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> : IJobManaged
+        private readonly struct JobAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> : IManagedJob
         {
             private readonly Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> action;
             private readonly T1 p1;
@@ -517,7 +517,7 @@ namespace Enderlook.Unity.Threading.Jobs
             public void Execute() => action(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11);
         }
 
-        private readonly struct JobAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> : IJobManaged
+        private readonly struct JobAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> : IManagedJob
         {
             private readonly Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> action;
             private readonly T1 p1;
@@ -553,7 +553,7 @@ namespace Enderlook.Unity.Threading.Jobs
             public void Execute() => action(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12);
         }
 
-        private readonly struct JobAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> : IJobManaged
+        private readonly struct JobAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> : IManagedJob
         {
             private readonly Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> action;
             private readonly T1 p1;
@@ -591,7 +591,7 @@ namespace Enderlook.Unity.Threading.Jobs
             public void Execute() => action(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13);
         }
 
-        private readonly struct JobAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> : IJobManaged
+        private readonly struct JobAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> : IManagedJob
         {
             private readonly Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> action;
             private readonly T1 p1;
@@ -631,7 +631,7 @@ namespace Enderlook.Unity.Threading.Jobs
             public void Execute() => action(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14);
         }
 
-        private readonly struct JobAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> : IJobManaged
+        private readonly struct JobAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> : IManagedJob
         {
             private readonly Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> action;
             private readonly T1 p1;
@@ -673,7 +673,7 @@ namespace Enderlook.Unity.Threading.Jobs
             public void Execute() => action(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15);
         }
 
-        private readonly struct JobAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> : IJobManaged
+        private readonly struct JobAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> : IManagedJob
         {
             private readonly Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> action;
             private readonly T1 p1;

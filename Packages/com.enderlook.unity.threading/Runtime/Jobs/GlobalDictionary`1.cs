@@ -25,9 +25,24 @@ namespace Enderlook.Unity.Threading.Jobs
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Drain(long key)
         {
-            if (dictionary.TryGetValue(key, out T value))
+            if (dictionary.TryRemove(key, out T value))
                 return value;
             throw new KeyNotFoundException("A key can't be requested more than once.");
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Remove(long key)
+        {
+            if (!dictionary.TryRemove(key, out T _))
+                throw new KeyNotFoundException("A key can't be requested more than once.");
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Peek(long key)
+        {
+            if (dictionary.TryGetValue(key, out T value))
+                return value;
+            throw new KeyNotFoundException("A key was already drained");
         }
     }
 }

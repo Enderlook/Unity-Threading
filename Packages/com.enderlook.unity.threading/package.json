@@ -1,6 +1,6 @@
 {
   "name": "com.enderlook.unity.threading",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "displayName": "Enderlook Unity Threading",
   "description": "Provides utility methods for working with multithreading and Unity Jobs.",
   "unity": "2019.2",
