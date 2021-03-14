@@ -9,8 +9,9 @@
     "threading"
   ],
   "dependencies": {
-    "com.enderlook.threading": "https://github.com/Enderlook/Unity-Net-Packages?path=Packages/com.enderlook.threading#com.enderlook.threading/v0.1.0",
     "com.enderlook.collections.low_level": "https://github.com/Enderlook/Unity-Net-Packages?path=Packages/com.enderlook.collections.low_level#com.enderlook.collections.low_level/v0.2.0",
+    "com.enderlook.threading": "https://github.com/Enderlook/Unity-Net-Packages?path=Packages/com.enderlook.threading#com.enderlook.threading/v0.1.0",
+    "com.enderlook.unity.toolset.utils": "https://github.com/Enderlook/Unity-Toolset.git?path=Packages/com.enderlook.unity.toolset.utils#com.enderlook.unity.toolset.utils/v0.3.0",
     "com.system.threading.tasks.extensions": "https://github.com/Enderlook/Unity-Net-Packages?path=Packages/com.system.threading.tasks.extensions#com.system.threading.tasks.extensions/v4.5.4"
   },
   "author": {

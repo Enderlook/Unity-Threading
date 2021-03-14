@@ -13,11 +13,6 @@ namespace Enderlook.Unity.Threading.Jobs
     {
         internal static readonly DynamicArray<Action> updaters = DynamicArray<Action>.Create();
 
-#if UNITY_EDITOR
-        [InitializeOnLoadMethod]
-        private static void Initialize() => EditorApplication.update += Update;
-#endif
-
         internal static void Update()
         {
             JobHandleCompleter.Update();
@@ -69,5 +64,34 @@ namespace Enderlook.Unity.Threading.Jobs
         public static JobHandle ScheduleAndWatch<T>(this T job, JobHandle dependsOn = default)
             where T : unmanaged, IJob
             => job.Schedule(dependsOn).WatchCompletition();
+
+#if UNITY_EDITOR
+        [InitializeOnLoadMethod]
+        private static void Initialize() => EditorApplication.update += Update;
+
+        /// <summary>
+        /// Unity Editor Only.
+        /// </summary>
+        internal static int JobHandleCompleterCount => JobHandleCompleter.Count;
+
+        /// <summary>
+        /// Unity Editor Only.
+        /// </summary>
+        internal static int JobTasksManagerCount => JobTasksManager.Count;
+
+        private static DynamicArray<Func<int>> jobTasksManagers = new DynamicArray<Func<int>>();
+
+        /// <summary>
+        /// Unity Editor Only.
+        /// </summary>
+        internal static int JobTasksManagersCount {
+            get {
+                int total = 0;
+                for (int i = 0; i < jobTasksManagers.Count; i++)
+                    total += jobTasksManagers[i]();
+                return total;
+            }
+        }
+#endif
     }
 }

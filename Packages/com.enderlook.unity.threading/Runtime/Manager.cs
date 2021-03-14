@@ -1,6 +1,4 @@
-﻿using UnityEditor;
-
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Enderlook.Unity.Threading.Jobs
 {
@@ -27,12 +25,12 @@ namespace Enderlook.Unity.Threading.Jobs
         }
 
 #if UNITY_EDITOR
-        [InitializeOnLoadMethod]
+        [UnityEditor.InitializeOnLoadMethod]
         private static void Initialize2()
         {
             isExiting = false;
-            EditorApplication.playModeStateChanged +=
-                (PlayModeStateChange playModeState) => isExiting = playModeState == PlayModeStateChange.ExitingPlayMode;
+            UnityEditor.EditorApplication.playModeStateChanged +=
+                (UnityEditor.PlayModeStateChange playModeState) => isExiting = playModeState == UnityEditor.PlayModeStateChange.ExitingPlayMode;
         }
 #endif
 

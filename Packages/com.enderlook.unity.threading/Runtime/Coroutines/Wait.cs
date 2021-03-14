@@ -26,6 +26,13 @@ namespace Enderlook.Unity.Threading.Coroutines
         /// <inheritdoc cref="WaitForUpdate"/>
         public static readonly WaitForUpdate ForUpdate = new WaitForUpdate();
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void Clear()
+        {
+            waitForSeconds.Clear();
+            waitForSecondsRealtime.Clear();
+        }
+
         private static readonly Dictionary<float, WaitForSeconds> waitForSeconds = new Dictionary<float, WaitForSeconds>();
 
         /// <inheritdoc cref="WaitForSeconds"/>
@@ -39,15 +46,15 @@ namespace Enderlook.Unity.Threading.Coroutines
             return wait;
         }
 
-        private static readonly Dictionary<float, WaitForSecondsRealtime> waitForSecondsRealTime = new Dictionary<float, WaitForSecondsRealtime>();
+        private static readonly Dictionary<float, WaitForSecondsRealtime> waitForSecondsRealtime = new Dictionary<float, WaitForSecondsRealtime>();
 
         /// <inheritdoc cref="WaitForSecondsRealtime"/>
         public static WaitForSecondsRealtime ForSecondsRealTime(float seconds)
         {
-            if (!waitForSecondsRealTime.TryGetValue(seconds, out WaitForSecondsRealtime wait))
+            if (!waitForSecondsRealtime.TryGetValue(seconds, out WaitForSecondsRealtime wait))
             {
                 wait = new WaitForSecondsRealtime(seconds);
-                waitForSecondsRealTime[seconds] = wait;
+                waitForSecondsRealtime[seconds] = wait;
             }
             return wait;
         }
@@ -81,5 +88,81 @@ namespace Enderlook.Unity.Threading.Coroutines
         /// <inheritdoc cref="WaitForValueTaskComplete{T}.Create(ValueTask{T})"/>
         public static WaitForValueTaskComplete<T> For<T>(ValueTask<T> task)
             => WaitForValueTaskComplete<T>.Create(task);
+
+#if UNITY_EDITOR
+        [UnityEditor.InitializeOnLoadMethod]
+        private static void Initialize() => UnityEditor.EditorApplication.playModeStateChanged += (_) => Clear();
+
+        /// <summary>
+        /// Unity Editor Only.
+        /// </summary>
+        internal static int ForSecondsCount => waitForSeconds.Count;
+
+        /// <summary>
+        /// Unity Editor Only.
+        /// </summary>
+        internal static void ForSecondsClear() => waitForSeconds.Clear();
+
+        /// <summary>
+        /// Unity Editor Only.
+        /// </summary>
+        internal static int ForSecondsRealtimeCount => waitForSecondsRealtime.Count;
+
+        /// <summary>
+        /// Unity Editor Only.
+        /// </summary>
+        internal static void ForSecondsRealtimeClear() => waitForSecondsRealtime.Clear();
+
+        private static readonly SortedSet<Container> waitForTaskComplete = new SortedSet<Container>();
+
+        /// <summary>
+        /// Unity Editor Only.
+        /// </summary>
+        internal static IReadOnlyCollection<Container> ForTaskAndValueTaskComplete => waitForTaskComplete;
+
+        /// <summary>
+        /// Unity Editor Only.
+        /// </summary>
+        internal static void AddWaitForTaskComplete(string name, Func<int> count, Action clear)
+            => waitForTaskComplete.Add(new Container(name, count, clear));
+
+        /// <summary>
+        /// Unity Editor Only.
+        /// </summary>
+        internal class Container : IComparable<Container>
+        {
+            private readonly string Name;
+            private readonly Func<int> count;
+            private readonly Action clear;
+            private int currentCount;
+            private string countString;
+            private string sizeString;
+
+            public Container(string name, Func<int> count, Action clear)
+            {
+                Name = name;
+                this.count = count;
+                this.clear = clear;
+                int c = count();
+                currentCount = c;
+                countString = c.ToString();
+            }
+
+            public void Get(out string name, out Action clear, out string count)
+            {
+                name = Name;
+                clear = this.clear;
+                int c = this.count();
+                if (currentCount != c)
+                {
+                    currentCount = c;
+                    countString = c.ToString();
+                }
+                count = countString;
+            }
+
+            int IComparable<Container>.CompareTo(Container other) => Name.CompareTo(other.Name);
+        }
+#endif
     }
 }

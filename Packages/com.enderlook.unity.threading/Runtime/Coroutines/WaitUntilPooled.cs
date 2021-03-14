@@ -31,6 +31,19 @@ namespace Enderlook.Unity.Threading.Coroutines
 
         private WaitUntilPooled(Func<bool> predicate) => this.predicate = predicate;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        internal static void Clear() => pool.Clear();
+
+#if UNITY_EDITOR
+        [UnityEditor.InitializeOnLoadMethod]
+        private static void Initialize() => UnityEditor.EditorApplication.playModeStateChanged += (_) => Clear();
+
+        /// <summary>
+        /// Unity Editor Only.
+        /// </summary>
+        internal static int Count => pool.Count;
+#endif
+
         /// <summary>
         /// Suspend the coroutine execution until the supplied delegate evaluates to <see langword="true"/>.<br/>
         /// Object is drawn from a pool.

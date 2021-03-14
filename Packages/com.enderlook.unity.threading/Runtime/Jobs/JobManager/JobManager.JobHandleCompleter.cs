@@ -10,6 +10,13 @@ namespace Enderlook.Unity.Threading.Jobs
         {
             private static DynamicPooledArray<JobHandle> jobHandles = DynamicPooledArray<JobHandle>.Create();
 
+#if UNITY_EDITOR
+            /// <summary>
+            /// Unity Editor Only.
+            /// </summary>
+            internal static int Count => jobHandles.Count;
+#endif
+
             public static void Add(JobHandle jobHandle)
             {
                 if (jobHandle.IsCompleted)

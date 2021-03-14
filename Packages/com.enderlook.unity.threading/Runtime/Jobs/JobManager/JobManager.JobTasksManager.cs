@@ -14,6 +14,13 @@ namespace Enderlook.Unity.Threading.Jobs
         {
             private static readonly DynamicArray<JobTask> jobTasks = DynamicArray<JobTask>.Create();
 
+#if UNITY_EDITOR
+            /// <summary>
+            /// Unity Editor Only.
+            /// </summary>
+            internal static int Count => jobTasks.Count;
+#endif
+
             public static void Add(JobHandle jobHandle, Action onJobComplete, bool canCompleteImmediately = true)
             {
                 if (onJobComplete is null)
@@ -51,7 +58,13 @@ namespace Enderlook.Unity.Threading.Jobs
         {
             private static DynamicArray<JobTask<TAction>> jobTasks = DynamicArray<JobTask<TAction>>.Create();
 
-            static JobTasksManager() => updaters.Add(Update);
+            static JobTasksManager()
+            {
+                updaters.Add(Update);
+#if UNITY_EDITOR
+                jobTasksManagers.Add(() => jobTasks.Count);
+#endif
+            }
 
             public static void Add(JobHandle jobHandle, TAction onJobComplete, bool canCompleteImmediately = true)
             {
