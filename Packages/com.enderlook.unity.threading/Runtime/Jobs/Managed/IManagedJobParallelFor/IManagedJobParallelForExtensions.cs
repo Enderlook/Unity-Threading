@@ -29,18 +29,6 @@ namespace Enderlook.Unity.Threading.Jobs
             }
         }
 
-        /// <summary>
-        /// Schedules and automatically watches the completition of this job.<br/>
-        /// Useful for fire and forget.
-        /// </summary>
-        /// <param name="job">Job to schedule and watch.</param>
-        /// <param name="arrayLength">The number of iterations the for loop will execute.</param>
-        /// <param name="innerLoopBatchCount">Granularity in which workstealing is performed. A value of 32, means the job queue will steal 32 iterations and then perform them in an efficient inner loop.</param>
-        /// <param name="dependsOn">Another job that must be executed before executing <paramref name="job"/>.</param>
-        /// <returns>Job handle of the scheduled task.</returns>
-        public static JobHandle ScheduleAndWatch(this IManagedJobParallelFor job, int arrayLength, int innerLoopBatchCount, JobHandle dependsOn = default)
-            => job.Schedule(arrayLength, innerLoopBatchCount, dependsOn).WatchCompletition();
-
         /// <inheritdoc cref="IJobParallelForExtensions.Schedule{T}(T, int, int, JobHandle)"/>
         public static JobHandle Schedule<T>(this T job, int arrayLength, int innerLoopBatchCount, JobHandle dependsOn = default)
             where T : struct, IManagedJobParallelFor
@@ -62,20 +50,6 @@ namespace Enderlook.Unity.Threading.Jobs
                 return new JobFreeHandle<T>(handle).Schedule(jobHandle);
             }
         }
-
-        /// <summary>
-        /// Schedules and automatically watches the completition of this job.<br/>
-        /// Useful for fire and forget.
-        /// </summary>
-        /// <typeparam name="T">Type of job.</typeparam>
-        /// <param name="job">Job to schedule and watch.</param>
-        /// <param name="arrayLength">The number of iterations the for loop will execute.</param>
-        /// <param name="innerLoopBatchCount">Granularity in which workstealing is performed. A value of 32, means the job queue will steal 32 iterations and then perform them in an efficient inner loop.</param>
-        /// <param name="dependsOn">Another job that must be executed before executing <paramref name="job"/>.</param>
-        /// <returns>Job handle of the scheduled task.</returns>
-        public static JobHandle ScheduleAndWatch<T>(this T job, int arrayLength, int innerLoopBatchCount, JobHandle dependsOn = default)
-            where T : struct, IManagedJobParallelFor
-            => job.Schedule(arrayLength, innerLoopBatchCount, dependsOn).WatchCompletition();
 
         /// <summary>
         /// Wrap a job into a managed job.

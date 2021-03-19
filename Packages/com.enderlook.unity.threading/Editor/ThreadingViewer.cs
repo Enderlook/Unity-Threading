@@ -54,7 +54,7 @@ namespace Enderlook.Unity.Threading
 
             Rect position = window.position;
             position.width = (EditorGUIUtility.fieldWidth + EditorGUIUtility.labelWidth) * 2;
-            position.height = EditorGUIUtility.singleLineHeight * 21f;
+            position.height = EditorGUIUtility.singleLineHeight * 19.5f;
             window.position = position;
         }
 
@@ -84,7 +84,7 @@ namespace Enderlook.Unity.Threading
                     const int ratio = 5;
                     jobManagerLayoutOptionsMethod = new GUILayoutOption[] { GUILayout.MinWidth(min - (min / ratio)), GUILayout.MaxWidth(position.width - (position.width / ratio)) };
                     jobManagerLayoutOptionsCount = new GUILayoutOption[] { GUILayout.MinWidth(min / ratio), GUILayout.MaxWidth(position.width / ratio) };
-                    jobManagerLayoutOptionScroll = new GUILayoutOption[] { GUILayout.MaxHeight(EditorGUIUtility.singleLineHeight * 4.75f) };
+                    jobManagerLayoutOptionScroll = new GUILayoutOption[] { GUILayout.MaxHeight(EditorGUIUtility.singleLineHeight * 3.5f) };
                 }
             }
         }
@@ -108,23 +108,13 @@ namespace Enderlook.Unity.Threading
                 {
                     EditorGUILayout.BeginHorizontal();
                     {
-                        EditorGUILayout.BeginVertical();
-                        {
-                            EditorGUILayout.LabelField("JobManager.WatchCompletition(JobHandle)", jobManagerLayoutOptionsMethod);
-                            EditorGUILayout.LabelField("JobManager.ScheduleAndWatch<T>(T, JobHandle)", jobManagerLayoutOptionsMethod);
-                        }
-                        EditorGUILayout.EndVertical();
+                        EditorGUILayout.LabelField("JobManager.WatchCompletition(JobHandle)", jobManagerLayoutOptionsMethod);
                         if (jobHandleWatchCompletition.Item1 != JobManager.JobHandleCompleterCount)
                         {
                             jobHandleWatchCompletition.Item1 = JobManager.JobHandleCompleterCount;
                             jobHandleWatchCompletition.Item2 = jobHandleWatchCompletition.Item1.ToString();
                         }
-                        EditorGUILayout.BeginVertical();
-                        {
-                            EditorGUILayout.LabelField(jobHandleWatchCompletition.Item2, jobManagerLayoutOptionsCount);
-                            EditorGUILayout.LabelField("^", jobManagerLayoutOptionsCount);
-                        }
-                        EditorGUILayout.EndHorizontal();
+                        EditorGUILayout.LabelField(jobHandleWatchCompletition.Item2, jobManagerLayoutOptionsCount);
                     }
                     EditorGUILayout.EndHorizontal();
 

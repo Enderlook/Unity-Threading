@@ -53,18 +53,6 @@ namespace Enderlook.Unity.Threading.Jobs
             return jobHandle;
         }
 
-        /// <summary>
-        /// Schedules and automatically watches the completition of this job.<br/>
-        /// Useful for fire and forget.
-        /// </summary>
-        /// <typeparam name="T">Type of job.</typeparam>
-        /// <param name="job">Job to schedule and watch.</param>
-        /// <param name="dependsOn">Another job that must be executed before executing <paramref name="job"/>.</param>
-        /// <returns>Job handle of the scheduled task.</returns>
-        public static JobHandle ScheduleAndWatch<T>(this T job, JobHandle dependsOn = default)
-            where T : unmanaged, IJob
-            => job.Schedule(dependsOn).WatchCompletition();
-
 #if UNITY_EDITOR
         [InitializeOnLoadMethod]
         private static void Initialize() => EditorApplication.update += Update;
