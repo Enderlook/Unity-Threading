@@ -23,7 +23,7 @@ namespace Enderlook.Unity.Threading.Jobs
         /// </summary>
         /// <param name="jobHandle">Job handle to convert.</param>
         /// <returns>Enumerator which wraps the job handle.</returns>
-        public static IEnumerator AsIEnumerator(this JobHandle jobHandle)
+        public static IEnumerator AsCoroutine(this JobHandle jobHandle)
         {
             while (!jobHandle.IsCompleted)
                 yield return null;

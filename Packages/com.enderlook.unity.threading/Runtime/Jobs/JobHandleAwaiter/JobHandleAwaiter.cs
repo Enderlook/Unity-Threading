@@ -61,7 +61,7 @@ namespace Enderlook.Unity.Threading.Jobs
         /// Convert a this awaiter into an enumerator.
         /// </summary>
         /// <returns>Enumerator which wraps the awaiter.</returns>
-        public IEnumerator AsIEnumerator()
+        public IEnumerator AsCoroutine()
         {
             while (!jobHandle.IsCompleted)
                 yield return null;
