@@ -2,6 +2,7 @@
 
 namespace Enderlook.Unity.Threading.Jobs
 {
+    [AddComponentMenu("")] // Not show in menu
     [DefaultExecutionOrder(int.MaxValue)]
     internal sealed class Manager : MonoBehaviour
     {
