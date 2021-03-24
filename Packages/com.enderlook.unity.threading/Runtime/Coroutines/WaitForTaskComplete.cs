@@ -12,7 +12,7 @@ namespace Enderlook.Unity.Threading.Coroutines
     /// </summary>
     public sealed class WaitForTaskComplete : CustomYieldInstruction
     {
-        private static readonly DynamicStack<WaitForTaskComplete> pool = DynamicStack<WaitForTaskComplete>.Create(Wait.POOL_CAPACITY);
+        private static readonly RawStack<WaitForTaskComplete> pool = RawStack<WaitForTaskComplete>.Create(Wait.POOL_CAPACITY);
 
         private Task task;
 

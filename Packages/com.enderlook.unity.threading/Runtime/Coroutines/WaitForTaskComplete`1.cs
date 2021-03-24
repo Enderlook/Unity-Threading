@@ -14,7 +14,7 @@ namespace Enderlook.Unity.Threading.Coroutines
     /// <typeparam name="T">Return type of task.</typeparam>
     public sealed class WaitForTaskComplete<T> : CustomYieldInstruction
     {
-        private static readonly DynamicStack<WaitForTaskComplete<T>> pool = DynamicStack<WaitForTaskComplete<T>>.Create(Wait.POOL_CAPACITY);
+        private static readonly RawStack<WaitForTaskComplete<T>> pool = RawStack<WaitForTaskComplete<T>>.Create(Wait.POOL_CAPACITY);
 
         private Task<T> task;
 

@@ -8,7 +8,7 @@ namespace Enderlook.Unity.Threading.Jobs
     {
         private static class JobHandleCompleter
         {
-            private static DynamicPooledArray<JobHandle> jobHandles = DynamicPooledArray<JobHandle>.Create();
+            private static RawList<JobHandle> jobHandles = RawList<JobHandle>.Create();
 
 #if UNITY_EDITOR
             /// <summary>

@@ -12,7 +12,7 @@ namespace Enderlook.Unity.Threading.Jobs
     {
         private static class JobTasksManager
         {
-            private static readonly DynamicArray<JobTask> jobTasks = DynamicArray<JobTask>.Create();
+            private static readonly RawList<JobTask> jobTasks = RawList<JobTask>.Create();
 
 #if UNITY_EDITOR
             /// <summary>
@@ -56,7 +56,7 @@ namespace Enderlook.Unity.Threading.Jobs
 
         private static class JobTasksManager<TAction> where TAction : IAction
         {
-            private static DynamicArray<JobTask<TAction>> jobTasks = DynamicArray<JobTask<TAction>>.Create();
+            private static RawList<JobTask<TAction>> jobTasks = RawList<JobTask<TAction>>.Create();
 
             static JobTasksManager()
             {

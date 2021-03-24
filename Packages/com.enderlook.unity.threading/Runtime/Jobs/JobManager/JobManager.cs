@@ -11,7 +11,7 @@ namespace Enderlook.Unity.Threading.Jobs
 {
     public static partial class JobManager
     {
-        internal static readonly DynamicArray<Action> updaters = DynamicArray<Action>.Create();
+        internal static readonly RawList<Action> updaters = RawList<Action>.Create();
 
         internal static void Update()
         {
@@ -67,7 +67,7 @@ namespace Enderlook.Unity.Threading.Jobs
         /// </summary>
         internal static int JobTasksManagerCount => JobTasksManager.Count;
 
-        private static DynamicArray<Func<int>> jobTasksManagers = new DynamicArray<Func<int>>();
+        private static RawList<Func<int>> jobTasksManagers = new RawList<Func<int>>();
 
         /// <summary>
         /// Unity Editor Only.
