@@ -19,6 +19,9 @@ namespace Enderlook.Unity.Threading.Jobs
             if (Shared == null)
             {
                 GameObject gameObject = new GameObject("Enderlook.Unity.Threading.Manager");
+#if UNITY_EDITOR
+                gameObject.hideFlags = HideFlags.HideAndDontSave;
+#endif
                 DontDestroyOnLoad(gameObject);
                 Shared = gameObject.AddComponent<Manager>();
             }
