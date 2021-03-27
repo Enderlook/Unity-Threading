@@ -7,7 +7,7 @@ using Unity.Jobs;
 
 using UnityEngine;
 
-namespace Enderlook.Unity.Threading.Coroutines
+namespace Enderlook.Unity.Coroutines
 {
     /// <summary>
     /// Provides a pool of waiters for coroutines.

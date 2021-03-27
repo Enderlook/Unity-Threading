@@ -2,7 +2,7 @@
 
 using Unity.Jobs;
 
-namespace Enderlook.Unity.Threading.Jobs
+namespace Enderlook.Unity.Jobs
 {
     public static partial class IManagedJobExtensions
     {

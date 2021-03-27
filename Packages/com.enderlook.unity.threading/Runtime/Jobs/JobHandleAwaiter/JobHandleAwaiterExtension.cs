@@ -1,10 +1,10 @@
-﻿using Enderlook.Unity.Threading.Coroutines;
+﻿using Enderlook.Unity.Coroutines;
 
 using System.Collections;
 
 using Unity.Jobs;
 
-namespace Enderlook.Unity.Threading.Jobs
+namespace Enderlook.Unity.Jobs
 {
     /// <summary>
     /// Allow get awaiter from <see cref="JobHandle"/>.

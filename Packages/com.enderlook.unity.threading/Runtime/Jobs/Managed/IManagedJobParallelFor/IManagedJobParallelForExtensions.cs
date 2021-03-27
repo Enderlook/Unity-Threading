@@ -5,7 +5,7 @@ using Unity.Jobs;
 
 using UnityEngine;
 
-namespace Enderlook.Unity.Threading.Jobs
+namespace Enderlook.Unity.Jobs
 {
     /// <summary>
     /// Helper methods for <see cref="IManagedJobParallelFor"/>.

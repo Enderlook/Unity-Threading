@@ -1,5 +1,5 @@
 ﻿using Enderlook.Threading;
-using Enderlook.Unity.Threading.Coroutines;
+using Enderlook.Unity.Coroutines;
 
 using System;
 using System.Collections;
@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 using Unity.Jobs;
 
-namespace Enderlook.Unity.Threading.Jobs
+namespace Enderlook.Unity.Jobs
 {
     /// <summary>
     /// An awaiter for <see cref="JobHandle"/>

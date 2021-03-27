@@ -2,7 +2,7 @@
 
 using UnityEngine;
 
-namespace Enderlook.Unity.Threading.Coroutines
+namespace Enderlook.Unity.Coroutines
 {
     /// <summary>
     /// Suspend the coroutine execution until the supplied seconds in realtime has passed.
@@ -11,7 +11,7 @@ namespace Enderlook.Unity.Threading.Coroutines
     {
         private static readonly RawStack<WaitForSecondsRealtimePooled> pool = RawStack<WaitForSecondsRealtimePooled>.Create(Wait.POOL_CAPACITY);
 
-        private float waitUntil;
+        internal float waitUntil;
 
         private WaitForSecondsRealtimePooled(float waitFor) => waitUntil = waitFor + Time.realtimeSinceStartup;
 

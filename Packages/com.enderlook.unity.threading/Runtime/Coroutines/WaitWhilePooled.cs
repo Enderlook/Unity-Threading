@@ -4,7 +4,7 @@ using System;
 
 using UnityEngine;
 
-namespace Enderlook.Unity.Threading.Coroutines
+namespace Enderlook.Unity.Coroutines
 {
     /// <summary>
     /// Suspend the coroutine execution until the supplied delegate evaluates to <see langword="true"/>.

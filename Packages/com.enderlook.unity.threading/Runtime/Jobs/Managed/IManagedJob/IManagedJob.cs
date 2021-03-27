@@ -1,6 +1,6 @@
 ﻿using Unity.Jobs;
 
-namespace Enderlook.Unity.Threading.Jobs
+namespace Enderlook.Unity.Jobs
 {
     /// <summary>
     /// Represent an <see cref="IJob"/> that contains managed data.

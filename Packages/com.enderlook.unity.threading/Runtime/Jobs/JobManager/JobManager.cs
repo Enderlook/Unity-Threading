@@ -7,7 +7,7 @@ using Unity.Jobs;
 
 using UnityEditor;
 
-namespace Enderlook.Unity.Threading.Jobs
+namespace Enderlook.Unity.Jobs
 {
     public static partial class JobManager
     {

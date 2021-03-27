@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 using UnityEngine;
 
-namespace Enderlook.Unity.Threading.Coroutines
+namespace Enderlook.Unity.Coroutines
 {
     /// <summary>
     /// Suspend the coroutine execution until the suplied task is completed.

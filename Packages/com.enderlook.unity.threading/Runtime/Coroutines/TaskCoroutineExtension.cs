@@ -2,7 +2,7 @@
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 
-namespace Enderlook.Unity.Threading.Coroutines
+namespace Enderlook.Unity.Coroutines
 {
     /// <summary>
     /// Extension method for tasks to use in coroutines.

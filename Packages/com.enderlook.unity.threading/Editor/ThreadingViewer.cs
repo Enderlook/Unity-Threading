@@ -1,5 +1,5 @@
-﻿using Enderlook.Unity.Threading.Coroutines;
-using Enderlook.Unity.Threading.Jobs;
+﻿using Enderlook.Unity.Coroutines;
+using Enderlook.Unity.Jobs;
 using Enderlook.Unity.Toolset.Utils;
 
 using System;

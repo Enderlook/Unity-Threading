@@ -1,8 +1,8 @@
-﻿using Enderlook.Unity.Threading.Jobs;
+﻿using Enderlook.Unity.Jobs;
 
 using System.Collections;
 
-namespace Enderlook.Unity.Threading.Coroutines
+namespace Enderlook.Unity.Coroutines
 {
     /// <summary>
     /// Helper methods for coroutines.

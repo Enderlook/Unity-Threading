@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Enderlook.Unity.Threading.Jobs
+namespace Enderlook.Unity.Jobs
 {
     [AddComponentMenu("")] // Not show in menu
     [DefaultExecutionOrder(int.MaxValue)]

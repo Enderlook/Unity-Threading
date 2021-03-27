@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Enderlook.Unity.Threading.Coroutines
+namespace Enderlook.Unity.Coroutines
 {
     /// <summary>
     /// Wait until the next frame, same as passing <see langword="null"/> to a coroutine.

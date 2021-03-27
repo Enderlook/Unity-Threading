@@ -5,7 +5,7 @@ using System.Threading;
 
 using UnityEngine;
 
-namespace Enderlook.Unity.Threading.Jobs
+namespace Enderlook.Unity.Jobs
 {
     internal static class GlobalDictionary<T>
     {

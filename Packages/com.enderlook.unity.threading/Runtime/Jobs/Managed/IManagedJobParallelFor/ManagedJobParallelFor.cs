@@ -1,6 +1,6 @@
 ﻿using Unity.Jobs;
 
-namespace Enderlook.Unity.Threading.Jobs
+namespace Enderlook.Unity.Jobs
 {
     /// <summary>
     /// Wrap a job into a managed job.
