@@ -27,11 +27,7 @@ namespace Enderlook.Unity.Threading.Coroutines
         public static readonly WaitForUpdate ForUpdate = new WaitForUpdate();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void Clear()
-        {
-            waitForSeconds.Clear();
-            waitForSecondsRealtime.Clear();
-        }
+        private static void Clear() => waitForSeconds.Clear();
 
         private static readonly Dictionary<float, WaitForSeconds> waitForSeconds = new Dictionary<float, WaitForSeconds>();
 
@@ -42,19 +38,6 @@ namespace Enderlook.Unity.Threading.Coroutines
             {
                 wait = new WaitForSeconds(seconds);
                 waitForSeconds[seconds] = wait;
-            }
-            return wait;
-        }
-
-        private static readonly Dictionary<float, WaitForSecondsRealtime> waitForSecondsRealtime = new Dictionary<float, WaitForSecondsRealtime>();
-
-        /// <inheritdoc cref="WaitForSecondsRealtime"/>
-        public static WaitForSecondsRealtime ForSecondsRealTime(float seconds)
-        {
-            if (!waitForSecondsRealtime.TryGetValue(seconds, out WaitForSecondsRealtime wait))
-            {
-                wait = new WaitForSecondsRealtime(seconds);
-                waitForSecondsRealtime[seconds] = wait;
             }
             return wait;
         }
@@ -89,6 +72,10 @@ namespace Enderlook.Unity.Threading.Coroutines
         public static WaitForValueTaskComplete<T> For<T>(ValueTask<T> task)
             => WaitForValueTaskComplete<T>.Create(task);
 
+        /// <inheritdoc cref="WaitForSecondsRealtimePooled.Create(float)"/>
+        public static WaitForSecondsRealtimePooled ForRealtime(float seconds)
+            => WaitForSecondsRealtimePooled.Create(seconds);
+
 #if UNITY_EDITOR
         [UnityEditor.InitializeOnLoadMethod]
         private static void Initialize() => UnityEditor.EditorApplication.playModeStateChanged += (_) => Clear();
@@ -102,16 +89,6 @@ namespace Enderlook.Unity.Threading.Coroutines
         /// Unity Editor Only.
         /// </summary>
         internal static void ForSecondsClear() => waitForSeconds.Clear();
-
-        /// <summary>
-        /// Unity Editor Only.
-        /// </summary>
-        internal static int ForSecondsRealtimeCount => waitForSecondsRealtime.Count;
-
-        /// <summary>
-        /// Unity Editor Only.
-        /// </summary>
-        internal static void ForSecondsRealtimeClear() => waitForSecondsRealtime.Clear();
 
         private static readonly SortedSet<Container> waitForTaskComplete = new SortedSet<Container>();
 
@@ -136,7 +113,6 @@ namespace Enderlook.Unity.Threading.Coroutines
             private readonly Action clear;
             private int currentCount;
             private string countString;
-            private string sizeString;
 
             public Container(string name, Func<int> count, Action clear)
             {

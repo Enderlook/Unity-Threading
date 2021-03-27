@@ -171,8 +171,8 @@ namespace Enderlook.Unity.Threading
                 {
                     if (Draw("Wait.ForSeconds(float)", Wait.ForSecondsCount, ref waitForSeconds))
                         Wait.ForSecondsClear();
-                    if (Draw("Wait.ForSecondsRealtime(float)", Wait.ForSecondsRealtimeCount, ref waitForSecondsRealtime))
-                        Wait.ForSecondsRealtimeClear();
+                    if (Draw("Wait.ForSecondsRealtime(float)", WaitForSecondsRealtimePooled.Count, ref waitForSecondsRealtime))
+                        WaitForSecondsRealtimePooled.Clear();
                     if (Draw("Wait.Until(Func<bool>)", WaitUntilPooled.Count, ref waitUntilPooled))
                         WaitUntilPooled.Clear();
                     if (Draw("Wait.While(Func<bool>)", WaitWhilePooled.Count, ref waitWhilePooled))
