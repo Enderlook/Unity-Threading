@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 using Unity.Jobs;
@@ -32,47 +33,60 @@ namespace Enderlook.Unity.Threading.Coroutines
         private static readonly Dictionary<float, WaitForSeconds> waitForSeconds = new Dictionary<float, WaitForSeconds>();
 
         /// <inheritdoc cref="WaitForSeconds"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static WaitForSeconds ForSeconds(float seconds)
         {
             if (!waitForSeconds.TryGetValue(seconds, out WaitForSeconds wait))
-            {
-                wait = new WaitForSeconds(seconds);
-                waitForSeconds[seconds] = wait;
-            }
+                return ForSecondsSlowPath(seconds);
+            return wait;
+        }
+
+        private static WaitForSeconds ForSecondsSlowPath(float seconds)
+        {
+            WaitForSeconds wait = new WaitForSeconds(seconds);
+            waitForSeconds[seconds] = wait;
             return wait;
         }
 
         // TODO: shall we pool them?
 
         /// <inheritdoc cref="WaitUntilPooled.Create(Func{bool})"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static WaitUntilPooled Until(Func<bool> predicate)
             => WaitUntilPooled.Create(predicate);
 
         /// <inheritdoc cref="WaitWhile.Create(Func{bool})"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static WaitWhilePooled While(Func<bool> predicate)
             => WaitWhilePooled.Create(predicate);
 
         /// <inheritdoc cref="WaitForJobComplete.Create(JobHandle)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static WaitForJobComplete For(JobHandle handle)
             => WaitForJobComplete.Create(handle);
 
         /// <inheritdoc cref="WaitForTaskComplete.Create(Task)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static WaitForTaskComplete For(Task task)
             => WaitForTaskComplete.Create(task);
 
         /// <inheritdoc cref="WaitForTaskComplete{T}.Create(Task{T})"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static WaitForTaskComplete<T> For<T>(Task<T> task)
             => WaitForTaskComplete<T>.Create(task);
 
         /// <inheritdoc cref="WaitForValueTaskComplete.Create(ValueTask)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static WaitForValueTaskComplete For(ValueTask task)
             => WaitForValueTaskComplete.Create(task);
 
         /// <inheritdoc cref="WaitForValueTaskComplete{T}.Create(ValueTask{T})"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static WaitForValueTaskComplete<T> For<T>(ValueTask<T> task)
             => WaitForValueTaskComplete<T>.Create(task);
 
         /// <inheritdoc cref="WaitForSecondsRealtimePooled.Create(float)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static WaitForSecondsRealtimePooled ForRealtime(float seconds)
             => WaitForSecondsRealtimePooled.Create(seconds);
 

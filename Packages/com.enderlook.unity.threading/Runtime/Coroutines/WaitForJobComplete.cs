@@ -1,6 +1,8 @@
 ﻿using Enderlook.Collections.LowLevel;
 using Enderlook.Unity.Threading.Jobs;
 
+using System.Runtime.CompilerServices;
+
 using Unity.Jobs;
 
 using UnityEngine;
@@ -62,10 +64,12 @@ namespace Enderlook.Unity.Threading.Coroutines
         }
 
         /// <inheritdoc cref="Create(JobHandle)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator WaitForJobComplete(JobHandle handle)
             => Create(handle);
 
         /// <inheritdoc cref="Create(JobHandle)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator WaitForJobComplete(JobHandleAwaiter handle)
             => handle.Wait();
     }

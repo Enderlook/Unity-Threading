@@ -1,5 +1,6 @@
 ﻿using Enderlook.Collections.LowLevel;
 
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 
@@ -64,6 +65,7 @@ namespace Enderlook.Unity.Threading.Coroutines
         }
 
         /// <inheritdoc cref="Create(Task)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator WaitForTaskComplete(Task task)
             => Create(task);
     }
