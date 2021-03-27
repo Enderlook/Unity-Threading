@@ -16,7 +16,7 @@ namespace Enderlook.Unity.Threading.Coroutines
         /// </summary>
         /// <param name="task">Task to convert.</param>
         /// <returns>Enumerator which wraps the task.</returns>
-        public static IEnumerator AsIEnumerator(this Task task)
+        public static IEnumerator AsCoroutine(this Task task)
         {
             while (!task.IsCompleted)
                 yield return null;
@@ -30,7 +30,7 @@ namespace Enderlook.Unity.Threading.Coroutines
         /// </summary>
         /// <param name="task">Task to convert.</param>
         /// <returns>Enumerator which wraps the task.</returns>
-        public static IEnumerator AsIEnumerator<T>(this Task<T> task)
+        public static IEnumerator AsCoroutine<T>(this Task<T> task)
         {
             while (!task.IsCompleted)
                 yield return null;
@@ -44,7 +44,7 @@ namespace Enderlook.Unity.Threading.Coroutines
         /// </summary>
         /// <param name="task">Task to convert.</param>
         /// <returns>Enumerator which wraps the task.</returns>
-        public static IEnumerator AsIEnumerator(this ValueTask task)
+        public static IEnumerator AsCoroutine(this ValueTask task)
         {
             while (!task.IsCompleted)
                 yield return null;
@@ -58,7 +58,7 @@ namespace Enderlook.Unity.Threading.Coroutines
         /// </summary>
         /// <param name="task">Task to convert.</param>
         /// <returns>Enumerator which wraps the task.</returns>
-        public static IEnumerator AsIEnumerator<T>(this ValueTask<T> task)
+        public static IEnumerator AsCoroutine<T>(this ValueTask<T> task)
         {
             while (!task.IsCompleted)
                 yield return null;
