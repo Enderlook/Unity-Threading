@@ -1,4 +1,8 @@
-﻿using UnityEngine;
+﻿using Enderlook.Unity.Coroutines;
+
+using System.Collections;
+
+using UnityEngine;
 
 namespace Enderlook.Unity.Jobs
 {
@@ -10,8 +14,18 @@ namespace Enderlook.Unity.Jobs
 
         public static Manager Shared { get; private set; }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Initialize()
+        {
+            GameObject gameObject = new GameObject("Enderlook.Unity.Threading.Manager");
+#if UNITY_EDITOR
+            gameObject.hideFlags = HideFlags.HideAndDontSave;
+#endif
+            DontDestroyOnLoad(gameObject);
+            Shared = gameObject.AddComponent<Manager>();
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void Initialize1()
         {
 #if UNITY_EDITOR
             if (isExiting)
@@ -46,6 +60,18 @@ namespace Enderlook.Unity.Jobs
                 Debug.LogError(nameof(Manager) + " should not be added manually.", this);
                 Destroy(this);
             }
+            else
+            {
+                StartCoroutine(Work());
+                IEnumerator Work()
+                {
+                    while (true)
+                    {
+                        yield return Wait.ForEndOfFrame;
+                        CoroutineManagers.OnEndOfFrame();
+                    }
+                }
+            }
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
@@ -73,6 +99,20 @@ namespace Enderlook.Unity.Jobs
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
-        private void Update() => JobManager.Update();
+        private void Update()
+        {
+            JobManager.Update();
+            CoroutineManagers.OnUpdate();
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
+        private void LateUpdate()
+        {
+            CoroutineManagers.OnLateUpdate();
+            CoroutineManagers.OnPoll();
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
+        private void FixedUpdate() => CoroutineManagers.OnFixedUpdate();
     }
 }

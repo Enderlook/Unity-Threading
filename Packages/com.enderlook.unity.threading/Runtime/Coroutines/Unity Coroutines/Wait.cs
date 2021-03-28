@@ -10,7 +10,7 @@ using UnityEngine;
 namespace Enderlook.Unity.Coroutines
 {
     /// <summary>
-    /// Provides a pool of waiters for coroutines.
+    /// Provides a pool of waiters for Unity coroutines.
     /// </summary>
     public static class Wait
     {
