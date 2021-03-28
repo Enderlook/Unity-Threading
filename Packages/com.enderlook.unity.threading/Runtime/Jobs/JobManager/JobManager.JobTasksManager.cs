@@ -12,7 +12,7 @@ namespace Enderlook.Unity.Jobs
     {
         private static class JobTasksManager
         {
-            private static readonly RawList<JobTask> jobTasks = RawList<JobTask>.Create();
+            private static RawList<JobTask> jobTasks = RawList<JobTask>.Create();
 
 #if UNITY_EDITOR
             /// <summary>

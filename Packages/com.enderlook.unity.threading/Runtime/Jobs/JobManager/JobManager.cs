@@ -11,7 +11,7 @@ namespace Enderlook.Unity.Jobs
 {
     public static partial class JobManager
     {
-        internal static readonly RawList<Action> updaters = RawList<Action>.Create();
+        internal static RawList<Action> updaters = RawList<Action>.Create();
 
         internal static void Update()
         {
