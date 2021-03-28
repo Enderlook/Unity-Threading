@@ -37,7 +37,7 @@ namespace Enderlook.Unity.Threading
             {
                 // We don't need to set `hasSwitched` to false because it's already false
 #if DEBUG
-                Debug.LogWarning("Threading is not supported on WebGL platform. A fallback to main thread has been used. Be warned that this may produce deadlocks very easily.");
+                Debug.LogWarning("Threading is not supported this platform. A fallback to main thread has been used. Be warned that this may produce deadlocks very easily.");
 #endif
                 continuation();
             }
