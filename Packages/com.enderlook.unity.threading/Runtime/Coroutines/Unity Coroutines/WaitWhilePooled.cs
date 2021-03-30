@@ -11,7 +11,7 @@ namespace Enderlook.Unity.Coroutines
     /// </summary>
     public sealed class WaitWhilePooled : CustomYieldInstruction
     {
-        private static readonly RawStack<WaitWhilePooled> pool = RawStack<WaitWhilePooled>.Create(Wait.POOL_CAPACITY);
+        private static RawStack<WaitWhilePooled> pool = RawStack<WaitWhilePooled>.Create(Wait.POOL_CAPACITY);
 
         private Func<bool> predicate;
 

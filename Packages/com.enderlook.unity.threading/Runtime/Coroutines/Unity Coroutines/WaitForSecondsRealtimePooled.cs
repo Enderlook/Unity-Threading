@@ -9,7 +9,7 @@ namespace Enderlook.Unity.Coroutines
     /// </summary>
     public sealed class WaitForSecondsRealtimePooled : CustomYieldInstruction
     {
-        private static readonly RawStack<WaitForSecondsRealtimePooled> pool = RawStack<WaitForSecondsRealtimePooled>.Create(Wait.POOL_CAPACITY);
+        private static RawStack<WaitForSecondsRealtimePooled> pool = RawStack<WaitForSecondsRealtimePooled>.Create(Wait.POOL_CAPACITY);
 
         internal float waitUntil;
 

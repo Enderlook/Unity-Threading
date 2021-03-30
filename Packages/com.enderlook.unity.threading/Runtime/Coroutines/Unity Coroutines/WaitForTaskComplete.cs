@@ -13,7 +13,7 @@ namespace Enderlook.Unity.Coroutines
     /// </summary>
     public sealed class WaitForTaskComplete : CustomYieldInstruction
     {
-        private static readonly RawStack<WaitForTaskComplete> pool = RawStack<WaitForTaskComplete>.Create(Wait.POOL_CAPACITY);
+        private static RawStack<WaitForTaskComplete> pool = RawStack<WaitForTaskComplete>.Create(Wait.POOL_CAPACITY);
 
         private Task task;
 
