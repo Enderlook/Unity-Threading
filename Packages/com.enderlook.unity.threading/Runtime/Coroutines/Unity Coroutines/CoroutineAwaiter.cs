@@ -10,12 +10,15 @@ namespace Enderlook.Unity.Coroutines
     public readonly struct CoroutineAwaiter : INotifyCompletion
     {
         private readonly Handle handle;
+        private readonly uint generation;
 
         private class Handle
         {
             public Action onCompleted;
 
             public bool isCompleted;
+
+            public uint generation;
         }
 
         /// <summary>
@@ -24,14 +27,17 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="coroutine">Job handle to await for.</param>
         public CoroutineAwaiter(UnityEngine.Coroutine coroutine)
         {
-            Handle handle = new Handle();
+            Handle handle = ConcurrentPool<Handle>.Rent();
             this.handle = handle;
+            generation = handle.generation;
             Coroutine.Unity.Start(Work());
             IEnumerator Work()
             {
                 yield return coroutine;
                 handle.isCompleted = true;
                 handle.onCompleted?.Invoke();
+                handle.generation++;
+                ConcurrentPool<Handle>.Return(handle);
             }
         }
 
@@ -44,7 +50,7 @@ namespace Enderlook.Unity.Coroutines
         /// <summary>
         /// Whenever the job handle has completed or not.
         /// </summary>
-        public bool IsCompleted => handle.isCompleted;
+        public bool IsCompleted => generation != handle.generation || handle.isCompleted;
 
         /// <summary>
         /// Determines the action to run after the job handle has completed.
@@ -52,6 +58,8 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="continuation">Action to run.</param>
         public void OnCompleted(Action continuation)
         {
+            if (generation != handle.generation)
+                continuation();
             if (IsCompleted)
                 continuation();
             else
