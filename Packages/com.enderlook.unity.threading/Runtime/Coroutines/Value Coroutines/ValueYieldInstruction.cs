@@ -34,6 +34,8 @@ namespace Enderlook.Unity.Coroutines
             public ValueTask ValueTask;
             [FieldOffset(0)]
             public JobHandle JobHandle;
+            [FieldOffset(0)]
+            public ValueCoroutine ValueCoroutine;
         }
 
         internal Func<bool> FuncBool {
@@ -61,11 +63,6 @@ namespace Enderlook.Unity.Coroutines
             set => obj = value;
         }
 
-        internal ValueCoroutine ValueCoroutine {
-            get => new ValueCoroutine((ValueCoroutine.Handle)obj);
-            set => obj = value.handle;
-        }
-
         internal float Float {
             get => union.Float;
             set => union.Float = value;
@@ -79,6 +76,11 @@ namespace Enderlook.Unity.Coroutines
         internal JobHandle JobHandle {
             get => union.JobHandle;
             set => union.JobHandle = value;
+        }
+
+        internal ValueCoroutine ValueCoroutine {
+            get => union.ValueCoroutine;
+            set => union.ValueCoroutine = value;
         }
 
         internal enum Type

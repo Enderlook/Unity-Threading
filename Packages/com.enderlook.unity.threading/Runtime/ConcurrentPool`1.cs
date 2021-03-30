@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace Enderlook.Unity.Jobs
+namespace Enderlook.Unity
 {
     internal static class ConcurrentPool<T> where T : class, new()
     {
