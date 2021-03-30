@@ -91,6 +91,7 @@ namespace Enderlook.Unity.Coroutines
                     onLateUpdateBag = new ConcurrentBag<Routine>();
                     onFixedUpdateBag = new ConcurrentBag<Routine>();
                     onEndOfFrameBag = new ConcurrentBag<Routine>();
+                    onPollQueue = new ConcurrentQueue<Routine>();
                     onCustomBag = new ConcurrentBag<(CustomYieldInstruction, Routine)>();
                     onWhileBag = new ConcurrentBag<(Func<bool>, Routine)>();
                     onUntilBag = new ConcurrentBag<(Func<bool>, Routine)>();
