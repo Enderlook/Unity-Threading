@@ -26,7 +26,6 @@ namespace Enderlook.Unity.Coroutines
             private const byte ShortThread = 1;
             private const byte LongThread = 2;
 
-            private readonly static MonoBehaviour monoBehaviour;
             private readonly static Action<Routine> nextShortBackgroundAction;
             private readonly static Action<Routine> nextLongBackgroundAction;
 
