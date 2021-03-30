@@ -39,7 +39,7 @@ namespace Enderlook.Unity.Coroutines
                 }
 
                 Generation++;
-                ConcurrentPool<Handle>.Return(this);
+                ConcurrentPool.Return(this);
             }
 
             public bool IsCompleted(uint generation)

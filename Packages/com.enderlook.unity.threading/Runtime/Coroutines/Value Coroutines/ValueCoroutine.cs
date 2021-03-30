@@ -24,7 +24,7 @@ namespace Enderlook.Unity.Coroutines
             where T : IEnumerator<ValueYieldInstruction>
             where U : ICancellable
         {
-            Handle handler = ConcurrentPool<Handle>.Rent();
+            Handle handler = ConcurrentPool.Rent<Handle>();
             CoroutineManagers.Start(cancellator, new Enumerator<T>(handler, routine));
             return new ValueCoroutine(handler);
         }
@@ -34,7 +34,7 @@ namespace Enderlook.Unity.Coroutines
             where T : IEnumerator<ValueYieldInstruction>
             where U : ICancellable
         {
-            Handle handler = ConcurrentPool<Handle>.Rent();
+            Handle handler = ConcurrentPool.Rent<Handle>();
             CoroutineManagers.StartThreadSafe(cancellator, new Enumerator<T>(handler, routine));
             return new ValueCoroutine(handler);
         }

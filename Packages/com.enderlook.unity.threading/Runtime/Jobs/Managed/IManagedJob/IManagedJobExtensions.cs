@@ -27,13 +27,13 @@ namespace Enderlook.Unity.Jobs
         {
             if (Application.platform == RuntimePlatform.WebGLPlayer)
             {
-                StrongBox<T> box = ConcurrentPool<StrongBox<T>>.Rent();
+                StrongBox<T> box = ConcurrentPool.Rent<StrongBox<T>>();
                 box.Value = job;
                 return new JobWithKey<T>(GlobalDictionary<StrongBox<T>>.Store(box)).Schedule(dependsOn);
             }
             else
             {
-                StrongBox<T> box = ConcurrentPool<StrongBox<T>>.Rent();
+                StrongBox<T> box = ConcurrentPool.Rent<StrongBox<T>>();
                 box.Value = job;
                 return new JobWithHandle<T>(GCHandle.Alloc(box, GCHandleType.Pinned)).Schedule(dependsOn);
             }
@@ -63,13 +63,13 @@ namespace Enderlook.Unity.Jobs
         {
             if (Application.platform == RuntimePlatform.WebGLPlayer)
             {
-                StrongBox<T> box = ConcurrentPool<StrongBox<T>>.Rent();
+                StrongBox<T> box = ConcurrentPool.Rent<StrongBox<T>>();
                 box.Value = job;
                 new JobWithKey<T>(GlobalDictionary<StrongBox<T>>.Store(box)).Run();
             }
             else
             {
-                StrongBox<T> box = ConcurrentPool<StrongBox<T>>.Rent();
+                StrongBox<T> box = ConcurrentPool.Rent<StrongBox<T>>();
                 box.Value = job;
                 new JobWithHandle<T>(GCHandle.Alloc(box, GCHandleType.Pinned)).Run();
             }
@@ -100,7 +100,7 @@ namespace Enderlook.Unity.Jobs
                 StrongBox<T> box = (StrongBox<T>)handle.Target;
                 handle.Free();
                 T job = box.Value;
-                ConcurrentPool<StrongBox<T>>.Return(box);
+                ConcurrentPool.Return(box);
                 job.Execute();
             }
         }
@@ -124,7 +124,7 @@ namespace Enderlook.Unity.Jobs
             {
                 StrongBox<T> box = GlobalDictionary<StrongBox<T>>.Drain(key);
                 T job = box.Value;
-                ConcurrentPool<StrongBox<T>>.Return(box);
+                ConcurrentPool.Return(box);
                 job.Execute();
             }
         }

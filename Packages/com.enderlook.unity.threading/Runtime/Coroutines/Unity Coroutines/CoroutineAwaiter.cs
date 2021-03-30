@@ -27,7 +27,7 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="coroutine">Job handle to await for.</param>
         public CoroutineAwaiter(UnityEngine.Coroutine coroutine)
         {
-            Handle handle = ConcurrentPool<Handle>.Rent();
+            Handle handle = ConcurrentPool.Rent<Handle>();
             this.handle = handle;
             generation = handle.generation;
             Coroutine.Unity.Start(Work());
@@ -37,7 +37,7 @@ namespace Enderlook.Unity.Coroutines
                 handle.isCompleted = true;
                 handle.onCompleted?.Invoke();
                 handle.generation++;
-                ConcurrentPool<Handle>.Return(handle);
+                ConcurrentPool.Return(handle);
             }
         }
 
