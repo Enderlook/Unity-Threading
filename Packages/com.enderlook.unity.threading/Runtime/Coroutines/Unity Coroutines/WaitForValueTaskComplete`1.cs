@@ -1,5 +1,6 @@
 ﻿using Enderlook.Collections.LowLevel;
 
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
@@ -36,15 +37,16 @@ namespace Enderlook.Unity.Coroutines
             }
         }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void Clear() => pool.Clear();
+        internal static void Clear() => pool.Clear();
 
+        static WaitForValueTaskComplete()
+        {
+            Action clear = Clear;
+            Wait.SuscribeClear(clear);
 #if UNITY_EDITOR
-        [UnityEditor.InitializeOnLoadMethod]
-        private static void Initialize() => UnityEditor.EditorApplication.playModeStateChanged += (_) => Clear();
-
-        static WaitForValueTaskComplete() => Wait.AddWaitForTaskComplete($"Wait.For({typeof(WaitForValueTaskComplete<T>).Name})", () => pool.Count, Clear);
+            Wait.AddWaitForTaskComplete($"Wait.For({typeof(WaitForValueTaskComplete<T>).Name})", () => pool.Count, clear);
 #endif
+        }
 
         /// <summary>
         /// Suspend the coroutine execution until the suplied task is completed.<br/>

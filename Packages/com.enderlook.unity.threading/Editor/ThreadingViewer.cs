@@ -183,7 +183,7 @@ namespace Enderlook.Unity.Threading
                     if (Draw("Wait.For(ValueTask)", WaitForValueTaskComplete.Count, ref waitForValueTaskComplete))
                         WaitForValueTaskComplete.Clear();
 
-                    foreach (Wait.Container container in Wait.ForTaskAndValueTaskComplete)
+                    foreach (EditorPoolContainer container in Wait.ForTaskAndValueTaskComplete)
                     {
                         container.Get(out string name, out Action clear, out string count);
                         if (count == "0")

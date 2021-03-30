@@ -16,6 +16,8 @@ namespace Enderlook.Unity.Coroutines
     {
         internal const int POOL_CAPACITY = 100;
 
+        private static event Action clear;
+
         // https://github.com/svermeulen/Unity3dAsyncAwaitUtil/blob/master/UnityProject/Assets/Plugins/AsyncAwaitUtil/Source/Awaiters.cs
 
         /// <inheritdoc cref="WaitForEndOfFrame"/>
@@ -27,8 +29,23 @@ namespace Enderlook.Unity.Coroutines
         /// <inheritdoc cref="WaitForUpdate"/>
         public static readonly WaitForUpdate ForUpdate = new WaitForUpdate();
 
+        /// <summary>
+        /// Clear all pooled objects in <see cref="Wait"/>.
+        /// </summary>
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void Clear() => waitForSeconds.Clear();
+        public static void Clear()
+        {
+            clear();
+            waitForSeconds.Clear();
+            WaitWhilePooled.Clear();
+            WaitUntilPooled.Clear();
+            WaitForValueTaskComplete.Clear();
+            WaitForTaskComplete.Clear();
+            WaitForSecondsRealtimePooled.Clear();
+            WaitForJobComplete.Clear();
+        }
+
+        internal static void SuscribeClear(Action clear) => Wait.clear += clear;
 
         private static readonly Dictionary<float, WaitForSeconds> waitForSeconds = new Dictionary<float, WaitForSeconds>();
 
@@ -104,55 +121,18 @@ namespace Enderlook.Unity.Coroutines
         /// </summary>
         internal static void ForSecondsClear() => waitForSeconds.Clear();
 
-        private static readonly SortedSet<Container> waitForTaskComplete = new SortedSet<Container>();
+        private static readonly SortedSet<EditorPoolContainer> waitForTaskComplete = new SortedSet<EditorPoolContainer>();
 
         /// <summary>
         /// Unity Editor Only.
         /// </summary>
-        internal static IReadOnlyCollection<Container> ForTaskAndValueTaskComplete => waitForTaskComplete;
+        internal static IReadOnlyCollection<EditorPoolContainer> ForTaskAndValueTaskComplete => waitForTaskComplete;
 
         /// <summary>
         /// Unity Editor Only.
         /// </summary>
         internal static void AddWaitForTaskComplete(string name, Func<int> count, Action clear)
-            => waitForTaskComplete.Add(new Container(name, count, clear));
-
-        /// <summary>
-        /// Unity Editor Only.
-        /// </summary>
-        internal class Container : IComparable<Container>
-        {
-            private readonly string Name;
-            private readonly Func<int> count;
-            private readonly Action clear;
-            private int currentCount;
-            private string countString;
-
-            public Container(string name, Func<int> count, Action clear)
-            {
-                Name = name;
-                this.count = count;
-                this.clear = clear;
-                int c = count();
-                currentCount = c;
-                countString = c.ToString();
-            }
-
-            public void Get(out string name, out Action clear, out string count)
-            {
-                name = Name;
-                clear = this.clear;
-                int c = this.count();
-                if (currentCount != c)
-                {
-                    currentCount = c;
-                    countString = c.ToString();
-                }
-                count = countString;
-            }
-
-            int IComparable<Container>.CompareTo(Container other) => Name.CompareTo(other.Name);
-        }
+            => waitForTaskComplete.Add(new EditorPoolContainer(name, count, clear));
 #endif
     }
 }

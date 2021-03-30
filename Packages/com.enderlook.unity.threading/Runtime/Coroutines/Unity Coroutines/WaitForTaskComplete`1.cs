@@ -37,15 +37,16 @@ namespace Enderlook.Unity.Coroutines
             }
         }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void Clear() => pool.Clear();
+        internal static void Clear() => pool.Clear();
 
+        static WaitForTaskComplete()
+        {
+            Action clear = Clear;
+            Wait.SuscribeClear(clear);
 #if UNITY_EDITOR
-        [UnityEditor.InitializeOnLoadMethod]
-        private static void Initialize() => UnityEditor.EditorApplication.playModeStateChanged += (_) => Clear();
-
-        static WaitForTaskComplete() => Wait.AddWaitForTaskComplete($"Wait.For({typeof(WaitForTaskComplete<T>).Name})", () => pool.Count, Clear);
+            Wait.AddWaitForTaskComplete($"Wait.For({typeof(WaitForTaskComplete<T>).Name})", () => pool.Count, clear);
 #endif
+        }
 
         /// <summary>
         /// Suspend the coroutine execution until the suplied task is completed.<br/>

@@ -27,13 +27,9 @@ namespace Enderlook.Unity.Coroutines
             }
         }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         internal static void Clear() => pool.Clear();
 
 #if UNITY_EDITOR
-        [UnityEditor.InitializeOnLoadMethod]
-        private static void Initialize() => UnityEditor.EditorApplication.playModeStateChanged += (_) => Clear();
-
         /// <summary>
         /// Unity Editor Only.
         /// </summary>
