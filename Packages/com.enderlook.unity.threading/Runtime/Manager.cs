@@ -1,6 +1,7 @@
 ﻿using Enderlook.Unity.Coroutines;
 
 using System.Collections;
+using System.Runtime.CompilerServices;
 
 using UnityEngine;
 
@@ -13,6 +14,28 @@ namespace Enderlook.Unity.Jobs
         private static bool isExiting;
 
         public static Manager Shared { get; private set; }
+
+        internal CoroutinesManager CoroutinesManager { get; private set; }
+
+        public int MilisecondsExecutedPerFrameOnPoll {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => CoroutinesManager.MilisecondsExecutedPerFrameOnPoll;
+            set {
+                CoroutinesManager manager = CoroutinesManager;
+                manager.MilisecondsExecutedPerFrameOnPoll = value;
+                CoroutinesManager = manager;
+            }
+        }
+
+        public float MinimumPercentOfExecutionsPerFrameOnPoll {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => CoroutinesManager.MinimumPercentOfExecutionsPerFrameOnPoll;
+            set {
+                CoroutinesManager manager = CoroutinesManager;
+                manager.MinimumPercentOfExecutionsPerFrameOnPoll = value;
+                CoroutinesManager = manager;
+            }
+        }
 
         private static void Initialize()
         {
@@ -62,13 +85,14 @@ namespace Enderlook.Unity.Jobs
             }
             else
             {
+                CoroutinesManager = CoroutinesManager.Create(this);
                 StartCoroutine(Work());
                 IEnumerator Work()
                 {
                     while (true)
                     {
                         yield return Wait.ForEndOfFrame;
-                        CoroutineManagers.OnEndOfFrame();
+                        CoroutinesManager.OnEndOfFrame();
                     }
                 }
             }
@@ -82,7 +106,8 @@ namespace Enderlook.Unity.Jobs
                 return;
 #endif
             Shared = null;
-            Debug.LogError($"{nameof(Manager)} should not be destroyed.", this);
+            Debug.LogError($"{nameof(Manager)} should not be destroyed. This has triggered undefined behaviour.", this);
+            CoroutinesManager.Dispose();
             Initialize();
         }
 
@@ -95,24 +120,24 @@ namespace Enderlook.Unity.Jobs
 #endif
             gameObject.SetActive(true);
             enabled = true;
-            Debug.LogError($"{nameof(Manager)} should not be disabled.", this);
+            Debug.LogError($"{nameof(Manager)} should not be disabled. This has triggered undefined behaviour.", this);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
         private void Update()
         {
             JobManager.Update();
-            CoroutineManagers.OnUpdate();
+            CoroutinesManager.OnUpdate();
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
         private void LateUpdate()
         {
-            CoroutineManagers.OnLateUpdate();
-            CoroutineManagers.OnPoll();
+            CoroutinesManager.OnLateUpdate();
+            CoroutinesManager.OnPoll();
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
-        private void FixedUpdate() => CoroutineManagers.OnFixedUpdate();
+        private void FixedUpdate() => CoroutinesManager.OnFixedUpdate();
     }
 }

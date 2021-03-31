@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Enderlook.Unity.Jobs;
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -13,14 +15,24 @@ namespace Enderlook.Unity.Coroutines
     public static class Yield
     {
         /// <summary>
-        /// Amount of miliseconds spent in executing poll coroutines per frame.
+        /// Amount of miliseconds spent in executing global poll coroutines per frame.
         /// </summary>
-        public static int MilisecondsExecutedPerFrameOnPoll { get; set; }
+        public static int MilisecondsExecutedPerFrameOnPoll {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Manager.Shared.MilisecondsExecutedPerFrameOnPoll;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => Manager.Shared.MilisecondsExecutedPerFrameOnPoll = value;
+        }
 
         /// <summary>
-        /// Percentage of total execution that must be execudewr on per frame regardless of <see cref="MilisecondsExecutedPerFrameOnPoll"/>.
+        /// Percentage of total execution that must be executed on per frame regardless of <see cref="MilisecondsExecutedPerFrameOnPoll"/> for global poll coroutines.
         /// </summary>
-        public static float PercentOfExecutionsPerFrameOnPoll { get; set; }
+        public static float MinimumPercentOfExecutionsPerFrameOnPoll {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Manager.Shared.MinimumPercentOfExecutionsPerFrameOnPoll;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => Manager.Shared.MinimumPercentOfExecutionsPerFrameOnPoll = value;
+        }
 
         /// <summary>
         /// Suspend coroutine execution until next update.
