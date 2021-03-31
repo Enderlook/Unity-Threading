@@ -1,11 +1,12 @@
 ﻿using Enderlook.Unity.Coroutines;
+using Enderlook.Unity.Jobs;
 
 using System.Collections;
 using System.Runtime.CompilerServices;
 
 using UnityEngine;
 
-namespace Enderlook.Unity.Jobs
+namespace Enderlook.Unity
 {
     [AddComponentMenu("")] // Not show in menu
     [DefaultExecutionOrder(int.MaxValue)]
