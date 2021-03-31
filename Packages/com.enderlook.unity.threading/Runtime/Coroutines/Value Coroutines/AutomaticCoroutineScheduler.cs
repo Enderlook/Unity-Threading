@@ -5,11 +5,11 @@ using UnityEngine;
 namespace Enderlook.Unity.Coroutines
 {
     /// <summary>
-    /// A wrapper arround <see cref="CoroutinesManager"/> to automatically execute its events.
+    /// A wrapper arround <see cref="CoroutineScheduler"/> to automatically execute its events.
     /// </summary>
     [AddComponentMenu("Enderlook/Automatic Coroutines Manager")] // Not show in menu
     [DefaultExecutionOrder(int.MaxValue)]
-    public sealed class AutomaticCoroutinesManager : MonoBehaviour
+    public sealed class AutomaticCoroutineScheduler : MonoBehaviour
     {
         /// <summary>
         /// Amount of miliseconds spent in executing poll coroutines per frame.
@@ -23,12 +23,12 @@ namespace Enderlook.Unity.Coroutines
         [Tooltip(" Percentage of total execution that must be executed on per frame regardless of Miliseconds Executed Per Frame On Poll.")]
         public float MinimumPercentOfExecutionsPerFrameOnPoll;
 
-        private CoroutinesManager manager;
+        private CoroutineScheduler manager;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
         private void Awake()
         {
-            manager = CoroutinesManager.Create(this);
+            manager = CoroutineScheduler.Create(this);
             StartCoroutine(Work());
             IEnumerator Work()
             {

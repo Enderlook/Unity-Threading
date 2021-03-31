@@ -20,7 +20,7 @@ namespace Enderlook.Unity.Coroutines
         [EditorBrowsable(EditorBrowsableState.Never)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void StartValueCoroutine<T>(this MonoBehaviour source, T routine) where T : IEnumerator<ValueYieldInstruction>
-            => Manager.Shared.CoroutinesManager.Start(routine, source);
+            => Manager.Shared.CoroutineScheduler.Start(routine, source);
 
         /// <summary>
         /// Start a value coroutine.<br/>
@@ -32,7 +32,7 @@ namespace Enderlook.Unity.Coroutines
         [EditorBrowsable(EditorBrowsableState.Never)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void StartValueCoroutineThreadSafe<T>(this MonoBehaviour source, T routine) where T : IEnumerator<ValueYieldInstruction>
-            => Manager.Shared.CoroutinesManager.StartWithHandleThreadSafe(routine, source);
+            => Manager.Shared.CoroutineScheduler.StartWithHandleThreadSafe(routine, source);
 
         /// <summary>
         /// Start a value coroutine.
@@ -43,7 +43,7 @@ namespace Enderlook.Unity.Coroutines
         [EditorBrowsable(EditorBrowsableState.Never)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ValueCoroutine StartValueCoroutineWithHandle<T>(this MonoBehaviour source, T routine) where T : IEnumerator<ValueYieldInstruction>
-            => Manager.Shared.CoroutinesManager.StartWithHandle(routine, source);
+            => Manager.Shared.CoroutineScheduler.StartWithHandle(routine, source);
 
         /// <summary>
         /// Start a value coroutine.<br/>
@@ -55,6 +55,6 @@ namespace Enderlook.Unity.Coroutines
         [EditorBrowsable(EditorBrowsableState.Never)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ValueCoroutine StartValueCoroutineWithHandleThreadSafe<T>(this MonoBehaviour source, T routine) where T : IEnumerator<ValueYieldInstruction>
-            => Manager.Shared.CoroutinesManager.StartWithHandleThreadSafe(routine, source);
+            => Manager.Shared.CoroutineScheduler.StartWithHandleThreadSafe(routine, source);
     }
 }

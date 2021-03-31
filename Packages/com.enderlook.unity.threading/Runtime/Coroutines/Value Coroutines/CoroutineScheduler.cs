@@ -11,7 +11,7 @@ namespace Enderlook.Unity.Coroutines
     /// Represent a manager of value coroutines.<br/>
     /// This object should not be copied not stored in readonly fields.
     /// </summary>
-    public partial struct CoroutinesManager : IDisposable
+    public partial struct CoroutineScheduler : IDisposable
     {
         private Managers core;
 
@@ -30,11 +30,11 @@ namespace Enderlook.Unity.Coroutines
         /// </summary>
         /// <param name="monoBehaviour"><see cref="MonoBehaviour"/> used to fallback Unity coroutines.</param>
         /// <returns>A new manager.</returns>
-        public static CoroutinesManager Create(MonoBehaviour monoBehaviour)
+        public static CoroutineScheduler Create(MonoBehaviour monoBehaviour)
         {
             Managers core = ConcurrentPool.Rent<Managers>();
             core.SetMonoBehaviour(monoBehaviour);
-            return new CoroutinesManager
+            return new CoroutineScheduler
             {
                 core = core,
                 MilisecondsExecutedPerFrameOnPoll = Yield.MilisecondsExecutedPerFrameOnPoll,
@@ -49,11 +49,11 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="milisecondsExecutedPerFrameOnPoll">Amount of miliseconds spent in executing global poll coroutines per frame.</param>
         /// <param name="minimumPercentOfExecutionsPerFrameOnPoll">Percentage of total execution that must be executed on per frame regardless of <paramref name="milisecondsExecutedPerFrameOnPoll"/> for global poll coroutines.</param>
         /// <returns>A new manager.</returns>
-        public static CoroutinesManager Create(MonoBehaviour monoBehaviour, int milisecondsExecutedPerFrameOnPoll, int minimumPercentOfExecutionsPerFrameOnPoll)
+        public static CoroutineScheduler Create(MonoBehaviour monoBehaviour, int milisecondsExecutedPerFrameOnPoll, int minimumPercentOfExecutionsPerFrameOnPoll)
         {
             Managers core = ConcurrentPool.Rent<Managers>();
             core.SetMonoBehaviour(monoBehaviour);
-            return new CoroutinesManager
+            return new CoroutineScheduler
             {
                 core = core,
                 MilisecondsExecutedPerFrameOnPoll = milisecondsExecutedPerFrameOnPoll,
@@ -323,7 +323,7 @@ namespace Enderlook.Unity.Coroutines
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void ThrowDisposed()
-            => throw new ObjectDisposedException(nameof(Managers), $"{nameof(CoroutinesManager)} was disposed of is a defalt struct.");
+            => throw new ObjectDisposedException(nameof(Managers), $"{nameof(CoroutineScheduler)} was disposed of is a defalt struct.");
 
         /// <summary>
         /// Executes the update event of all coroutines.

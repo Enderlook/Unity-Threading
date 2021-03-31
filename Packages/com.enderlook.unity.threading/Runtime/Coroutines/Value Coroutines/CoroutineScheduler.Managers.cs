@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Enderlook.Unity.Coroutines
 {
-    public partial struct CoroutinesManager
+    public partial struct CoroutineScheduler
     {
         internal partial class Managers
         {

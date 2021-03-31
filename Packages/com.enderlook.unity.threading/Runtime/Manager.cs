@@ -16,25 +16,25 @@ namespace Enderlook.Unity
 
         public static Manager Shared { get; private set; }
 
-        internal CoroutinesManager CoroutinesManager { get; private set; }
+        internal CoroutineScheduler CoroutineScheduler { get; private set; }
 
         public int MilisecondsExecutedPerFrameOnPoll {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => CoroutinesManager.MilisecondsExecutedPerFrameOnPoll;
+            get => CoroutineScheduler.MilisecondsExecutedPerFrameOnPoll;
             set {
-                CoroutinesManager manager = CoroutinesManager;
+                CoroutineScheduler manager = CoroutineScheduler;
                 manager.MilisecondsExecutedPerFrameOnPoll = value;
-                CoroutinesManager = manager;
+                CoroutineScheduler = manager;
             }
         }
 
         public float MinimumPercentOfExecutionsPerFrameOnPoll {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => CoroutinesManager.MinimumPercentOfExecutionsPerFrameOnPoll;
+            get => CoroutineScheduler.MinimumPercentOfExecutionsPerFrameOnPoll;
             set {
-                CoroutinesManager manager = CoroutinesManager;
+                CoroutineScheduler manager = CoroutineScheduler;
                 manager.MinimumPercentOfExecutionsPerFrameOnPoll = value;
-                CoroutinesManager = manager;
+                CoroutineScheduler = manager;
             }
         }
 
@@ -86,14 +86,14 @@ namespace Enderlook.Unity
             }
             else
             {
-                CoroutinesManager = CoroutinesManager.Create(this);
+                CoroutineScheduler = CoroutineScheduler.Create(this);
                 StartCoroutine(Work());
                 IEnumerator Work()
                 {
                     while (true)
                     {
                         yield return Wait.ForEndOfFrame;
-                        CoroutinesManager.OnEndOfFrame();
+                        CoroutineScheduler.OnEndOfFrame();
                     }
                 }
             }
@@ -108,7 +108,7 @@ namespace Enderlook.Unity
 #endif
             Shared = null;
             Debug.LogError($"{nameof(Manager)} should not be destroyed. This has triggered undefined behaviour.", this);
-            CoroutinesManager.Dispose();
+            CoroutineScheduler.Dispose();
             Initialize();
         }
 
@@ -128,17 +128,17 @@ namespace Enderlook.Unity
         private void Update()
         {
             JobManager.Update();
-            CoroutinesManager.OnUpdate();
+            CoroutineScheduler.OnUpdate();
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
         private void LateUpdate()
         {
-            CoroutinesManager.OnLateUpdate();
-            CoroutinesManager.OnPoll();
+            CoroutineScheduler.OnLateUpdate();
+            CoroutineScheduler.OnPoll();
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
-        private void FixedUpdate() => CoroutinesManager.OnFixedUpdate();
+        private void FixedUpdate() => CoroutineScheduler.OnFixedUpdate();
     }
 }

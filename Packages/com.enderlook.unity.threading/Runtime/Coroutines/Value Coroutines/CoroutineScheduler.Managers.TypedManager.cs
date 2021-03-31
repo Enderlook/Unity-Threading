@@ -15,7 +15,7 @@ using UnityEngine;
 
 namespace Enderlook.Unity.Coroutines
 {
-    public partial struct CoroutinesManager
+    public partial struct CoroutineScheduler
     {
         internal sealed partial class Managers
         {

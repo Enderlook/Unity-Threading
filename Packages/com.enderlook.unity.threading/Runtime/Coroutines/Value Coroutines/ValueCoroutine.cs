@@ -20,7 +20,7 @@ namespace Enderlook.Unity.Coroutines
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static ValueCoroutine Start<T, U>(CoroutinesManager.Managers managers, U cancellator, T routine)
+        internal static ValueCoroutine Start<T, U>(CoroutineScheduler.Managers managers, U cancellator, T routine)
             where T : IEnumerator<ValueYieldInstruction>
             where U : ICancellable
         {
@@ -30,7 +30,7 @@ namespace Enderlook.Unity.Coroutines
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static ValueCoroutine StartThreadSafe<T, U>(CoroutinesManager.Managers managers, U cancellator, T routine)
+        internal static ValueCoroutine StartThreadSafe<T, U>(CoroutineScheduler.Managers managers, U cancellator, T routine)
             where T : IEnumerator<ValueYieldInstruction>
             where U : ICancellable
         {
