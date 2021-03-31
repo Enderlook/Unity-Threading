@@ -29,22 +29,23 @@ namespace Enderlook.Unity.Coroutines
 
                 // TODO: Cache locality may be improved by using a circular buffer instead of two lists when iterating each one. Futher reasearch is required.
 
-                private RawList<Routine> onUpdate = RawList<Routine>.Create();
-                private RawList<Routine> onLateUpdate = RawList<Routine>.Create();
-                private RawList<Routine> onFixedUpdate = RawList<Routine>.Create();
-                private RawList<Routine> onEndOfFrame = RawList<Routine>.Create();
-                private RawQueue<Routine> onPoll = RawQueue<Routine>.Create();
-                private RawList<(CustomYieldInstruction, Routine)> onCustom = RawList<(CustomYieldInstruction, Routine)>.Create();
-                private RawList<(Func<bool>, Routine)> onWhile = RawList<(Func<bool>, Routine)>.Create();
-                private RawList<(Func<bool>, Routine)> onUntil = RawList<(Func<bool>, Routine)>.Create();
-                private RawList<(ValueTask, Routine)> onTask = RawList<(ValueTask, Routine)>.Create();
-                private RawList<(JobHandle, Routine)> onJobHandle = RawList<(JobHandle, Routine)>.Create();
+                private PackList<Routine> onUpdate = PackList<Routine>.Create();
+                private PackList<Routine> onFixedUpdate = PackList<Routine>.Create();
+                private PackList<Routine> onLateUpdate = PackList<Routine>.Create();
+                private PackList<Routine> onEndOfFrame = PackList<Routine>.Create();
+                private PackQueue<Routine> onPoll = PackQueue<Routine>.Create();
+                private PackList<(CustomYieldInstruction, Routine)> onCustom = PackList<(CustomYieldInstruction, Routine)>.Create();
+                private PackList<(Func<bool>, Routine)> onWhile = PackList<(Func<bool>, Routine)>.Create();
+                private PackList<(Func<bool>, Routine)> onUntil = PackList<(Func<bool>, Routine)>.Create();
+                private PackList<(ValueTask, Routine)> onTask = PackList<(ValueTask, Routine)>.Create();
+                private PackList<(JobHandle, Routine)> onJobHandle = PackList<(JobHandle, Routine)>.Create();
                 // Waiter with timer can be reduced in time complexity by using priority queues.
-                private RawList<(float, Routine)> onTime = RawList<(float, Routine)>.Create();
-                private RawList<(float, Routine)> onRealtime = RawList<(float, Routine)>.Create();
-                private RawList<(ValueCoroutine, Routine)> onValueCoroutine = RawList<(ValueCoroutine, Routine)>.Create();
+                private PackList<(float, Routine)> onTime = PackList<(float, Routine)>.Create();
+                private PackList<(float, Routine)> onRealtime = PackList<(float, Routine)>.Create();
+                private PackList<(ValueCoroutine, Routine)> onValueCoroutine = PackList<(ValueCoroutine, Routine)>.Create();
 
                 private RawList<(U, UnityEngine.Coroutine)> onUnityCoroutine = RawList<(U, UnityEngine.Coroutine)>.Create();
+                private readonly ConcurrentBag<(U, IEnumerator)> onUnityCoroutineBag;
 
                 private RawList<Routine> tmpT = RawList<Routine>.Create();
                 private RawQueue<Routine> tmpTQueue = RawQueue<Routine>.Create();
@@ -54,21 +55,6 @@ namespace Enderlook.Unity.Coroutines
                 private RawList<(ValueTask, Routine)> tmpTask = RawList<(ValueTask, Routine)>.Create();
                 private RawList<(JobHandle, Routine)> tmpJobHandle = RawList<(JobHandle, Routine)>.Create();
                 private RawList<(ValueCoroutine, Routine)> tmpValueCoroutine = RawList<(ValueCoroutine, Routine)>.Create();
-
-                private readonly ConcurrentBag<Routine> onUpdateBag;
-                private readonly ConcurrentBag<Routine> onLateUpdateBag;
-                private readonly ConcurrentBag<Routine> onFixedUpdateBag;
-                private readonly ConcurrentBag<Routine> onEndOfFrameBag;
-                private readonly ConcurrentQueue<Routine> onPollQueue;
-                private readonly ConcurrentBag<(CustomYieldInstruction, Routine)> onCustomBag;
-                private readonly ConcurrentBag<(Func<bool>, Routine)> onWhileBag;
-                private readonly ConcurrentBag<(Func<bool>, Routine)> onUntilBag;
-                private readonly ConcurrentBag<(ValueTask, Routine)> onTaskBag;
-                private readonly ConcurrentBag<(JobHandle, Routine)> onJobHandleBag;
-                private readonly ConcurrentBag<(float, Routine)> onTimeBag;
-                private readonly ConcurrentBag<(float, Routine)> onRealtimeBag;
-                private readonly ConcurrentBag<(U, IEnumerator)> onUnityCoroutineBag;
-                private readonly ConcurrentBag<(ValueCoroutine, Routine)> onValueCoroutineBag;
 
                 public TypedManager(Managers manager)
                 {
@@ -84,24 +70,6 @@ namespace Enderlook.Unity.Coroutines
                         if (!e.IsCancelationRequested)
                             NextBackground(e, LongThread);
                     };
-
-                    if (Application.platform != RuntimePlatform.WebGLPlayer)
-                    {
-                        onUpdateBag = new ConcurrentBag<Routine>();
-                        onLateUpdateBag = new ConcurrentBag<Routine>();
-                        onFixedUpdateBag = new ConcurrentBag<Routine>();
-                        onEndOfFrameBag = new ConcurrentBag<Routine>();
-                        onPollQueue = new ConcurrentQueue<Routine>();
-                        onCustomBag = new ConcurrentBag<(CustomYieldInstruction, Routine)>();
-                        onWhileBag = new ConcurrentBag<(Func<bool>, Routine)>();
-                        onUntilBag = new ConcurrentBag<(Func<bool>, Routine)>();
-                        onTaskBag = new ConcurrentBag<(ValueTask, Routine)>();
-                        onJobHandleBag = new ConcurrentBag<(JobHandle, Routine)>();
-                        onTimeBag = new ConcurrentBag<(float, Routine)>();
-                        onRealtimeBag = new ConcurrentBag<(float, Routine)>();
-                        onUnityCoroutineBag = new ConcurrentBag<(U, IEnumerator)>();
-                        onValueCoroutineBag = new ConcurrentBag<(ValueCoroutine, Routine)>();
-                    }
                 }
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -114,8 +82,7 @@ namespace Enderlook.Unity.Coroutines
 
                 public override void OnUpdate()
                 {
-                    RawList<Routine> local = onUpdate;
-                    onUpdate = tmpT;
+                    RawList<Routine> local = onUpdate.Swap(tmpT);
 
                     for (int i = 0; i < local.Count; i++)
                     {
@@ -124,7 +91,7 @@ namespace Enderlook.Unity.Coroutines
                             Next(local[i]);
                     }
 
-                    ConcurrentBag<Routine> bag = onUpdateBag;
+                    ConcurrentBag<Routine> bag = onUpdate.Concurrent;
                     if (!(bag is null))
                     {
                         while (bag.TryTake(out Routine routine))
@@ -140,8 +107,7 @@ namespace Enderlook.Unity.Coroutines
 
                 public override void OnLateUpdate()
                 {
-                    RawList<Routine> local = onLateUpdate;
-                    onLateUpdate = tmpT;
+                    RawList<Routine> local = onLateUpdate.Swap(tmpT);
 
                     for (int i = 0; i < local.Count; i++)
                     {
@@ -150,7 +116,7 @@ namespace Enderlook.Unity.Coroutines
                             Next(local[i]);
                     }
 
-                    ConcurrentBag<Routine> bag = onLateUpdateBag;
+                    ConcurrentBag<Routine> bag = onLateUpdate.Concurrent;
                     if (!(bag is null))
                     {
                         while (bag.TryTake(out Routine routine))
@@ -164,8 +130,7 @@ namespace Enderlook.Unity.Coroutines
 
                 public override void OnFixedUpdate()
                 {
-                    RawList<Routine> local = onFixedUpdate;
-                    onFixedUpdate = tmpT;
+                    RawList<Routine> local = onFixedUpdate.Swap(tmpT);
 
                     for (int i = 0; i < local.Count; i++)
                     {
@@ -174,7 +139,7 @@ namespace Enderlook.Unity.Coroutines
                             Next(local[i]);
                     }
 
-                    ConcurrentBag<Routine> bag = onFixedUpdateBag;
+                    ConcurrentBag<Routine> bag = onFixedUpdate.Concurrent;
                     if (!(bag is null))
                     {
                         while (bag.TryTake(out Routine routine))
@@ -188,8 +153,7 @@ namespace Enderlook.Unity.Coroutines
 
                 public override void OnEndOfFrame()
                 {
-                    RawList<Routine> local = onEndOfFrame;
-                    onEndOfFrame = tmpT;
+                    RawList<Routine> local = onEndOfFrame.Swap(tmpT);
 
                     for (int i = 0; i < local.Count; i++)
                     {
@@ -198,7 +162,7 @@ namespace Enderlook.Unity.Coroutines
                             Next(local[i]);
                     }
 
-                    ConcurrentBag<Routine> bag = onEndOfFrameBag;
+                    ConcurrentBag<Routine> bag = onEndOfFrame.Concurrent;
                     if (!(bag is null))
                     {
                         while (bag.TryTake(out Routine routine))
@@ -212,15 +176,8 @@ namespace Enderlook.Unity.Coroutines
 
                 public override bool OnPoll(int until, float percentOfExecutions)
                 {
-                    RawQueue<Routine> local = onPoll;
-                    onPoll = tmpTQueue;
-
-                    ConcurrentQueue<Routine> queue = onPollQueue;
-                    if (!(queue is null))
-                    {
-                        while (queue.TryDequeue(out Routine routine))
-                            local.Enqueue(routine);
-                    }
+                    onPoll.DrainConcurrent();
+                    RawQueue<Routine> local = onPoll.Swap(tmpTQueue);
 
                     float i = 0;
                     int total = local.Count;
@@ -234,22 +191,21 @@ namespace Enderlook.Unity.Coroutines
                             break;
                     }
 
-                    tmpTQueue = onPoll;
-                    onPoll = local;
+                    RawQueue<Routine> tmp = onPoll.Queue;
 
                     // TODO: This may be improved with Array.Copy or similar.
-                    while (tmpTQueue.TryDequeue(out Routine routine))
+                    while (tmp.TryDequeue(out Routine routine))
                         local.Enqueue(routine);
 
-                    tmpTQueue.Clear();
+                    onPoll.Queue = local;
+                    tmpTQueue = tmp;
 
                     return total > 0;
                 }
 
                 private void OnWaitForSeconds()
                 {
-                    RawList<(float, Routine)> local = onTime;
-                    onTime = tmpFloat;
+                    RawList<(float, Routine)> local = onTime.Swap(tmpFloat);
 
                     for (int i = 0; i < local.Count; i++)
                     {
@@ -262,7 +218,7 @@ namespace Enderlook.Unity.Coroutines
                             onTime.Add(tmp);
                     }
 
-                    ConcurrentBag<(float condition, Routine routine)> bag = onTimeBag;
+                    ConcurrentBag<(float condition, Routine routine)> bag = onTime.Concurrent;
                     if (!(bag is null))
                     {
                         while (bag.TryTake(out (float condition, Routine routine) tmp))
@@ -282,8 +238,7 @@ namespace Enderlook.Unity.Coroutines
 
                 private void OnWaitForRealtimeSeconds()
                 {
-                    RawList<(float, Routine)> local = onRealtime;
-                    onRealtime = tmpFloat;
+                    RawList<(float, Routine)> local = onRealtime.Swap(tmpFloat);
 
                     for (int i = 0; i < local.Count; i++)
                     {
@@ -296,7 +251,7 @@ namespace Enderlook.Unity.Coroutines
                             onRealtime.Add(tmp);
                     }
 
-                    ConcurrentBag<(float condition, Routine routine)> bag = onRealtimeBag;
+                    ConcurrentBag<(float condition, Routine routine)> bag = onRealtime.Concurrent;
                     if (!(bag is null))
                     {
                         while (bag.TryTake(out (float condition, Routine routine) tmp))
@@ -316,8 +271,7 @@ namespace Enderlook.Unity.Coroutines
 
                 private void OnCustom()
                 {
-                    RawList<(CustomYieldInstruction, Routine)> local = onCustom;
-                    onCustom = tmpCustom;
+                    RawList<(CustomYieldInstruction, Routine)> local = onCustom.Swap(tmpCustom);
 
                     for (int i = 0; i < local.Count; i++)
                     {
@@ -330,7 +284,7 @@ namespace Enderlook.Unity.Coroutines
                             Next(tmp.routine);
                     }
 
-                    ConcurrentBag<(CustomYieldInstruction condition, Routine routine)> bag = onCustomBag;
+                    ConcurrentBag<(CustomYieldInstruction condition, Routine routine)> bag = onCustom.Concurrent;
                     if (!(bag is null))
                     {
                         while (bag.TryTake(out (CustomYieldInstruction condition, Routine routine) tmp))
@@ -350,8 +304,7 @@ namespace Enderlook.Unity.Coroutines
 
                 private void OnWhile()
                 {
-                    RawList<(Func<bool>, Routine)> local = onWhile;
-                    onWhile = tmpFuncBool;
+                    RawList<(Func<bool>, Routine)> local = onWhile.Swap(tmpFuncBool);
 
                     for (int i = 0; i < local.Count; i++)
                     {
@@ -364,7 +317,7 @@ namespace Enderlook.Unity.Coroutines
                             Next(tmp.routine);
                     }
 
-                    ConcurrentBag<(Func<bool> condition, Routine routine)> bag = onWhileBag;
+                    ConcurrentBag<(Func<bool> condition, Routine routine)> bag = onWhile.Concurrent;
                     if (!(bag is null))
                     {
                         while (bag.TryTake(out (Func<bool> condition, Routine routine) tmp))
@@ -384,8 +337,7 @@ namespace Enderlook.Unity.Coroutines
 
                 private void OnUntil()
                 {
-                    RawList<(Func<bool>, Routine)> local = onUntil;
-                    onUntil = tmpFuncBool;
+                    RawList<(Func<bool>, Routine)> local = onUntil.Swap(tmpFuncBool);
 
                     for (int i = 0; i < local.Count; i++)
                     {
@@ -398,7 +350,7 @@ namespace Enderlook.Unity.Coroutines
                             onUntil.Add(tmp);
                     }
 
-                    ConcurrentBag<(Func<bool> condition, Routine routine)> bag = onUntilBag;
+                    ConcurrentBag<(Func<bool> condition, Routine routine)> bag = onUntil.Concurrent;
                     if (!(bag is null))
                     {
                         while (bag.TryTake(out (Func<bool> condition, Routine routine) tmp))
@@ -418,8 +370,7 @@ namespace Enderlook.Unity.Coroutines
 
                 private void OnTask()
                 {
-                    RawList<(ValueTask, Routine)> local = onTask;
-                    onTask = tmpTask;
+                    RawList<(ValueTask, Routine)> local = onTask.Swap(tmpTask);
 
                     for (int i = 0; i < local.Count; i++)
                     {
@@ -432,7 +383,7 @@ namespace Enderlook.Unity.Coroutines
                             onTask.Add(tmp);
                     }
 
-                    ConcurrentBag<(ValueTask condition, Routine routine)> bag = onTaskBag;
+                    ConcurrentBag<(ValueTask condition, Routine routine)> bag = onTask.Concurrent;
                     if (!(bag is null))
                     {
                         while (bag.TryTake(out (ValueTask condition, Routine routine) tmp))
@@ -452,8 +403,7 @@ namespace Enderlook.Unity.Coroutines
 
                 private void OnJobHandle()
                 {
-                    RawList<(JobHandle, Routine)> local = onJobHandle;
-                    onJobHandle = tmpJobHandle;
+                    RawList<(JobHandle, Routine)> local = onJobHandle.Swap(tmpJobHandle);
 
                     for (int i = 0; i < local.Count; i++)
                     {
@@ -469,7 +419,7 @@ namespace Enderlook.Unity.Coroutines
                             onJobHandle.Add(tmp);
                     }
 
-                    ConcurrentBag<(JobHandle condition, Routine routine)> bag = onJobHandleBag;
+                    ConcurrentBag<(JobHandle condition, Routine routine)> bag = onJobHandle.Concurrent;
                     if (!(bag is null))
                     {
                         while (bag.TryTake(out (JobHandle condition, Routine routine) tmp))
@@ -492,8 +442,7 @@ namespace Enderlook.Unity.Coroutines
 
                 private void OnValueCoroutine()
                 {
-                    RawList<(ValueCoroutine, Routine)> local = onValueCoroutine;
-                    onValueCoroutine = tmpValueCoroutine;
+                    RawList<(ValueCoroutine, Routine)> local = onValueCoroutine.Swap(tmpValueCoroutine);
 
                     for (int i = 0; i < local.Count; i++)
                     {
@@ -506,7 +455,7 @@ namespace Enderlook.Unity.Coroutines
                             onValueCoroutine.Add(tmp);
                     }
 
-                    ConcurrentBag<(ValueCoroutine condition, Routine routine)> bag = onValueCoroutineBag;
+                    ConcurrentBag<(ValueCoroutine condition, Routine routine)> bag = onValueCoroutine.Concurrent;
                     if (!(bag is null))
                     {
                         while (bag.TryTake(out (ValueCoroutine condition, Routine routine) tmp))
@@ -674,37 +623,37 @@ namespace Enderlook.Unity.Coroutines
                         switch (instruction.Mode)
                         {
                             case ValueYieldInstruction.Type.ForUpdate:
-                                onUpdateBag.Add(routine);
+                                onUpdate.AddConcurrent(routine);
                                 break;
                             case ValueYieldInstruction.Type.ForLateUpdate:
-                                onLateUpdateBag.Add(routine);
+                                onLateUpdate.AddConcurrent(routine);
                                 break;
                             case ValueYieldInstruction.Type.ForFixedUpdate:
-                                onFixedUpdateBag.Add(routine);
+                                onFixedUpdate.AddConcurrent(routine);
                                 break;
                             case ValueYieldInstruction.Type.ForEndOfFrame:
-                                onEndOfFrameBag.Add(routine);
+                                onEndOfFrame.AddConcurrent(routine);
                                 break;
                             case ValueYieldInstruction.Type.ForSeconds:
-                                onTimeBag.Add((instruction.Float + Time.time, routine));
+                                onTime.AddConcurrent((instruction.Float + Time.time, routine));
                                 break;
                             case ValueYieldInstruction.Type.ForRealtimeSeconds:
-                                onRealtimeBag.Add((instruction.Float + Time.realtimeSinceStartup, routine));
+                                onRealtime.AddConcurrent((instruction.Float + Time.realtimeSinceStartup, routine));
                                 break;
                             case ValueYieldInstruction.Type.Until:
-                                onUntilBag.Add((instruction.FuncBool, routine));
+                                onUntil.AddConcurrent((instruction.FuncBool, routine));
                                 break;
                             case ValueYieldInstruction.Type.While:
-                                onWhileBag.Add((instruction.FuncBool, routine));
+                                onWhile.AddConcurrent((instruction.FuncBool, routine));
                                 break;
                             case ValueYieldInstruction.Type.CustomYieldInstruction:
-                                onCustomBag.Add((instruction.CustomYieldInstruction, routine));
+                                onCustom.AddConcurrent((instruction.CustomYieldInstruction, routine));
                                 break;
                             case ValueYieldInstruction.Type.ValueTask:
-                                onTaskBag.Add((instruction.ValueTask, routine));
+                                onTask.AddConcurrent((instruction.ValueTask, routine));
                                 break;
                             case ValueYieldInstruction.Type.JobHandle:
-                                onJobHandleBag.Add((instruction.JobHandle, routine));
+                                onJobHandle.AddConcurrent((instruction.JobHandle, routine));
                                 break;
                             case ValueYieldInstruction.Type.ValueEnumerator:
                                 manager.StartThreadSafe(routine.cancellator, new NestedEnumeratorBackground<T, U>(this, routine, instruction.ValueEnumerator, mode), mode);
@@ -720,7 +669,7 @@ namespace Enderlook.Unity.Coroutines
                                 }
                             }
                             case ValueYieldInstruction.Type.ValueCoroutine:
-                                onValueCoroutineBag.Add((instruction.ValueCoroutine, routine));
+                                onValueCoroutine.AddConcurrent((instruction.ValueCoroutine, routine));
                                 break;
                             case ValueYieldInstruction.Type.ToUnity:
 #if UNITY_EDITOR
@@ -773,170 +722,28 @@ namespace Enderlook.Unity.Coroutines
 
                 public override void Free()
                 {
-                    RawList<Routine> onUpdate = this.onUpdate;
-                    for (int i = 0; i < onUpdate.Count; i++)
-                        onUpdate[i].Dispose();
-                    this.onUpdate.Clear();
+                    Dispose(ref onUpdate);
+                    Dispose(ref onFixedUpdate);
+                    Dispose(ref onLateUpdate);
+                    Dispose(ref onEndOfFrame);
+                    Dispose(ref onPoll);
+                    Dispose(ref onCustom);
+                    Dispose(ref onWhile);
+                    Dispose(ref onUntil);
+                    Dispose(ref onTask);
+                    Dispose(ref onJobHandle);
+                    Dispose(ref onTime);
+                    Dispose(ref onRealtime);
+                    Dispose(ref onValueCoroutine);
 
-                    RawList<Routine> onFixedUpdate = this.onFixedUpdate;
-                    for (int i = 0; i < onFixedUpdate.Count; i++)
-                        onFixedUpdate[i].Dispose();
-                    this.onFixedUpdate.Clear();
-
-                    RawList<Routine> onLateUpdate = this.onLateUpdate;
-                    for (int i = 0; i < onLateUpdate.Count; i++)
-                        onLateUpdate[i].Dispose();
-                    this.onLateUpdate.Clear();
-
-                    RawList<Routine> onEndOfFrame = this.onEndOfFrame;
-                    for (int i = 0; i < onEndOfFrame.Count; i++)
-                        onEndOfFrame[i].Dispose();
-                    this.onEndOfFrame.Clear();
-
-                    while (onPoll.TryDequeue(out Routine routine))
-                        routine.Dispose();
-
-                    RawList<(CustomYieldInstruction, Routine)> onCustom = this.onCustom;
-                    for (int i = 0; i < onCustom.Count; i++)
-                        onCustom[i].Item2.Dispose();
-                    this.onCustom.Clear();
-
-                    RawList<(Func<bool>, Routine)> onWhile = this.onWhile;
-                    for (int i = 0; i < onWhile.Count; i++)
-                        onWhile[i].Item2.Dispose();
-                    this.onWhile.Clear();
-
-                    RawList<(Func<bool>, Routine)> onUntil = this.onUntil;
-                    for (int i = 0; i < onUntil.Count; i++)
-                        onUntil[i].Item2.Dispose();
-                    this.onUntil.Clear();
-
-                    RawList<(ValueTask, Routine)> onTask = this.onTask;
-                    for (int i = 0; i < onTask.Count; i++)
-                        onTask[i].Item2.Dispose();
-                    this.onTask.Clear();
-
-                    RawList<(JobHandle, Routine)> onJobHandle = this.onJobHandle;
-                    for (int i = 0; i < onJobHandle.Count; i++)
-                        onJobHandle[i].Item2.Dispose();
-                    this.onJobHandle.Clear();
-                    
-                    RawList<(float, Routine)> onTime = this.onTime;
-                    for (int i = 0; i < onTime.Count; i++)
-                        onTime[i].Item2.Dispose();
-                    this.onTime.Clear();
-                    
-                    RawList<(float, Routine)> onRealtime = this.onRealtime;
-                    for (int i = 0; i < onRealtime.Count; i++)
-                        onRealtime[i].Item2.Dispose();
-                    this.onRealtime.Clear();
-                    
-                    RawList<(ValueCoroutine, Routine)> onValueCoroutine = this.onValueCoroutine;
-                    for (int i = 0; i < onValueCoroutine.Count; i++)
-                        onValueCoroutine[i].Item2.Dispose();
-                    this.onValueCoroutine.Clear();
-                    
                     RawList<(U, UnityEngine.Coroutine)> onUnityCoroutine = this.onUnityCoroutine;
                     for (int i = 0; i < onUnityCoroutine.Count; i++)
                         manager.StopUnityCoroutine(onUnityCoroutine[i].Item2);
                     this.onUnityCoroutine.Clear();
 
-                    RawList<Routine> tmpT = this.tmpT;
-                    for (int i = 0; i < tmpT.Count; i++)
-                        tmpT[i].Dispose();
-                    this.tmpT.Clear();
-
-                    while (tmpTQueue.TryDequeue(out Routine routine))
-                        routine.Dispose();
-
-                    RawList<(CustomYieldInstruction, Routine)> tmpCustom = this.tmpCustom;
-                    for (int i = 0; i < tmpCustom.Count; i++)
-                        tmpCustom[i].Item2.Dispose();
-                    this.tmpCustom.Clear();
-
-                    RawList<(float, Routine)> tmpFloat = this.tmpFloat;
-                    for (int i = 0; i < tmpFloat.Count; i++)
-                        tmpFloat[i].Item2.Dispose();
-                    this.tmpFloat.Clear();
-
-                    RawList<(Func<bool>, Routine)> tmpFuncBool = this.tmpFuncBool;
-                    for (int i = 0; i < tmpFuncBool.Count; i++)
-                        tmpFuncBool[i].Item2.Dispose();
-                    this.tmpFuncBool.Clear();
-
-                    RawList<(ValueTask, Routine)> tmpTask = this.tmpTask;
-                    for (int i = 0; i < tmpTask.Count; i++)
-                        tmpTask[i].Item2.Dispose();
-                    this.tmpTask.Clear();
-
-                    RawList<(JobHandle, Routine)> tmpJobHandle = this.tmpJobHandle;
-                    for (int i = 0; i < tmpJobHandle.Count; i++)
-                        tmpJobHandle[i].Item2.Dispose();
-                    this.tmpJobHandle.Clear();
-                    
-                    RawList<(ValueCoroutine, Routine)> tmpValueCoroutine = this.tmpValueCoroutine;
-                    for (int i = 0; i < tmpValueCoroutine.Count; i++)
-                        tmpValueCoroutine[i].Item2.Dispose();
-                    this.tmpValueCoroutine.Clear();
-
-                    if (Application.platform != RuntimePlatform.WebGLPlayer)
-                    {
-                        ConcurrentBag<Routine> onUpdateBag = this.onUpdateBag;
-                        while (onUpdateBag.TryTake(out Routine result))
-                            result.Dispose();
-
-                        ConcurrentBag<Routine> onFixedUpdateBag = this.onFixedUpdateBag;
-                        while (onFixedUpdateBag.TryTake(out Routine result))
-                            result.Dispose();
-
-                        ConcurrentBag<Routine> onLateUpdateBag = this.onLateUpdateBag;
-                        while (onLateUpdateBag.TryTake(out Routine result))
-                            result.Dispose();
-
-                        ConcurrentBag<Routine> onEndOfFrameBag = this.onEndOfFrameBag;
-                        while (onEndOfFrameBag.TryTake(out Routine result))
-                            result.Dispose();
-
-                        ConcurrentQueue<Routine> onPollQueue = this.onPollQueue;
-                        while (onPollQueue.TryDequeue(out Routine result))
-                            result.Dispose();
-
-                        ConcurrentBag<(CustomYieldInstruction, Routine)> onCustomBag = this.onCustomBag;
-                        while (onCustomBag.TryTake(out (CustomYieldInstruction, Routine) result))
-                            result.Item2.Dispose();
-
-                        ConcurrentBag<(Func<bool>, Routine)> onWhileBag = this.onWhileBag;
-                        while (onWhileBag.TryTake(out (Func<bool>, Routine) result))
-                            result.Item2.Dispose();
-
-                        ConcurrentBag<(Func<bool>, Routine)> onUntilBag = this.onUntilBag;
-                        while (onUntilBag.TryTake(out (Func<bool>, Routine) result))
-                            result.Item2.Dispose();
-
-                        ConcurrentBag<(ValueTask, Routine)> onTaskBag = this.onTaskBag;
-                        while (onTaskBag.TryTake(out (ValueTask, Routine) result))
-                            result.Item2.Dispose();
-
-                        ConcurrentBag<(JobHandle, Routine)> onJobHandleBag = this.onJobHandleBag;
-                        while (onJobHandleBag.TryTake(out (JobHandle, Routine) result))
-                            result.Item2.Dispose();
-
-                        ConcurrentBag<(float, Routine)> onTimeBag = this.onTimeBag;
-                        while (onTimeBag.TryTake(out (float, Routine) result))
-                            result.Item2.Dispose();
-
-                        ConcurrentBag<(float, Routine)> onRealtimeBag = this.onRealtimeBag;
-                        while (onRealtimeBag.TryTake(out (float, Routine) result))
-                            result.Item2.Dispose();
-
-                        ConcurrentBag<(U, IEnumerator)> onUnityCoroutineBag = this.onUnityCoroutineBag;
-                        // TODO: In .Net Standard 2.1, ConcurrentBag<T>.Clear() method exists.
-                        while (onUnityCoroutineBag.TryTake(out _)) ;
-
-                        ConcurrentBag<(ValueCoroutine, Routine)> onValueCoroutineBag = this.onValueCoroutineBag;
-                        while (onValueCoroutineBag.TryTake(out (ValueCoroutine, Routine) result))
-                            result.Item2.Dispose();
-                    }
+                    ConcurrentBag<(U, IEnumerator)> onUnityCoroutineBag = this.onUnityCoroutineBag;
+                    // TODO: In .Net Standard 2.1, ConcurrentBag<T>.Clear() method exists.
+                    while (onUnityCoroutineBag.TryTake(out _)) ;
                 }
             }
         }
