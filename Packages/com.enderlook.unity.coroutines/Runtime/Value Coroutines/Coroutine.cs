@@ -39,7 +39,7 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="routine">Coroutine to start.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Start<T>(T routine) where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineScheduler.Shared.Start(new Uncancellable(), routine);
+            => CoroutineScheduler.Shared.Start(routine, new Uncancellable());
 
         /// <summary>
         /// Start a value coroutine.<br/>
@@ -48,8 +48,8 @@ namespace Enderlook.Unity.Coroutines
         /// <typeparam name="T">Type of routine to start.</typeparam>
         /// <param name="routine">Coroutine to start.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void StartThreadSafe<T>(T routine) where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineScheduler.Shared.StartThreadSafe(new Uncancellable(), routine);
+        public static void ConcurrentStart<T>(T routine) where T : IEnumerator<ValueYieldInstruction>
+            => CoroutineScheduler.Shared.ConcurrentStart(routine, new Uncancellable());
 
         /// <summary>
         /// Start a value coroutine.
@@ -58,7 +58,7 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="routine">Coroutine to start.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ValueCoroutine StartWithHandle<T>(T routine) where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineScheduler.Shared.StartWithHandle(new Uncancellable(), routine);
+            => CoroutineScheduler.Shared.StartWithHandle(routine, new Uncancellable());
 
         /// <summary>
         /// Start a value coroutine.<br/>
@@ -67,8 +67,8 @@ namespace Enderlook.Unity.Coroutines
         /// <typeparam name="T">Type of routine to start.</typeparam>
         /// <param name="routine">Coroutine to start.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ValueCoroutine StartWithHandleThreadSafe<T>(T routine) where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineScheduler.Shared.StartWithHandleThreadSafe(new Uncancellable(), routine);
+        public static ValueCoroutine ConcurrentStartWithHandle<T>(T routine) where T : IEnumerator<ValueYieldInstruction>
+            => CoroutineScheduler.Shared.ConcurrentStartWithHandle(routine, new Uncancellable());
 
         /// <summary>
         /// Start a value coroutine.<br/>
@@ -81,7 +81,7 @@ namespace Enderlook.Unity.Coroutines
         public static void Start<T, U>(T routine, U cancellator)
             where T : IEnumerator<ValueYieldInstruction>
             where U : ICancellable
-            => CoroutineScheduler.Shared.Start(cancellator, routine);
+            => CoroutineScheduler.Shared.Start(routine, cancellator);
 
         /// <summary>
         /// Start a value coroutine.<br/>
@@ -91,10 +91,10 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="routine">Coroutine to start.</param>
         /// <param name="cancellator">Cancellator of the coroutine.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void StartThreadSafe<T, U>(T routine, U cancellator)
+        public static void ConcurrentStart<T, U>(T routine, U cancellator)
             where T : IEnumerator<ValueYieldInstruction>
             where U : ICancellable
-            => CoroutineScheduler.Shared.StartThreadSafe(cancellator, routine);
+            => CoroutineScheduler.Shared.ConcurrentStart(routine, cancellator);
 
         /// <summary>
         /// Start a value coroutine.<br/>
@@ -105,7 +105,7 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="source"><see cref="Object"/> from which this coroutine is attached to.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Start<T>(T routine, Object source) where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineScheduler.Shared.Start(new CancellableUnityObject(source), routine);
+            => CoroutineScheduler.Shared.Start(routine, new CancellableUnityObject(source));
 
         /// <summary>
         /// Start a value coroutine.<br/>
@@ -115,8 +115,8 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="routine">Coroutine to start.</param>
         /// <param name="source"><see cref="Object"/> from which this coroutine is attached to.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void StartThreadSafe<T>(T routine, Object source) where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineScheduler.Shared.StartThreadSafe(new CancellableUnityObject(source), routine);
+        public static void ConcurrentStart<T>(T routine, Object source) where T : IEnumerator<ValueYieldInstruction>
+            => CoroutineScheduler.Shared.ConcurrentStart(routine, new CancellableUnityObject(source));
 
         /// <summary>
         /// Start a value coroutine.<br/>
@@ -127,7 +127,7 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="source"><see cref="Object"/> from which this coroutine is attached to.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ValueCoroutine StartWithHandle<T>(T routine, Object source) where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineScheduler.Shared.StartWithHandle(new CancellableUnityObject(source), routine);
+            => CoroutineScheduler.Shared.StartWithHandle(routine, new CancellableUnityObject(source));
 
         /// <summary>
         /// Start a value coroutine.<br/>
@@ -137,8 +137,8 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="routine">Coroutine to start.</param>
         /// <param name="source"><see cref="Object"/> from which this coroutine is attached to.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ValueCoroutine StartWithHandleThreadSafe<T>(T routine, Object source) where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineScheduler.Shared.StartWithHandleThreadSafe(new CancellableUnityObject(source), routine);
+        public static ValueCoroutine ConcurrentStartWithHandle<T>(T routine, Object source) where T : IEnumerator<ValueYieldInstruction>
+            => CoroutineScheduler.Shared.ConcurrentStartWithHandle(routine, new CancellableUnityObject(source));
 
         /// <summary>
         /// Start a value coroutine.
@@ -148,7 +148,7 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="cancellationToken"><see cref="CancellationToken"/> of this coroutine.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Start<T>(T routine, CancellationToken cancellationToken) where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineScheduler.Shared.Start(new CancellableCancellationToken(cancellationToken), routine);
+            => CoroutineScheduler.Shared.Start(routine, new CancellableCancellationToken(cancellationToken));
 
         /// <summary>
         /// Start a value coroutine.<br/>
@@ -158,8 +158,8 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="routine">Coroutine to start.</param>
         /// <param name="cancellationToken"><see cref="CancellationToken"/> of this coroutine.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void StartThreadSafe<T>(T routine, CancellationToken cancellationToken) where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineScheduler.Shared.StartThreadSafe(new CancellableCancellationToken(cancellationToken), routine);
+        public static void ConcurrentStart<T>(T routine, CancellationToken cancellationToken) where T : IEnumerator<ValueYieldInstruction>
+            => CoroutineScheduler.Shared.ConcurrentStart(routine, new CancellableCancellationToken(cancellationToken));
 
         /// <summary>
         /// Start a value coroutine.<br/>
@@ -170,7 +170,7 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="cancellationToken"><see cref="CancellationToken"/> of this coroutine.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ValueCoroutine StartWithHandle<T>(T routine, CancellationToken cancellationToken) where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineScheduler.Shared.StartWithHandle(new CancellableCancellationToken(cancellationToken), routine);
+            => CoroutineScheduler.Shared.StartWithHandle(routine, new CancellableCancellationToken(cancellationToken));
 
         /// <summary>
         /// Start a value coroutine.<br/>
@@ -180,7 +180,7 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="routine">Coroutine to start.</param>
         /// <param name="cancellationToken"><see cref="CancellationToken"/> of this coroutine.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ValueCoroutine StartWithHandleThreadSafe<T>(T routine, CancellationToken cancellationToken) where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineScheduler.Shared.StartWithHandleThreadSafe(new CancellableCancellationToken(cancellationToken), routine);
+        public static ValueCoroutine ConcurrentStartWithHandle<T>(T routine, CancellationToken cancellationToken) where T : IEnumerator<ValueYieldInstruction>
+            => CoroutineScheduler.Shared.ConcurrentStartWithHandle(routine, new CancellableCancellationToken(cancellationToken));
     }
 }

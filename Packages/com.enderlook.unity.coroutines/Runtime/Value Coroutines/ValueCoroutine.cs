@@ -27,17 +27,17 @@ namespace Enderlook.Unity.Coroutines
             where U : ICancellable
         {
             Handle handler = ConcurrentPool.Rent<Handle>();
-            managers.Start(cancellator, new Enumerator<T>(handler, routine));
+            managers.Start(new Enumerator<T>(handler, routine), cancellator);
             return new ValueCoroutine(handler);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static ValueCoroutine StartThreadSafe<T, U>(CoroutineScheduler.Managers managers, U cancellator, T routine)
+        internal static ValueCoroutine ConcurrentStart<T, U>(CoroutineScheduler.Managers managers, U cancellator, T routine)
             where T : IEnumerator<ValueYieldInstruction>
             where U : ICancellable
         {
             Handle handler = ConcurrentPool.Rent<Handle>();
-            managers.StartThreadSafe(cancellator, new Enumerator<T>(handler, routine));
+            managers.ConcurrentStart(new Enumerator<T>(handler, routine), cancellator);
             return new ValueCoroutine(handler);
         }
 

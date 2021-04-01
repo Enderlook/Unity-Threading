@@ -20,7 +20,7 @@ namespace Enderlook.Unity.Coroutines
         [EditorBrowsable(EditorBrowsableState.Never)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void StartValueCoroutine<T>(this MonoBehaviour source, T routine) where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineScheduler.Shared.Start(new CancellableUnityObject(source), routine);
+            => CoroutineScheduler.Shared.Start(routine, new CancellableUnityObject(source));
 
         /// <summary>
         /// Start a value coroutine.<br/>
@@ -31,8 +31,8 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="routine">Coroutine to start.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void StartValueCoroutineThreadSafe<T>(this MonoBehaviour source, T routine) where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineScheduler.Shared.StartThreadSafe(new CancellableUnityObject(source), routine);
+        public static void ConcurrentStartValueCoroutine<T>(this MonoBehaviour source, T routine) where T : IEnumerator<ValueYieldInstruction>
+            => CoroutineScheduler.Shared.ConcurrentStart(routine, new CancellableUnityObject(source));
 
         /// <summary>
         /// Start a value coroutine.
@@ -43,7 +43,7 @@ namespace Enderlook.Unity.Coroutines
         [EditorBrowsable(EditorBrowsableState.Never)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ValueCoroutine StartValueCoroutineWithHandle<T>(this MonoBehaviour source, T routine) where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineScheduler.Shared.StartWithHandle(new CancellableUnityObject(source), routine);
+            => CoroutineScheduler.Shared.StartWithHandle(routine, new CancellableUnityObject(source));
 
         /// <summary>
         /// Start a value coroutine.<br/>
@@ -54,7 +54,7 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="routine">Coroutine to start.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ValueCoroutine StartValueCoroutineWithHandleThreadSafe<T>(this MonoBehaviour source, T routine) where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineScheduler.Shared.StartWithHandleThreadSafe(new CancellableUnityObject(source), routine);
+        public static ValueCoroutine ConcurrentStartValueCoroutineWithHandle<T>(this MonoBehaviour source, T routine) where T : IEnumerator<ValueYieldInstruction>
+            => CoroutineScheduler.Shared.ConcurrentStartWithHandle(routine, new CancellableUnityObject(source));
     }
 }

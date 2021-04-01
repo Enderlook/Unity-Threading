@@ -58,27 +58,28 @@ namespace Enderlook.Unity.Coroutines
                     throw new InvalidOperationException($"Already has set a {nameof(MonoBehaviour)}.");
             }
 
-            public void Start<T, U>(U cancellator, T routine)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Start<T, U>(T routine, U cancellator)
                 where T : IEnumerator<ValueYieldInstruction>
                 where U : ICancellable
             {
                 if (typeof(T).IsValueType)
                 {
                     if (typeof(U).IsValueType)
-                        StartInner(cancellator, routine);
+                        StartInner(routine, cancellator);
                     else
-                        StartInner((ICancellable)cancellator, routine);
+                        StartInner(routine, (ICancellable)cancellator);
                 }
                 else
                 {
                     if (typeof(U).IsValueType)
-                        StartInner(new Uncancellable(), (IEnumerator<ValueYieldInstruction>)routine);
+                        StartInner((IEnumerator<ValueYieldInstruction>)routine, new Uncancellable());
                     else
-                        StartInner((ICancellable)cancellator, (IEnumerator<ValueYieldInstruction>)routine);
+                        StartInner((IEnumerator<ValueYieldInstruction>)routine, (ICancellable)cancellator);
                 }
             }
 
-            private void StartInner<T, U>(U cancellator, T routine)
+            private void StartInner<T, U>(T routine, U cancellator)
                 where T : IEnumerator<ValueYieldInstruction>
                 where U : ICancellable
             {
@@ -111,44 +112,45 @@ namespace Enderlook.Unity.Coroutines
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ValueCoroutine StartWithHandle<T, U>(U cancellator, T routine)
+            public ValueCoroutine StartWithHandle<T, U>(T routine, U cancellator)
                where T : IEnumerator<ValueYieldInstruction>
                where U : ICancellable
                 => ValueCoroutine.Start(this, cancellator, routine);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ValueCoroutine StartWithHandleThreadSafe<T, U>(U cancellator, T routine)
+            public ValueCoroutine ConcurrentStartWithHandle<T, U>(T routine, U cancellator)
                where T : IEnumerator<ValueYieldInstruction>
                where U : ICancellable
-                => ValueCoroutine.StartThreadSafe(this, cancellator, routine);
+                => ValueCoroutine.ConcurrentStart(this, cancellator, routine);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void StartThreadSafe<T, U>(U cancellator, T routine)
+            public void ConcurrentStart<T, U>(T routine, U cancellator)
                where T : IEnumerator<ValueYieldInstruction>
                where U : ICancellable
-                => StartThreadSafe(cancellator, routine, UnknownThread);
+                => ConcurrentStart(routine, cancellator, UnknownThread);
 
-            private void StartThreadSafe<T, U>(U cancellator, T routine, int mode)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private void ConcurrentStart<T, U>(T routine, U cancellator, int mode)
                 where T : IEnumerator<ValueYieldInstruction>
                 where U : ICancellable
             {
                 if (typeof(T).IsValueType)
                 {
                     if (typeof(U).IsValueType)
-                        StartThreadSafeInner(cancellator, routine, mode);
+                        ConcurrentStartInner(routine, cancellator, mode);
                     else
-                        StartThreadSafeInner((ICancellable)cancellator, routine, mode);
+                        ConcurrentStartInner(routine, (ICancellable)cancellator, mode);
                 }
                 else
                 {
                     if (typeof(U).IsValueType)
-                        StartThreadSafeInner(new Uncancellable(), (IEnumerator<ValueYieldInstruction>)routine, mode);
+                        ConcurrentStartInner((IEnumerator<ValueYieldInstruction>)routine, new Uncancellable(), mode);
                     else
-                        StartThreadSafeInner((ICancellable)cancellator, (IEnumerator<ValueYieldInstruction>)routine, mode);
+                        ConcurrentStartInner((IEnumerator<ValueYieldInstruction>)routine, (ICancellable)cancellator, mode);
                 }
             }
 
-            private void StartThreadSafeInner<T, U>(U cancellator, T routine, int mode)
+            private void ConcurrentStartInner<T, U>(T routine, U cancellator, int mode)
                 where T : IEnumerator<ValueYieldInstruction>
                 where U : ICancellable
             {
@@ -166,7 +168,7 @@ namespace Enderlook.Unity.Coroutines
                 if (managersDictionary.TryGetValue((enumerator_, cancellator_), out ManagerBase manager))
                 {
                     managerLock.ReadEnd();
-                    ((TypedManager<T, U>)manager).StartThreadSafe(cancellator, routine, UnknownThread);
+                    ((TypedManager<T, U>)manager).ConcurrentStart(cancellator, routine, UnknownThread);
                 }
                 else
                 {
@@ -174,7 +176,7 @@ namespace Enderlook.Unity.Coroutines
                     if (managersDictionary.TryGetValue((enumerator_, cancellator_), out manager))
                     {
                         managerLock.WriteEnd();
-                        ((TypedManager<T, U>)manager).StartThreadSafe(cancellator, routine, mode);
+                        ((TypedManager<T, U>)manager).ConcurrentStart(cancellator, routine, mode);
                     }
                     else
                     {
@@ -182,7 +184,7 @@ namespace Enderlook.Unity.Coroutines
                         managersDictionary.Add((enumerator_, cancellator_), manager_);
                         managersList.Add(manager_);
                         managerLock.WriteEnd();
-                        manager_.StartThreadSafe(cancellator, routine, mode);
+                        manager_.ConcurrentStart(cancellator, routine, mode);
                     }
                 }
             }
