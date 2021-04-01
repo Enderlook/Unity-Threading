@@ -1,0 +1,18 @@
+{
+    "name": "Enderlook.Unity.Coroutines-Editor",
+    "references": [
+        "GUID:7a7cdaeabbbb3ab4cb575ce2a8443842",
+        "GUID:70bb7604d926506479be15f5272e3957",
+        "GUID:12965892c664bf44cbd63f6568ef40da"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

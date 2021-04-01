@@ -1,12 +1,10 @@
-﻿using Enderlook.Unity.Coroutines;
-using Enderlook.Unity.Jobs;
-
+﻿using System;
 using System.Collections;
-using System.Runtime.CompilerServices;
+using System.Threading;
 
 using UnityEngine;
 
-namespace Enderlook.Unity
+namespace Enderlook.Unity.Threading
 {
     [AddComponentMenu("")] // Not show in menu
     [DefaultExecutionOrder(int.MaxValue)]
@@ -16,37 +14,11 @@ namespace Enderlook.Unity
 
         public static Manager Shared { get; private set; }
 
-        internal CoroutineScheduler CoroutineScheduler { get; private set; }
-
-        public int MilisecondsExecutedPerFrameOnPoll {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => CoroutineScheduler.MilisecondsExecutedPerFrameOnPoll;
-            set {
-                CoroutineScheduler manager = CoroutineScheduler;
-                manager.MilisecondsExecutedPerFrameOnPoll = value;
-                CoroutineScheduler = manager;
-            }
-        }
-
-        public float MinimumPercentOfExecutionsPerFrameOnPoll {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => CoroutineScheduler.MinimumPercentOfExecutionsPerFrameOnPoll;
-            set {
-                CoroutineScheduler manager = CoroutineScheduler;
-                manager.MinimumPercentOfExecutionsPerFrameOnPoll = value;
-                CoroutineScheduler = manager;
-            }
-        }
-
-        private static void Initialize()
-        {
-            GameObject gameObject = new GameObject("Enderlook.Unity.Threading.Manager");
-#if UNITY_EDITOR
-            gameObject.hideFlags = HideFlags.HideAndDontSave;
-#endif
-            DontDestroyOnLoad(gameObject);
-            Shared = gameObject.AddComponent<Manager>();
-        }
+        public static event Action OnUpdate;
+        public static event Action OnFixedUpdate;
+        public static event Action OnLateUpdate;
+        public static event Action OnEndOfFrame;
+        public static event Action<Manager> ToInitialize;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Initialize1()
@@ -57,7 +29,7 @@ namespace Enderlook.Unity
 #endif
             if (Shared == null)
             {
-                GameObject gameObject = new GameObject("Enderlook.Unity.Threading.Manager");
+                GameObject gameObject = new GameObject("Enderlook.Unity.Scheduling.Manager");
 #if UNITY_EDITOR
                 gameObject.hideFlags = HideFlags.HideAndDontSave;
 #endif
@@ -86,14 +58,16 @@ namespace Enderlook.Unity
             }
             else
             {
-                CoroutineScheduler = CoroutineScheduler.Create(this);
+                WaitForEndOfFrame endOfFrame = new WaitForEndOfFrame();
                 StartCoroutine(Work());
                 IEnumerator Work()
                 {
                     while (true)
                     {
-                        yield return Wait.ForEndOfFrame;
-                        CoroutineScheduler.OnEndOfFrame();
+                        yield return endOfFrame;
+                        Action<Manager> action = Interlocked.Exchange(ref ToInitialize, null);
+                        action(this);
+                        OnEndOfFrame();
                     }
                 }
             }
@@ -108,8 +82,6 @@ namespace Enderlook.Unity
 #endif
             Shared = null;
             Debug.LogError($"{nameof(Manager)} should not be destroyed. This has triggered undefined behaviour.", this);
-            CoroutineScheduler.Dispose();
-            Initialize();
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
@@ -127,18 +99,25 @@ namespace Enderlook.Unity
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
         private void Update()
         {
-            JobManager.Update();
-            CoroutineScheduler.OnUpdate();
+            Action<Manager> action = Interlocked.Exchange(ref ToInitialize, null);
+            action(this);
+            OnUpdate();
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
         private void LateUpdate()
         {
-            CoroutineScheduler.OnLateUpdate();
-            CoroutineScheduler.OnPoll();
+            Action<Manager> action = Interlocked.Exchange(ref ToInitialize, null);
+            action(this);
+            OnLateUpdate();
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
-        private void FixedUpdate() => CoroutineScheduler.OnFixedUpdate();
+        private void FixedUpdate()
+        {
+            Action<Manager> action = Interlocked.Exchange(ref ToInitialize, null);
+            action(this);
+            OnFixedUpdate();
+        }
     }
 }

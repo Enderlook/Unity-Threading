@@ -1,0 +1,20 @@
+{
+  "name": "com.enderlook.unity.async",
+  "version": "0.1.0",
+  "displayName": "Enderlook Unity Async",
+  "description": "Provides utility methods for working with async/await.",
+  "unity": "2019.2",
+  "keywords": [
+    "utility",
+    "threading",
+    "async",
+    "await"
+  ],
+  "dependencies": {
+    "com.system.threading.tasks.extensions": "https://github.com/Enderlook/Unity-Net-Packages?path=Packages/com.system.threading.tasks.extensions#com.system.threading.tasks.extensions/v4.5.4"
+  },
+  "author": {
+    "name": "Enderlook",
+    "url": "https://github.com/Enderlook"
+  }
+}

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Enderlook.Unity
+namespace Enderlook.Unity.Threading
 {
 #if UNITY_EDITOR
     /// <summary>

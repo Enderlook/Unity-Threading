@@ -1,18 +1,15 @@
 {
   "name": "com.enderlook.unity.threading",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "displayName": "Enderlook Unity Threading",
-  "description": "Provides utility methods for working with multithreading and Unity Jobs.",
+  "description": "Provides utility methods for working with multithreading adn tasks.",
   "unity": "2019.2",
   "keywords": [
     "utility",
-    "threading"
+    "threading",
+    "tasks"
   ],
   "dependencies": {
-    "com.enderlook.collections.low_level": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.enderlook.collections.low_level#com.enderlook.collections.low_level/v0.6.0",
-    "com.enderlook.threading": "https://github.com/Enderlook/Unity-Net-Packages?path=Packages/com.enderlook.threading#com.enderlook.threading/v0.1.0",
-    "com.enderlook.unity.toolset.utils": "https://github.com/Enderlook/Unity-Toolset.git?path=Packages/com.enderlook.unity.toolset.utils#com.enderlook.unity.toolset.utils/v0.3.2",
-    "com.system.threading.tasks.extensions": "https://github.com/Enderlook/Unity-Net-Packages?path=Packages/com.system.threading.tasks.extensions#com.system.threading.tasks.extensions/v4.5.4"
   },
   "author": {
     "name": "Enderlook",

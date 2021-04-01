@@ -1,0 +1,17 @@
+{
+    "name": "Enderlook.Unity.Jobs-Editor",
+    "references": [
+        "GUID:0213f6f83d9102e47a7722b566934def",
+        "GUID:70bb7604d926506479be15f5272e3957"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

@@ -1,0 +1,14 @@
+{
+    "name": "Enderlook.Unity.Coroutines",
+    "references": [
+        "GUID:12965892c664bf44cbd63f6568ef40da"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}
