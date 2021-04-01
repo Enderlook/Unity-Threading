@@ -112,7 +112,13 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="source">Yield instruction.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator ValueYieldInstruction(WaitForUpdate source)
-            => new ValueYieldInstruction() { Mode = Type.ForUpdate };
+        {
+#if UNITY_EDITOR
+            if (source is null)
+                Debug.LogWarning($"{nameof(source)} is null. Note that this function won't fail if {nameof(source)} is null.");
+#endif
+            return new ValueYieldInstruction() { Mode = Type.ForUpdate };
+        }
 
         /// <summary>
         /// Convert a <see cref="WaitForFixedUpdate"/> into a <see cref="ValueYieldInstruction"/>.
@@ -120,7 +126,13 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="source">Yield instruction.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator ValueYieldInstruction(WaitForFixedUpdate source)
-            => new ValueYieldInstruction() { Mode = Type.ForFixedUpdate };
+        {
+#if UNITY_EDITOR
+            if (source is null)
+                Debug.LogWarning($"{nameof(source)} is null. Note that this function won't fail if {nameof(source)} is null.");
+#endif
+            return new ValueYieldInstruction() { Mode = Type.ForFixedUpdate };
+        }
 
         /// <summary>
         /// Convert a <see cref="WaitForSeconds"/> into a <see cref="ValueYieldInstruction"/>.
@@ -128,7 +140,17 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="source">Yield instruction.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator ValueYieldInstruction(WaitForSeconds source)
-            => new ValueYieldInstruction() { Mode = Type.ForSeconds, Float = (float)waitForSecondsTimer.GetValue(source) + Time.time };
+        {
+            try
+            {
+                return new ValueYieldInstruction() { Mode = Type.ForSeconds, Float = (float)waitForSecondsTimer.GetValue(source) + Time.time };
+            }
+            catch (ArgumentNullException)
+            {
+                ThrowSourceIsNull();
+                return default;
+            }
+        }
 
         /// <summary>
         /// Convert a <see cref="WaitForSecondsRealtime"/> into a <see cref="ValueYieldInstruction"/>.
@@ -136,7 +158,17 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="source">Yield instruction.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator ValueYieldInstruction(WaitForSecondsRealtime source)
-            => new ValueYieldInstruction() { Mode = Type.ForRealtimeSeconds, Float = source.waitTime + Time.time };
+        {
+            try
+            {
+                return new ValueYieldInstruction() { Mode = Type.ForRealtimeSeconds, Float = source.waitTime + Time.time };
+            }
+            catch (NullReferenceException)
+            {
+                ThrowSourceIsNull();
+                return default;
+            }
+        }
 
         /// <summary>
         /// Convert a <see cref="WaitForSecondsRealtimePooled"/> into a <see cref="ValueYieldInstruction"/>.
@@ -144,7 +176,17 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="source">Yield instruction.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator ValueYieldInstruction(WaitForSecondsRealtimePooled source)
-            => new ValueYieldInstruction() { Mode = Type.ForRealtimeSeconds, Float = source.waitUntil };
+        {
+            try
+            {
+                return new ValueYieldInstruction() { Mode = Type.ForRealtimeSeconds, Float = source.waitUntil };
+            }
+            catch (NullReferenceException)
+            {
+                ThrowSourceIsNull();
+                return default;
+            }
+        }
 
         /// <summary>
         /// Convert a <see cref="WaitForEndOfFrame"/> into a <see cref="ValueYieldInstruction"/>.
@@ -152,7 +194,13 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="source">Yield instruction.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator ValueYieldInstruction(WaitForEndOfFrame source)
-            => new ValueYieldInstruction() { Mode = Type.ForEndOfFrame };
+        {
+#if UNITY_EDITOR
+            if (source is null)
+                Debug.LogWarning($"{nameof(source)} is null. Note that this function won't fail if {nameof(source)} is null.");
+#endif
+            return new ValueYieldInstruction() { Mode = Type.ForEndOfFrame };
+        }
 
         /// <summary>
         /// Convert a <see cref="CustomYieldInstruction"/> into a <see cref="ValueYieldInstruction"/>.
@@ -160,7 +208,11 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="source">Yield instruction.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator ValueYieldInstruction(CustomYieldInstruction source)
-            => new ValueYieldInstruction() { Mode = Type.CustomYieldInstruction, CustomYieldInstruction = source };
+        {
+            if (source is null)
+                ThrowSourceIsNull();
+            return new ValueYieldInstruction() { Mode = Type.CustomYieldInstruction, CustomYieldInstruction = source };
+        }
 
         /// <summary>
         /// Convert a <see cref="ValueTask"/> into a <see cref="ValueYieldInstruction"/>.
@@ -217,6 +269,8 @@ namespace Enderlook.Unity.Coroutines
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator ValueYieldInstruction(YieldInstruction source)
         {
+            if (source is null)
+                ThrowSourceIsNull();
 #if UNITY_EDITOR
             if (source is WaitForFixedUpdate)
                 Debug.LogWarning($"Using implicit conversion from {nameof(UnityEngine.YieldInstruction)} to {nameof(ValueYieldInstruction)}.\n"
@@ -229,5 +283,8 @@ namespace Enderlook.Unity.Coroutines
 #endif
             return new ValueYieldInstruction() { Mode = Type.YieldInstruction, YieldInstruction = source };
         }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowSourceIsNull() => throw new ArgumentNullException("source");
     }
 }
