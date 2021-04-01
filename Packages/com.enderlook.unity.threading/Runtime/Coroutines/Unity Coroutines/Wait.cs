@@ -45,7 +45,7 @@ namespace Enderlook.Unity.Coroutines
             WaitForJobComplete.Clear();
         }
 
-        internal static void SuscribeClear(Action clear) => Wait.clear += clear;
+        internal static void SubscribeClear(Action clear) => Wait.clear += clear;
 
         private static readonly Dictionary<float, WaitForSeconds> waitForSeconds = new Dictionary<float, WaitForSeconds>();
 

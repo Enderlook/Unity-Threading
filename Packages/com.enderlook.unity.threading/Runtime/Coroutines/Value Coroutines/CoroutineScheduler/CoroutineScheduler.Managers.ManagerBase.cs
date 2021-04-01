@@ -14,7 +14,9 @@
 
                 public abstract void OnEndOfFrame();
 
-                public abstract bool OnPoll(int until, float percentOfExecutions);
+                public abstract int PollCount();
+
+                public abstract bool OnPoll(int until, ref int i, int to);
 
                 public abstract void Free();
             }

@@ -113,7 +113,7 @@ namespace Enderlook.Unity.Coroutines
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator ValueYieldInstruction(WaitForUpdate source)
         {
-#if UNITY_EDITOR
+#if DEBUG
             if (source is null)
                 Debug.LogWarning($"{nameof(source)} is null. Note that this function won't fail if {nameof(source)} is null.");
 #endif
@@ -127,7 +127,7 @@ namespace Enderlook.Unity.Coroutines
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator ValueYieldInstruction(WaitForFixedUpdate source)
         {
-#if UNITY_EDITOR
+#if DEBUG
             if (source is null)
                 Debug.LogWarning($"{nameof(source)} is null. Note that this function won't fail if {nameof(source)} is null.");
 #endif
@@ -195,7 +195,7 @@ namespace Enderlook.Unity.Coroutines
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator ValueYieldInstruction(WaitForEndOfFrame source)
         {
-#if UNITY_EDITOR
+#if DEBUG
             if (source is null)
                 Debug.LogWarning($"{nameof(source)} is null. Note that this function won't fail if {nameof(source)} is null.");
 #endif
@@ -271,7 +271,7 @@ namespace Enderlook.Unity.Coroutines
         {
             if (source is null)
                 ThrowSourceIsNull();
-#if UNITY_EDITOR
+#if DEBUG
             if (source is WaitForFixedUpdate)
                 Debug.LogWarning($"Using implicit conversion from {nameof(UnityEngine.YieldInstruction)} to {nameof(ValueYieldInstruction)}.\n"
                     + $"But concrete type is {nameof(WaitForFixedUpdate)}.\n"

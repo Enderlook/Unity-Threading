@@ -117,12 +117,9 @@ namespace Enderlook.Unity.Coroutines
                     }
 
                     ConcurrentBag<Routine> bag = onLateUpdate.Concurrent;
-                    if (!(bag is null))
-                    {
-                        while (bag.TryTake(out Routine routine))
-                            if (!routine.IsCancelationRequested)
-                                Next(routine);
-                    }
+                    while (bag.TryTake(out Routine routine))
+                        if (!routine.IsCancelationRequested)
+                            Next(routine);
 
                     local.Clear();
                     tmpT = local;
@@ -140,12 +137,9 @@ namespace Enderlook.Unity.Coroutines
                     }
 
                     ConcurrentBag<Routine> bag = onFixedUpdate.Concurrent;
-                    if (!(bag is null))
-                    {
-                        while (bag.TryTake(out Routine routine))
-                            if (!routine.IsCancelationRequested)
-                                Next(routine);
-                    }
+                    while (bag.TryTake(out Routine routine))
+                        if (!routine.IsCancelationRequested)
+                            Next(routine);
 
                     local.Clear();
                     tmpT = local;
@@ -163,32 +157,32 @@ namespace Enderlook.Unity.Coroutines
                     }
 
                     ConcurrentBag<Routine> bag = onEndOfFrame.Concurrent;
-                    if (!(bag is null))
-                    {
-                        while (bag.TryTake(out Routine routine))
-                            if (!routine.IsCancelationRequested)
-                                Next(routine);
-                    }
+                    while (bag.TryTake(out Routine routine))
+                        if (!routine.IsCancelationRequested)
+                            Next(routine);
 
                     local.Clear();
                     tmpT = local;
                 }
 
-                public override bool OnPoll(int until, float percentOfExecutions)
+                public override int PollCount() => onPoll.Count;
+
+                public override bool OnPoll(int until, ref int i, int to)
                 {
                     onPoll.DrainConcurrent();
                     RawQueue<Routine> local = onPoll.Swap(tmpTQueue);
 
-                    float i = 0;
-                    int total = local.Count;
+                    bool completed = true;
                     while (local.TryDequeue(out Routine routine))
                     {
                         i++;
                         if (!routine.IsCancelationRequested)
                             Next(routine);
-                        // At least percent of all stored tasks must be executed.
-                        if (DateTime.Now.Millisecond >= until && i / total >= percentOfExecutions)
+                        if (DateTime.Now.Millisecond >= until && i < to)
+                        {
+                            completed = false;
                             break;
+                        }
                     }
 
                     RawQueue<Routine> tmp = onPoll.Queue;
@@ -200,7 +194,7 @@ namespace Enderlook.Unity.Coroutines
                     onPoll.Queue = local;
                     tmpTQueue = tmp;
 
-                    return total > 0;
+                    return completed;
                 }
 
                 private void OnWaitForSeconds()
@@ -219,17 +213,14 @@ namespace Enderlook.Unity.Coroutines
                     }
 
                     ConcurrentBag<(float condition, Routine routine)> bag = onTime.Concurrent;
-                    if (!(bag is null))
+                    while (bag.TryTake(out (float condition, Routine routine) tmp))
                     {
-                        while (bag.TryTake(out (float condition, Routine routine) tmp))
-                        {
-                            if (tmp.routine.IsCancelationRequested)
-                                continue;
-                            if (tmp.condition <= Time.time)
-                                Next(tmp.routine);
-                            else
-                                onTime.Add(tmp);
-                        }
+                        if (tmp.routine.IsCancelationRequested)
+                            continue;
+                        if (tmp.condition <= Time.time)
+                            Next(tmp.routine);
+                        else
+                            onTime.Add(tmp);
                     }
 
                     local.Clear();
@@ -252,17 +243,14 @@ namespace Enderlook.Unity.Coroutines
                     }
 
                     ConcurrentBag<(float condition, Routine routine)> bag = onRealtime.Concurrent;
-                    if (!(bag is null))
+                    while (bag.TryTake(out (float condition, Routine routine) tmp))
                     {
-                        while (bag.TryTake(out (float condition, Routine routine) tmp))
-                        {
-                            if (tmp.routine.IsCancelationRequested)
-                                continue;
-                            if (tmp.condition <= Time.realtimeSinceStartup)
-                                Next(tmp.routine);
-                            else
-                                onTime.Add(tmp);
-                        }
+                        if (tmp.routine.IsCancelationRequested)
+                            continue;
+                        if (tmp.condition <= Time.realtimeSinceStartup)
+                            Next(tmp.routine);
+                        else
+                            onTime.Add(tmp);
                     }
 
                     local.Clear();
@@ -285,17 +273,14 @@ namespace Enderlook.Unity.Coroutines
                     }
 
                     ConcurrentBag<(CustomYieldInstruction condition, Routine routine)> bag = onCustom.Concurrent;
-                    if (!(bag is null))
+                    while (bag.TryTake(out (CustomYieldInstruction condition, Routine routine) tmp))
                     {
-                        while (bag.TryTake(out (CustomYieldInstruction condition, Routine routine) tmp))
-                        {
-                            if (tmp.routine.IsCancelationRequested)
-                                continue;
-                            if (tmp.condition.keepWaiting)
-                                onCustom.Add(tmp);
-                            else
-                                Next(tmp.routine);
-                        }
+                        if (tmp.routine.IsCancelationRequested)
+                            continue;
+                        if (tmp.condition.keepWaiting)
+                            onCustom.Add(tmp);
+                        else
+                            Next(tmp.routine);
                     }
 
                     local.Clear();
@@ -318,17 +303,14 @@ namespace Enderlook.Unity.Coroutines
                     }
 
                     ConcurrentBag<(Func<bool> condition, Routine routine)> bag = onWhile.Concurrent;
-                    if (!(bag is null))
+                    while (bag.TryTake(out (Func<bool> condition, Routine routine) tmp))
                     {
-                        while (bag.TryTake(out (Func<bool> condition, Routine routine) tmp))
-                        {
-                            if (tmp.routine.IsCancelationRequested)
-                                continue;
-                            if (tmp.condition())
-                                onWhile.Add(tmp);
-                            else
-                                Next(tmp.routine);
-                        }
+                        if (tmp.routine.IsCancelationRequested)
+                            continue;
+                        if (tmp.condition())
+                            onWhile.Add(tmp);
+                        else
+                            Next(tmp.routine);
                     }
 
                     local.Clear();
@@ -351,17 +333,14 @@ namespace Enderlook.Unity.Coroutines
                     }
 
                     ConcurrentBag<(Func<bool> condition, Routine routine)> bag = onUntil.Concurrent;
-                    if (!(bag is null))
+                    while (bag.TryTake(out (Func<bool> condition, Routine routine) tmp))
                     {
-                        while (bag.TryTake(out (Func<bool> condition, Routine routine) tmp))
-                        {
-                            if (tmp.routine.IsCancelationRequested)
-                                continue;
-                            if (tmp.condition())
-                                Next(tmp.routine);
-                            else
-                                onWhile.Add(tmp);
-                        }
+                        if (tmp.routine.IsCancelationRequested)
+                            continue;
+                        if (tmp.condition())
+                            Next(tmp.routine);
+                        else
+                            onWhile.Add(tmp);
                     }
 
                     local.Clear();
@@ -384,17 +363,14 @@ namespace Enderlook.Unity.Coroutines
                     }
 
                     ConcurrentBag<(ValueTask condition, Routine routine)> bag = onTask.Concurrent;
-                    if (!(bag is null))
+                    while (bag.TryTake(out (ValueTask condition, Routine routine) tmp))
                     {
-                        while (bag.TryTake(out (ValueTask condition, Routine routine) tmp))
-                        {
-                            if (tmp.routine.IsCancelationRequested)
-                                continue;
-                            if (tmp.condition.IsCompleted)
-                                Next(tmp.routine);
-                            else
-                                onTask.Add(tmp);
-                        }
+                        if (tmp.routine.IsCancelationRequested)
+                            continue;
+                        if (tmp.condition.IsCompleted)
+                            Next(tmp.routine);
+                        else
+                            onTask.Add(tmp);
                     }
 
                     local.Clear();
@@ -420,20 +396,17 @@ namespace Enderlook.Unity.Coroutines
                     }
 
                     ConcurrentBag<(JobHandle condition, Routine routine)> bag = onJobHandle.Concurrent;
-                    if (!(bag is null))
+                    while (bag.TryTake(out (JobHandle condition, Routine routine) tmp))
                     {
-                        while (bag.TryTake(out (JobHandle condition, Routine routine) tmp))
+                        if (tmp.routine.IsCancelationRequested)
+                            continue;
+                        if (tmp.condition.IsCompleted)
                         {
-                            if (tmp.routine.IsCancelationRequested)
-                                continue;
-                            if (tmp.condition.IsCompleted)
-                            {
-                                tmp.condition.Complete();
-                                Next(tmp.routine);
-                            }
-                            else
-                                onJobHandle.Add(tmp);
+                            tmp.condition.Complete();
+                            Next(tmp.routine);
                         }
+                        else
+                            onJobHandle.Add(tmp);
                     }
 
                     local.Clear();
@@ -456,17 +429,14 @@ namespace Enderlook.Unity.Coroutines
                     }
 
                     ConcurrentBag<(ValueCoroutine condition, Routine routine)> bag = onValueCoroutine.Concurrent;
-                    if (!(bag is null))
+                    while (bag.TryTake(out (ValueCoroutine condition, Routine routine) tmp))
                     {
-                        while (bag.TryTake(out (ValueCoroutine condition, Routine routine) tmp))
-                        {
-                            if (tmp.routine.IsCancelationRequested)
-                                continue;
-                            if (tmp.condition.IsCompleted)
-                                Next(tmp.routine);
-                            else
-                                onValueCoroutine.Add(tmp);
-                        }
+                        if (tmp.routine.IsCancelationRequested)
+                            continue;
+                        if (tmp.condition.IsCompleted)
+                            Next(tmp.routine);
+                        else
+                            onValueCoroutine.Add(tmp);
                     }
 
                     local.Clear();
@@ -500,15 +470,12 @@ namespace Enderlook.Unity.Coroutines
                     }
 
                     ConcurrentBag<(U condition, IEnumerator coroutine)> bag = onUnityCoroutineBag;
-                    if (!(bag is null))
+                    while (bag.TryTake(out (U condition, IEnumerator coroutine) tmp))
                     {
-                        while (bag.TryTake(out (U condition, IEnumerator coroutine) tmp))
-                        {
-                            if (tmp.condition.IsCancelationRequested)
-                                continue;
-                            UnityEngine.Coroutine coroutine = manager.StartUnityCoroutine(tmp.coroutine);
-                            this.onUnityCoroutine.Add((tmp.condition, coroutine));
-                        }
+                        if (tmp.condition.IsCancelationRequested)
+                            continue;
+                        UnityEngine.Coroutine coroutine = manager.StartUnityCoroutine(tmp.coroutine);
+                        this.onUnityCoroutine.Add((tmp.condition, coroutine));
                     }
                 }
 
@@ -617,43 +584,46 @@ namespace Enderlook.Unity.Coroutines
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void NextBackground(Routine routine, int mode)
                 {
+#if DEBUG
+                    Debug.Assert(Application.platform != RuntimePlatform.WebGLPlayer);
+#endif
                     if (routine.MoveNext())
                     {
                         ValueYieldInstruction instruction = routine.Current;
                         switch (instruction.Mode)
                         {
                             case ValueYieldInstruction.Type.ForUpdate:
-                                onUpdate.AddConcurrent(routine);
+                                onUpdate.ConcurrentAdd(routine);
                                 break;
                             case ValueYieldInstruction.Type.ForLateUpdate:
-                                onLateUpdate.AddConcurrent(routine);
+                                onLateUpdate.ConcurrentAdd(routine);
                                 break;
                             case ValueYieldInstruction.Type.ForFixedUpdate:
-                                onFixedUpdate.AddConcurrent(routine);
+                                onFixedUpdate.ConcurrentAdd(routine);
                                 break;
                             case ValueYieldInstruction.Type.ForEndOfFrame:
-                                onEndOfFrame.AddConcurrent(routine);
+                                onEndOfFrame.ConcurrentAdd(routine);
                                 break;
                             case ValueYieldInstruction.Type.ForSeconds:
-                                onTime.AddConcurrent((instruction.Float + Time.time, routine));
+                                onTime.ConcurrentAdd((instruction.Float + Time.time, routine));
                                 break;
                             case ValueYieldInstruction.Type.ForRealtimeSeconds:
-                                onRealtime.AddConcurrent((instruction.Float + Time.realtimeSinceStartup, routine));
+                                onRealtime.ConcurrentAdd((instruction.Float + Time.realtimeSinceStartup, routine));
                                 break;
                             case ValueYieldInstruction.Type.Until:
-                                onUntil.AddConcurrent((instruction.FuncBool, routine));
+                                onUntil.ConcurrentAdd((instruction.FuncBool, routine));
                                 break;
                             case ValueYieldInstruction.Type.While:
-                                onWhile.AddConcurrent((instruction.FuncBool, routine));
+                                onWhile.ConcurrentAdd((instruction.FuncBool, routine));
                                 break;
                             case ValueYieldInstruction.Type.CustomYieldInstruction:
-                                onCustom.AddConcurrent((instruction.CustomYieldInstruction, routine));
+                                onCustom.ConcurrentAdd((instruction.CustomYieldInstruction, routine));
                                 break;
                             case ValueYieldInstruction.Type.ValueTask:
-                                onTask.AddConcurrent((instruction.ValueTask, routine));
+                                onTask.ConcurrentAdd((instruction.ValueTask, routine));
                                 break;
                             case ValueYieldInstruction.Type.JobHandle:
-                                onJobHandle.AddConcurrent((instruction.JobHandle, routine));
+                                onJobHandle.ConcurrentAdd((instruction.JobHandle, routine));
                                 break;
                             case ValueYieldInstruction.Type.ValueEnumerator:
                                 manager.StartThreadSafe(routine.cancellator, new NestedEnumeratorBackground<T, U>(this, routine, instruction.ValueEnumerator, mode), mode);
@@ -669,22 +639,22 @@ namespace Enderlook.Unity.Coroutines
                                 }
                             }
                             case ValueYieldInstruction.Type.ValueCoroutine:
-                                onValueCoroutine.AddConcurrent((instruction.ValueCoroutine, routine));
+                                onValueCoroutine.ConcurrentAdd((instruction.ValueCoroutine, routine));
                                 break;
                             case ValueYieldInstruction.Type.ToUnity:
-#if UNITY_EDITOR
+#if DEBUG
                                 Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToUnity)} was yielded and it allocates memory. Alternatively you could use other methods such as {nameof(Yield)}.{nameof(Yield.ToUpdate)} which doesn't allocate and has a similar effect.");
 #endif
                                 // TODO: Allocations can be reduced.
                                 Switch.OnUnityLater(() => Next(routine));
                                 break;
                             case ValueYieldInstruction.Type.ToBackground:
-#if UNITY_EDITOR
+#if DEBUG
                                 Debug.Assert(Application.platform != RuntimePlatform.WebGLPlayer);
 #endif
                                 if (mode == ShortThread)
                                 {
-#if UNITY_EDITOR
+#if DEBUG
                                     Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded from a background thread. This will be ignored.");
 #endif
                                     NextBackground(routine, mode);
@@ -693,12 +663,12 @@ namespace Enderlook.Unity.Coroutines
                                     Task.Factory.StartNew(nextLongBackgroundAction, routine);
                                 break;
                             case ValueYieldInstruction.Type.ToLongBackground:
-#if UNITY_EDITOR
+#if DEBUG
                                 Debug.Assert(Application.platform != RuntimePlatform.WebGLPlayer);
 #endif
                                 if (mode == LongThread)
                                 {
-#if UNITY_EDITOR
+#if DEBUG
                                     Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded from a long background thread. This will be ignored.");
 #endif
                                     NextBackground(routine, mode);
@@ -722,19 +692,19 @@ namespace Enderlook.Unity.Coroutines
 
                 public override void Free()
                 {
-                    Dispose(ref onUpdate);
-                    Dispose(ref onFixedUpdate);
-                    Dispose(ref onLateUpdate);
-                    Dispose(ref onEndOfFrame);
-                    Dispose(ref onPoll);
-                    Dispose(ref onCustom);
-                    Dispose(ref onWhile);
-                    Dispose(ref onUntil);
-                    Dispose(ref onTask);
-                    Dispose(ref onJobHandle);
-                    Dispose(ref onTime);
-                    Dispose(ref onRealtime);
-                    Dispose(ref onValueCoroutine);
+                    onUpdate.Dispose();
+                    onFixedUpdate.Dispose();
+                    onLateUpdate.Dispose();
+                    onEndOfFrame.Dispose();
+                    onPoll.Dispose();
+                    onCustom.Dispose();
+                    onWhile.Dispose();
+                    onUntil.Dispose();
+                    onTask.Dispose();
+                    onJobHandle.Dispose();
+                    onTime.Dispose();
+                    onRealtime.Dispose();
+                    onValueCoroutine.Dispose();
 
                     RawList<(U, UnityEngine.Coroutine)> onUnityCoroutine = this.onUnityCoroutine;
                     for (int i = 0; i < onUnityCoroutine.Count; i++)

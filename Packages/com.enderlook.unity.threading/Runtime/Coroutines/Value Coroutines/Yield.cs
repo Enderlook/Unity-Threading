@@ -143,12 +143,12 @@ namespace Enderlook.Unity.Coroutines
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ValueYieldInstruction From(IEnumerator coroutine)
         {
-#if UNITY_EDITOR
+#if DEBUG
             if (coroutine is IEnumerator<ValueYieldInstruction>)
                 Debug.LogError($"Using {nameof(Yield)}.{nameof(From)}({nameof(IEnumerator)}).\n"
                     + $"But concrete type is {nameof(IEnumerator<ValueYieldInstruction>)}.\n"
                     + $"Downcast {nameof(IEnumerator)} to {nameof(IEnumerator<ValueYieldInstruction>)} or the coroutine will fail in undefined behaviour.\n"
-                    + "This becomes a silent error outside Unity Editor.");
+                    + "This becomes a silent error on release");
 #endif
             return new ValueYieldInstruction() { Mode = ValueYieldInstruction.Type.BoxedEnumerator, BoxedEnumerator = coroutine };
         }

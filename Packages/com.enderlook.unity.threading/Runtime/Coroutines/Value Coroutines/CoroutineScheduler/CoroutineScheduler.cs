@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Enderlook.Unity.Threading;
+
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -9,21 +11,27 @@ namespace Enderlook.Unity.Coroutines
 {
     /// <summary>
     /// Represent a manager of value coroutines.<br/>
-    /// This object should not be copied not stored in readonly fields.
+    /// This object should not be copied nor stored in readonly fields, and should be passed by reference.
     /// </summary>
     public partial struct CoroutineScheduler : IDisposable
     {
         private Managers core;
 
         /// <summary>
-        /// Amount of miliseconds spent in executing poll coroutines per frame.
+        /// Amount of miliseconds spent in executing poll coroutines per call to <see cref="OnPoll"/>.
         /// </summary>
-        public int MilisecondsExecutedPerFrameOnPoll { get; set; }
+        public int MilisecondsExecutedPerFrameOnPoll {
+            get => core.MilisecondsExecutedPerFrameOnPoll;
+            set => core.MilisecondsExecutedPerFrameOnPoll = value;
+        }
 
         /// <summary>
-        /// Percentage of total execution that must be executed on per frame regardless of <see cref="MilisecondsExecutedPerFrameOnPoll"/>.
+        /// Percentage of total execution that must be executed on per call to <see cref="OnPoll"/>. regardless of <see cref="MilisecondsExecutedPerFrameOnPoll"/>.
         /// </summary>
-        public float MinimumPercentOfExecutionsPerFrameOnPoll { get; set; }
+        public float MinimumPercentOfExecutionsPerFrameOnPoll {
+            get => core.MinimumPercentOfExecutionsPerFrameOnPoll;
+            set => core.MinimumPercentOfExecutionsPerFrameOnPoll = value;
+        }
 
         /// <summary>
         /// Creates a manager whose events must be called manually.
@@ -331,6 +339,7 @@ namespace Enderlook.Unity.Coroutines
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void OnUpdate()
         {
+            CheckThread();
             Managers manager = core;
             if (manager is null)
                 ThrowDisposed();
@@ -343,6 +352,7 @@ namespace Enderlook.Unity.Coroutines
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void OnFixedUpdate()
         {
+            CheckThread();
             Managers manager = core;
             if (manager is null)
                 ThrowDisposed();
@@ -355,6 +365,7 @@ namespace Enderlook.Unity.Coroutines
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void OnLateUpdate()
         {
+            CheckThread();
             Managers manager = core;
             if (manager is null)
                 ThrowDisposed();
@@ -367,6 +378,7 @@ namespace Enderlook.Unity.Coroutines
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void OnEndOfFrame()
         {
+            CheckThread();
             Managers manager = core;
             if (manager is null)
                 ThrowDisposed();
@@ -379,21 +391,33 @@ namespace Enderlook.Unity.Coroutines
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void OnPoll()
         {
+            CheckThread();
             Managers manager = core;
             if (manager is null)
                 ThrowDisposed();
-            manager.OnPoll(MilisecondsExecutedPerFrameOnPoll, MinimumPercentOfExecutionsPerFrameOnPoll);
+            manager.OnPoll();
         }
 
         /// <inheritdoc cref="IDisposable.Dispose"/>
         public void Dispose()
         {
+            CheckThread();
             Managers manager = Interlocked.Exchange(ref core, null);
             if (!(manager is null))
             {
                 manager.Free();
                 ConcurrentPool.Return(manager);
             }
+        }
+
+        [System.Diagnostics.Conditional("DEBUG")]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void CheckThread()
+        {
+#if DEBUG
+            if (!Switch.IsInMainThread)
+                Debug.LogError("This function can only be executed in the Unity thread. This has produced undefined behaviour. This error will not shown on release.");
+#endif
         }
     }
 }

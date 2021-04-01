@@ -42,7 +42,7 @@ namespace Enderlook.Unity.Coroutines
         static WaitForValueTaskComplete()
         {
             Action clear = Clear;
-            Wait.SuscribeClear(clear);
+            Wait.SubscribeClear(clear);
 #if UNITY_EDITOR
             Wait.AddWaitForTaskComplete($"Wait.For({typeof(WaitForValueTaskComplete<T>).Name})", () => pool.Count, clear);
 #endif
