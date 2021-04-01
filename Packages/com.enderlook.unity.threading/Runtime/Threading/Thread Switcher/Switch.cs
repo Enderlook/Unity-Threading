@@ -42,7 +42,7 @@ namespace Enderlook.Unity.Threading
         /// Check if we are currently running in main thread.
         /// </summary>
         /// <returns>Whenever we are running in main thread or not.</returns>
-        public static bool IsInMainThread => UnitySynchronizationContextUtility.IsInUnitySynchronizationContext;
+        public static bool IsInMainThread => UnitySynchronizationContextUtility.IsInUnityThread;
 
         /// <summary>
         /// Executes the specified action on the Unity thread.<br/>
