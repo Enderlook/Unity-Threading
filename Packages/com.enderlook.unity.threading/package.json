@@ -10,6 +10,7 @@
     "tasks"
   ],
   "dependencies": {
+    "com.enderlook.collections.low_level": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.enderlook.collections.low_level#com.enderlook.collections.low_level/v0.6.0"
   },
   "author": {
     "name": "Enderlook",
