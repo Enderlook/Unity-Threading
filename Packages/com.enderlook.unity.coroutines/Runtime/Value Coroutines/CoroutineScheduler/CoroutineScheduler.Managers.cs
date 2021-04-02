@@ -95,19 +95,11 @@ namespace Enderlook.Unity.Coroutines
                 else
                 {
                     managerLock.UpgradeFromReaderToWriter();
-                    if (managersDictionary.TryGetValue((enumerator_, cancellator_), out manager))
-                    {
-                        managerLock.WriteEnd();
-                        ((TypedManager<T, U>)manager).Start(cancellator, routine);
-                    }
-                    else
-                    {
-                        TypedManager<T, U> manager_ = new TypedManager<T, U>(this);
-                        managersDictionary.Add((enumerator_, cancellator_), manager_);
-                        managersList.Add(manager_);
-                        managerLock.WriteEnd();
-                        manager_.Start(cancellator, routine);
-                    }
+                    TypedManager<T, U> manager_ = new TypedManager<T, U>(this);
+                    managersDictionary.Add((enumerator_, cancellator_), manager_);
+                    managersList.Add(manager_);
+                    managerLock.WriteEnd();
+                    manager_.Start(cancellator, routine);
                 }
             }
 
@@ -173,19 +165,11 @@ namespace Enderlook.Unity.Coroutines
                 else
                 {
                     managerLock.UpgradeFromReaderToWriter();
-                    if (managersDictionary.TryGetValue((enumerator_, cancellator_), out manager))
-                    {
-                        managerLock.WriteEnd();
-                        ((TypedManager<T, U>)manager).ConcurrentStart(cancellator, routine, mode);
-                    }
-                    else
-                    {
-                        TypedManager<T, U> manager_ = new TypedManager<T, U>(this);
-                        managersDictionary.Add((enumerator_, cancellator_), manager_);
-                        managersList.Add(manager_);
-                        managerLock.WriteEnd();
-                        manager_.ConcurrentStart(cancellator, routine, mode);
-                    }
+                    TypedManager<T, U> manager_ = new TypedManager<T, U>(this);
+                    managersDictionary.Add((enumerator_, cancellator_), manager_);
+                    managersList.Add(manager_);
+                    managerLock.WriteEnd();
+                    manager_.ConcurrentStart(cancellator, routine, mode);
                 }
             }
 
