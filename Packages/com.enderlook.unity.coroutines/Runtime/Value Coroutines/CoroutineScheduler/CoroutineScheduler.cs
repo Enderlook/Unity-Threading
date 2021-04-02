@@ -13,6 +13,7 @@ namespace Enderlook.Unity.Coroutines
     /// Represent a manager of value coroutines.<br/>
     /// This object should not be copied nor stored in readonly fields, and should be passed by reference.
     /// </summary>
+    [Serializable]
     public partial struct CoroutineScheduler : IDisposable
     {
         internal static readonly Managers Shared = new Managers();
@@ -26,6 +27,7 @@ namespace Enderlook.Unity.Coroutines
             Manager.OnLateUpdate += Shared.OnEndOfFrame;
         }
 
+        [SerializeField, HideInInspector]
         private Managers core;
 
         /// <summary>
@@ -37,7 +39,7 @@ namespace Enderlook.Unity.Coroutines
         }
 
         /// <summary>
-        /// Percentage of total execution that must be executed on per call to <see cref="OnPoll"/>. regardless of <see cref="MilisecondsExecutedPerFrameOnPoll"/>.
+        /// Percentage of total execution that must be executed on per call to <see cref="OnPoll"/> regardless of <see cref="MilisecondsExecutedPerFrameOnPoll"/>.
         /// </summary>
         public float MinimumPercentOfExecutionsPerFrameOnPoll {
             get => core.MinimumPercentOfExecutionsPerFrameOnPoll;

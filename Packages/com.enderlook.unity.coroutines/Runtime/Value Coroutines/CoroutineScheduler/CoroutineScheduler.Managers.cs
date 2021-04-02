@@ -12,6 +12,7 @@ namespace Enderlook.Unity.Coroutines
 {
     public partial struct CoroutineScheduler
     {
+        [Serializable]
         internal partial class Managers
         {
             private const byte UnknownThread = 0;
@@ -33,6 +34,7 @@ namespace Enderlook.Unity.Coroutines
                     milisecondsExecutedPerFrameOnPoll = value;
                 }
             }
+            [SerializeField, Min(0), Tooltip("Amount of miliseconds spent in executing poll coroutines")]
             private int milisecondsExecutedPerFrameOnPoll = 5;
 
             public float MinimumPercentOfExecutionsPerFrameOnPoll {
@@ -43,6 +45,7 @@ namespace Enderlook.Unity.Coroutines
                     minimumPercentOfExecutionsPerFrameOnPoll = value;
                 }
             }
+            [SerializeField, Range(0, 1), Tooltip("Percentage of total execution that must be executed on poll coroutines regardless of timeout.")]
             private float minimumPercentOfExecutionsPerFrameOnPoll = .025f;
 
             public Managers() => pollEnumerator = new PollEnumerator(this);
