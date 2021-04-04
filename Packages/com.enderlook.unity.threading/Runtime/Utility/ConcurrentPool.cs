@@ -12,11 +12,11 @@ namespace Enderlook.Unity.Threading
         private static event Action Clear_;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        public static void Clear() => Clear_();
+        public static void Clear() => Clear_?.Invoke();
 
 #if UNITY_EDITOR
         [UnityEditor.InitializeOnLoadMethod]
-        private static void Initialize() => UnityEditor.EditorApplication.playModeStateChanged += (_) => Clear_();
+        private static void Initialize() => UnityEditor.EditorApplication.playModeStateChanged += (_) => Clear_?.Invoke();
 
         private static readonly SortedSet<EditorPoolContainer> pools = new SortedSet<EditorPoolContainer>();
 #endif

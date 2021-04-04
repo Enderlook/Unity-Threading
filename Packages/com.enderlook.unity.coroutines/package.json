@@ -1,6 +1,6 @@
 {
   "name": "com.enderlook.unity.coroutines",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "displayName": "Enderlook Unity Coroutines",
   "description": "Provides utility methods for working with Unity coroutines.",
   "unity": "2019.2",
@@ -11,7 +11,7 @@
   ],
   "dependencies": {
     "com.enderlook.threading": "https://github.com/Enderlook/Unity-Net-Packages?path=Packages/com.enderlook.threading#com.enderlook.threading/v0.1.0",
-    "com.enderlook.unity.threading": "https://github.com/Enderlook/Unity-Threading.git?/path=Packages/com.enderlook.unity.threading#com.enderlook.unity.threading/v0.5.0",
+    "com.enderlook.unity.threading": "https://github.com/Enderlook/Unity-Threading.git?/path=Packages/com.enderlook.unity.threading#com.enderlook.unity.threading/v0.5.1",
     "com.enderlook.unity.toolset.utils": "https://github.com/Enderlook/Unity-Toolset.git?path=Packages/com.enderlook.unity.toolset.utils#com.enderlook.unity.toolset.utils/v0.3.1",
     "com.system.threading.tasks.extensions": "https://github.com/Enderlook/Unity-Net-Packages?path=Packages/com.system.threading.tasks.extensions#com.system.threading.tasks.extensions/v4.5.4"
   },

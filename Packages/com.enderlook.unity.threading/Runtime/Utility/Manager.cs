@@ -66,8 +66,8 @@ namespace Enderlook.Unity.Threading
                     {
                         yield return endOfFrame;
                         Action<Manager> action = Interlocked.Exchange(ref ToInitialize, null);
-                        action(this);
-                        OnEndOfFrame();
+                        action?.Invoke(this);
+                        OnEndOfFrame?.Invoke();
                     }
                 }
             }
@@ -100,24 +100,24 @@ namespace Enderlook.Unity.Threading
         private void Update()
         {
             Action<Manager> action = Interlocked.Exchange(ref ToInitialize, null);
-            action(this);
-            OnUpdate();
+            action?.Invoke(this);
+            OnUpdate?.Invoke();
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
         private void LateUpdate()
         {
             Action<Manager> action = Interlocked.Exchange(ref ToInitialize, null);
-            action(this);
-            OnLateUpdate();
+            action?.Invoke(this);
+            OnLateUpdate?.Invoke();
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
         private void FixedUpdate()
         {
             Action<Manager> action = Interlocked.Exchange(ref ToInitialize, null);
-            action(this);
-            OnFixedUpdate();
+            action?.Invoke(this);
+            OnFixedUpdate?.Invoke();
         }
     }
 }

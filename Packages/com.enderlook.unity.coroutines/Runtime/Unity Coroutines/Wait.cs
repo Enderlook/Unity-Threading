@@ -37,7 +37,7 @@ namespace Enderlook.Unity.Coroutines
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         public static void Clear()
         {
-            clear();
+            clear?.Invoke();
             waitForSeconds.Clear();
             WaitWhilePooled.Clear();
             WaitUntilPooled.Clear();
