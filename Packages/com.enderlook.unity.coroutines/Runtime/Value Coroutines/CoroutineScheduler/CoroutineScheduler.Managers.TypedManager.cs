@@ -487,16 +487,16 @@ namespace Enderlook.Unity.Coroutines
                         ValueYieldInstruction instruction = routine.Current;
                         switch (instruction.Mode)
                         {
-                            case ValueYieldInstruction.Type.ForUpdate:
+                            case ValueYieldInstruction.Type.ToUpdate:
                                 onUpdate.Add(routine);
                                 break;
-                            case ValueYieldInstruction.Type.ForLateUpdate:
+                            case ValueYieldInstruction.Type.ToLateUpdate:
                                 onLateUpdate.Add(routine);
                                 break;
-                            case ValueYieldInstruction.Type.ForFixedUpdate:
+                            case ValueYieldInstruction.Type.ToFixedUpdate:
                                 onFixedUpdate.Add(routine);
                                 break;
-                            case ValueYieldInstruction.Type.ForEndOfFrame:
+                            case ValueYieldInstruction.Type.ToEndOfFrame:
                                 onEndOfFrame.Add(routine);
                                 break;
                             case ValueYieldInstruction.Type.ForSeconds:
@@ -592,16 +592,16 @@ namespace Enderlook.Unity.Coroutines
                         ValueYieldInstruction instruction = routine.Current;
                         switch (instruction.Mode)
                         {
-                            case ValueYieldInstruction.Type.ForUpdate:
+                            case ValueYieldInstruction.Type.ToUpdate:
                                 onUpdate.ConcurrentAdd(routine);
                                 break;
-                            case ValueYieldInstruction.Type.ForLateUpdate:
+                            case ValueYieldInstruction.Type.ToLateUpdate:
                                 onLateUpdate.ConcurrentAdd(routine);
                                 break;
-                            case ValueYieldInstruction.Type.ForFixedUpdate:
+                            case ValueYieldInstruction.Type.ToFixedUpdate:
                                 onFixedUpdate.ConcurrentAdd(routine);
                                 break;
-                            case ValueYieldInstruction.Type.ForEndOfFrame:
+                            case ValueYieldInstruction.Type.ToEndOfFrame:
                                 onEndOfFrame.ConcurrentAdd(routine);
                                 break;
                             case ValueYieldInstruction.Type.ForSeconds:

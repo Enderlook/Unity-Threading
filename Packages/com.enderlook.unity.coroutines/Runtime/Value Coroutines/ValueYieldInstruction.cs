@@ -1,6 +1,4 @@
-﻿using Enderlook.Unity.Threading;
-
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -85,25 +83,25 @@ namespace Enderlook.Unity.Coroutines
 
         internal enum Type
         {
-            ForUpdate = 0,
-            ForLateUpdate,
-            ForFixedUpdate,
-            ForEndOfFrame,
-            ForSeconds,
-            ForRealtimeSeconds,
-            While,
-            Until,
-            CustomYieldInstruction,
-            YieldInstruction,
-            ValueTask,
-            JobHandle,
-            ValueEnumerator,
+            ToUpdate = 0,
             BoxedEnumerator,
-            ValueCoroutine,
-            ToUnity,
+            CustomYieldInstruction,
+            JobHandle,
             ToBackground,
+            ToEndOfFrame,
+            ToLateUpdate,
             ToLongBackground,
+            ToFixedUpdate,
+            ToUnity,
+            ForRealtimeSeconds,
+            ForSeconds,
             Poll,
+            Until,
+            While,
+            ValueEnumerator,
+            ValueTask,
+            YieldInstruction,
+            ValueCoroutine,
         }
 
         /// <summary>
@@ -117,7 +115,7 @@ namespace Enderlook.Unity.Coroutines
             if (source is null)
                 Debug.LogWarning($"{nameof(source)} is null. Note that this function won't fail if {nameof(source)} is null.");
 #endif
-            return new ValueYieldInstruction() { Mode = Type.ForUpdate };
+            return new ValueYieldInstruction() { Mode = Type.ToUpdate };
         }
 
         /// <summary>
@@ -131,7 +129,7 @@ namespace Enderlook.Unity.Coroutines
             if (source is null)
                 Debug.LogWarning($"{nameof(source)} is null. Note that this function won't fail if {nameof(source)} is null.");
 #endif
-            return new ValueYieldInstruction() { Mode = Type.ForFixedUpdate };
+            return new ValueYieldInstruction() { Mode = Type.ToFixedUpdate };
         }
 
         /// <summary>
@@ -199,7 +197,7 @@ namespace Enderlook.Unity.Coroutines
             if (source is null)
                 Debug.LogWarning($"{nameof(source)} is null. Note that this function won't fail if {nameof(source)} is null.");
 #endif
-            return new ValueYieldInstruction() { Mode = Type.ForEndOfFrame };
+            return new ValueYieldInstruction() { Mode = Type.ToEndOfFrame };
         }
 
         /// <summary>
