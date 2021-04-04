@@ -11,14 +11,20 @@ namespace Enderlook.Unity.Coroutines
     /// </summary>
     public readonly partial struct ValueCoroutine : INotifyCompletion
     {
-        private readonly Handle handle;
-        // Since the handle is pooled, we use generation to check if it's already used
-        private readonly uint generation;
+        internal readonly Handle handle;
+        // Since the handle is pooled, we use generation to check if it's already used.
+        internal readonly uint generation;
 
         private ValueCoroutine(Handle handle)
         {
             this.handle = handle;
             generation = handle.Generation;
+        }
+
+        internal ValueCoroutine(Handle handle, uint generation)
+        {
+            this.handle = handle;
+            this.generation = generation;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
