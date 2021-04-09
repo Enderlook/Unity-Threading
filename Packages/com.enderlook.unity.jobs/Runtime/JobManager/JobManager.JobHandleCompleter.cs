@@ -27,15 +27,18 @@ namespace Enderlook.Unity.Jobs
 
             public static void Update()
             {
-                for (int i = jobHandles.Count - 1; i > 0; i--)
+                int j = 0;
+                for (int i = 0; i < jobHandles.Count; i++)
                 {
                     JobHandle jobHandle = jobHandles[i];
                     if (jobHandle.IsCompleted)
                     {
                         jobHandle.Complete();
-                        jobHandles.RemoveAt(i);
+                        continue;
                     }
+                    jobHandles[j++] = jobHandle;
                 }
+                jobHandles = RawList<JobHandle>.From(jobHandles.UnderlyingArray, j);
             }
         }
     }

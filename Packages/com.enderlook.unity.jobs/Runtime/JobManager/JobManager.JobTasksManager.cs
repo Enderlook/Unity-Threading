@@ -41,15 +41,18 @@ namespace Enderlook.Unity.Jobs
 
             public static void Update()
             {
-                for (int i = jobTasks.Count - 1; i > 0; i--)
+                int j = 0;
+                for (int i = 0; i < jobTasks.Count; i++)
                 {
                     JobTask jobTask = jobTasks[i];
                     if (jobTask.IsCompleted)
                     {
                         jobTask.Complete();
-                        jobTasks.RemoveAt(i);
+                        continue;
                     }
+                    jobTasks[j++] = jobTask;
                 }
+                jobTasks = RawList<JobTask>.From(jobTasks.UnderlyingArray, j);
             }
         }
     }
