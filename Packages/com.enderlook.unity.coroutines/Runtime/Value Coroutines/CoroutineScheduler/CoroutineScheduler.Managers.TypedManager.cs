@@ -45,7 +45,7 @@ namespace Enderlook.Unity.Coroutines
                 private PackList<(ValueCoroutine, Routine)> onValueCoroutine = PackList<(ValueCoroutine, Routine)>.Create();
 
                 private RawList<(U, UnityEngine.Coroutine)> onUnityCoroutine = RawList<(U, UnityEngine.Coroutine)>.Create();
-                private readonly ConcurrentBag<(U, IEnumerator)> onUnityCoroutineBag;
+                private readonly ConcurrentBag<(U, IEnumerator)> onUnityCoroutineBag = new ConcurrentBag<(U, IEnumerator)>();
 
                 private RawList<Routine> tmpT = RawList<Routine>.Create();
                 private RawQueue<Routine> tmpTQueue = RawQueue<Routine>.Create();

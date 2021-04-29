@@ -10,7 +10,9 @@ namespace Enderlook.Unity.Threading
 {
     internal struct PackList<T>
     {
-        public RawList<T> List { get; private set; }
+        // This can't be a property because the struct would be copied instead of being mutated.
+        // Instead if this is a field, mutations would be on the reference.
+        public RawList<T> List;
 
         public ConcurrentBag<T> Concurrent { get; private set; }
 
@@ -26,7 +28,7 @@ namespace Enderlook.Unity.Threading
         public RawList<T> Swap(RawList<T> list)
         {
             // This is not atomic. However it does't matter since `List` and `Swap` are only used in the main thread.
-            RawList<T> old = list;
+            RawList<T> old = List;
             List = list;
             return old;
         }
