@@ -27,7 +27,7 @@ namespace Enderlook.Unity.Threading
         /// <inheritdoc cref="INotifyCompletion.OnCompleted(Action)"/>
         public void OnCompleted(Action continuation)
         {
-            if (continuation == null)
+            if (continuation is null)
                 throw new ArgumentNullException(nameof(continuation));
 
             hasSwitched = !UnityThread.IsMainThread;
