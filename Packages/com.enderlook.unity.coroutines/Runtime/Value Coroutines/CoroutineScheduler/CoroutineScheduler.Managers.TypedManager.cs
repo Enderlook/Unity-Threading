@@ -92,12 +92,9 @@ namespace Enderlook.Unity.Coroutines
                     }
 
                     ConcurrentBag<Routine> bag = onUpdate.Concurrent;
-                    if (!(bag is null))
-                    {
-                        while (bag.TryTake(out Routine routine))
-                            if (!routine.IsCancelationRequested)
-                                Next(routine);
-                    }
+                    while (bag.TryTake(out Routine routine))
+                        if (!routine.IsCancelationRequested)
+                            Next(routine);
 
                     local.Clear();
                     tmpT = local;
