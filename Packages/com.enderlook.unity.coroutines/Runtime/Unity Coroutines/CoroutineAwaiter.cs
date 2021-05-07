@@ -4,10 +4,12 @@ using System;
 using System.Collections;
 using System.Runtime.CompilerServices;
 
+using UnityEngine;
+
 namespace Enderlook.Unity.Coroutines
 {
     /// <summary>
-    /// An awaiter for <see cref="UnityEngine.Coroutine"/>
+    /// An awaiter for <see cref="Coroutine"/>
     /// </summary>
     public readonly struct CoroutineAwaiter : INotifyCompletion
     {
@@ -27,12 +29,12 @@ namespace Enderlook.Unity.Coroutines
         /// Creates an awaiter for the given <see cref="JobHandle"/>.
         /// </summary>
         /// <param name="coroutine">Job handle to await for.</param>
-        public CoroutineAwaiter(UnityEngine.Coroutine coroutine)
+        public CoroutineAwaiter(Coroutine coroutine)
         {
             Handle handle = ConcurrentPool.Rent<Handle>();
             this.handle = handle;
             generation = handle.generation;
-            Coroutine.Unity.Start(Work());
+            Manager.Shared.StartCoroutine(Work());
             IEnumerator Work()
             {
                 yield return coroutine;

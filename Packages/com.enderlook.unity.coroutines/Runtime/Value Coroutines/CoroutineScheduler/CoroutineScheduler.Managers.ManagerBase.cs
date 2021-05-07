@@ -19,6 +19,8 @@
                 public abstract bool OnPoll(int until, ref int i, int to);
 
                 public abstract void Free();
+
+                public abstract void OnBackground();
             }
         }
     }

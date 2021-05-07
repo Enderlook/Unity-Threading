@@ -9,52 +9,35 @@ namespace Enderlook.Unity.Coroutines
     /// <summary>
     /// Aditional methods for value coroutines.
     /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static class CoroutineExtensions
     {
-        /// <summary>
-        /// Start a value coroutine.
-        /// </summary>
-        /// <typeparam name="T">Type of routine to start.</typeparam>
-        /// <param name="source"><see cref="MonoBehaviour"/> from which this coroutine is attached to.</param>
-        /// <param name="routine">Coroutine to start.</param>
+        /// <inheritdoc cref="CoroutineScheduler.Start{T}(T, GameObject)"/>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void StartValueCoroutine<T>(this MonoBehaviour source, T routine) where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineScheduler.Shared.Start(routine, new CancellableUnityObject(source));
+        public static void StartValueCoroutine<T>(this GameObject source, T routine)
+            where T : IEnumerator<ValueYieldInstruction>
+           => CoroutineScheduler.Shared.Start(routine, source);
 
-        /// <summary>
-        /// Start a value coroutine.<br/>
-        /// This method is can be executed from any thread.
-        /// </summary>
-        /// <typeparam name="T">Type of routine to start.</typeparam>
-        /// <param name="source"><see cref="MonoBehaviour"/> from which this coroutine is attached to.</param>
-        /// <param name="routine">Coroutine to start.</param>
+        /// <inheritdoc cref="CoroutineScheduler.StartWithValueHandle{T}(T, GameObject)"/>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ConcurrentStartValueCoroutine<T>(this MonoBehaviour source, T routine) where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineScheduler.Shared.ConcurrentStart(routine, new CancellableUnityObject(source));
+        public static ValueCoroutine StartValueCoroutineWithValueHandle<T>(this GameObject source, T routine)
+            where T : IEnumerator<ValueYieldInstruction>
+           => CoroutineScheduler.Shared.StartWithHandle(routine, source);
 
-        /// <summary>
-        /// Start a value coroutine.
-        /// </summary>
-        /// <typeparam name="T">Type of routine to start.</typeparam>
-        /// <param name="source"><see cref="MonoBehaviour"/> from which this coroutine is attached to.</param>
-        /// <param name="routine">Coroutine to start.</param>
+        /// <inheritdoc cref="CoroutineScheduler.Start{T}(T, MonoBehaviour, bool)"/>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ValueCoroutine StartValueCoroutineWithHandle<T>(this MonoBehaviour source, T routine) where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineScheduler.Shared.StartWithHandle(routine, new CancellableUnityObject(source));
+        public static void StartValueCoroutine<T>(this MonoBehaviour source, T routine, bool suspendWhenSourceIsDisabled = false)
+            where T : IEnumerator<ValueYieldInstruction>
+           => CoroutineScheduler.Shared.Start(routine, source, suspendWhenSourceIsDisabled);
 
-        /// <summary>
-        /// Start a value coroutine.<br/>
-        /// This method is can be executed from any thread.
-        /// </summary>
-        /// <typeparam name="T">Type of routine to start.</typeparam>
-        /// <param name="source"><see cref="MonoBehaviour"/> from which this coroutine is attached to.</param>
-        /// <param name="routine">Coroutine to start.</param>
+        /// <inheritdoc cref="CoroutineScheduler.StartWithValueHandle{T}(T, MonoBehaviour, bool)"/>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ValueCoroutine ConcurrentStartValueCoroutineWithHandle<T>(this MonoBehaviour source, T routine) where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineScheduler.Shared.ConcurrentStartWithHandle(routine, new CancellableUnityObject(source));
+        public static ValueCoroutine StartValueCoroutineWithValueHandle<T>(this MonoBehaviour source, T routine, bool suspendWhenSourceIsDisabled = false)
+            where T : IEnumerator<ValueYieldInstruction>
+           => CoroutineScheduler.Shared.StartWithHandle(routine, source, suspendWhenSourceIsDisabled);
     }
 }

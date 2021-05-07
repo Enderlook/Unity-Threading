@@ -19,82 +19,98 @@ namespace Enderlook.Unity.Coroutines
     {
         internal sealed partial class Managers
         {
-            private partial class TypedManager<T, U> : ManagerBase
-                where T : IEnumerator<ValueYieldInstruction>
-                where U : ICancellable
+            private static readonly Action<Task> onFaultTask = e => Debug.LogException(e.Exception);
+
+            private partial class TypedManager<T> : ManagerBase where T : IValueCoroutineEnumerator
             {
-                private readonly Action<Routine> nextShortBackgroundAction;
-                private readonly Action<Routine> nextLongBackgroundAction;
+                private static readonly Action<(TypedManager<T> manager, ValueCoroutineStateBoxed state, T routine)> shortBackground =
+                    e => e.manager.NextBackground(e.routine, new BackgroundShortNextCallback(e.state), e.state, ThreadMode.Short);
+
+                private static readonly Action<(TypedManager<T> manager, ValueCoroutineStateBoxed state, T routine)> longBackground =
+                     e => e.manager.NextBackground(e.routine, new BackgroundShortNextCallback(e.state), e.state, ThreadMode.Long);
+
                 private readonly Managers manager;
 
                 // TODO: Cache locality may be improved by using a circular buffer instead of two lists when iterating each one. Futher reasearch is required.
 
-                private PackList<Routine> onUpdate = PackList<Routine>.Create();
-                private PackList<Routine> onFixedUpdate = PackList<Routine>.Create();
-                private PackList<Routine> onLateUpdate = PackList<Routine>.Create();
-                private PackList<Routine> onEndOfFrame = PackList<Routine>.Create();
-                private PackQueue<Routine> onPoll = PackQueue<Routine>.Create();
-                private PackList<(CustomYieldInstruction, Routine)> onCustom = PackList<(CustomYieldInstruction, Routine)>.Create();
-                private PackList<(Func<bool>, Routine)> onWhile = PackList<(Func<bool>, Routine)>.Create();
-                private PackList<(Func<bool>, Routine)> onUntil = PackList<(Func<bool>, Routine)>.Create();
-                private PackList<(ValueTask, Routine)> onTask = PackList<(ValueTask, Routine)>.Create();
-                private PackList<(JobHandle, Routine)> onJobHandle = PackList<(JobHandle, Routine)>.Create();
+                private PackList<T> onUpdate = PackList<T>.Create();
+                private PackList<T> onFixedUpdate = PackList<T>.Create();
+                private PackList<T> onLateUpdate = PackList<T>.Create();
+                private PackList<T> onEndOfFrame = PackList<T>.Create();
+                private PackQueue<T> onUnityPoll = PackQueue<T>.Create();
+                private PackList<(CustomYieldInstruction, T)> onCustom = PackList<(CustomYieldInstruction, T)>.Create();
+                private PackList<(Func<bool>, T)> onWhile = PackList<(Func<bool>, T)>.Create();
+                private PackList<(Func<bool>, T)> onUntil = PackList<(Func<bool>, T)>.Create();
+                private PackList<(ValueTask, T)> onTask = PackList<(ValueTask, T)>.Create();
+                private PackList<(JobHandle, T)> onJobHandle = PackList<(JobHandle, T)>.Create();
                 // Waiter with timer can be reduced in time complexity by using priority queues.
-                private PackList<(float, Routine)> onTime = PackList<(float, Routine)>.Create();
-                private PackList<(float, Routine)> onRealtime = PackList<(float, Routine)>.Create();
-                private PackList<(ValueCoroutine, Routine)> onValueCoroutine = PackList<(ValueCoroutine, Routine)>.Create();
+                private PackList<(float, T)> onWaitSeconds = PackList<(float, T)>.Create();
+                private PackList<(float, T)> onWaitRealtimeSeconds = PackList<(float, T)>.Create();
+                private PackList<(ValueCoroutine, T)> onValueCoroutine = PackList<(ValueCoroutine, T)>.Create();
+                private PackList<(Coroutine, T)> onUnityCoroutine = PackList<(Coroutine, T)>.Create();
 
-                private RawList<(U, UnityEngine.Coroutine)> onUnityCoroutine = RawList<(U, UnityEngine.Coroutine)>.Create();
-                private readonly ConcurrentBag<(U, IEnumerator)> onUnityCoroutineBag = new ConcurrentBag<(U, IEnumerator)>();
+                private PackList<T> suspendedEntry = PackList<T>.Create();
 
-                private RawList<Routine> tmpT = RawList<Routine>.Create();
-                private RawQueue<Routine> tmpTQueue = RawQueue<Routine>.Create();
-                private RawList<(CustomYieldInstruction, Routine)> tmpCustom = RawList<(CustomYieldInstruction, Routine)>.Create();
-                private RawList<(float, Routine)> tmpFloat = RawList<(float, Routine)>.Create();
-                private RawList<(Func<bool>, Routine)> tmpFuncBool = RawList<(Func<bool>, Routine)>.Create();
-                private RawList<(ValueTask, Routine)> tmpTask = RawList<(ValueTask, Routine)>.Create();
-                private RawList<(JobHandle, Routine)> tmpJobHandle = RawList<(JobHandle, Routine)>.Create();
-                private RawList<(ValueCoroutine, Routine)> tmpValueCoroutine = RawList<(ValueCoroutine, Routine)>.Create();
+                private readonly ConcurrentQueue<(ValueCoroutineStateBoxed, T)> suspendedBackgroundShort;
+                private readonly ConcurrentQueue<(ValueCoroutineStateBoxed, T)> suspendedBackgroundLong;
+                private readonly ConcurrentQueue<Task> backgroundTasks;
+
+                private RawList<T> tmpT = RawList<T>.Create();
+                private RawQueue<T> tmpTQueue = RawQueue<T>.Create();
+                private RawList<(CustomYieldInstruction, T)> tmpCustom = RawList<(CustomYieldInstruction, T)>.Create();
+                private RawList<(float, T)> tmpFloat = RawList<(float, T)>.Create();
+                private RawList<(Func<bool>, T)> tmpFuncBool = RawList<(Func<bool>, T)>.Create();
+                private RawList<(ValueTask, T)> tmpTask = RawList<(ValueTask, T)>.Create();
+                private RawList<(JobHandle, T)> tmpJobHandle = RawList<(JobHandle, T)>.Create();
+                private RawList<(ValueCoroutine, T)> tmpValueCoroutine = RawList<(ValueCoroutine, T)>.Create();
+                private RawList<(Coroutine, T)> tmpUnityCoroutine = RawList<(Coroutine, T)>.Create();
 
                 public TypedManager(Managers manager)
                 {
                     this.manager = manager;
-
-                    nextShortBackgroundAction = (e) =>
+                    if (Application.platform != RuntimePlatform.WebGLPlayer)
                     {
-                        if (!e.IsCancelationRequested)
-                            NextBackground(e, ShortThread);
-                    };
-                    nextLongBackgroundAction = (e) =>
-                    {
-                        if (!e.IsCancelationRequested)
-                            NextBackground(e, LongThread);
-                    };
+                        suspendedBackgroundShort = new ConcurrentQueue<(ValueCoroutineStateBoxed, T)>();
+                        suspendedBackgroundLong = new ConcurrentQueue<(ValueCoroutineStateBoxed, T)>();
+                        backgroundTasks = new ConcurrentQueue<Task>();
+                    }
                 }
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public void Start(U cancellator, T coroutine)
-                    => Next(new Routine(cancellator, coroutine));
+                public void Start(T coroutine)
+                    => Next(coroutine, new EntryNextCallback());
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public void ConcurrentStart(U cancellator, T coroutine, int mode)
-                    => NextBackground(new Routine(cancellator, coroutine), mode);
+                public void ConcurrentStart(T coroutine, ThreadMode mode)
+                    => NextBackground(coroutine, new EntryNextCallback(), manager.state, mode);
+
+                private void OnEntry()
+                {
+                    RawList<T> local = suspendedEntry.Swap(tmpT);
+
+                    for (int i = 0; i < local.Count; i++)
+                        Next(local[i], new EntryNextCallback());
+
+                    ConcurrentBag<T> bag = onUpdate.Concurrent;
+                    while (bag.TryTake(out T routine))
+                        Next(routine, new EntryNextCallback());
+
+                    local.Clear();
+                    tmpT = local;
+                }
 
                 public override void OnUpdate()
                 {
-                    RawList<Routine> local = onUpdate.Swap(tmpT);
+                    OnEntry();
+
+                    RawList<T> local = onUpdate.Swap(tmpT);
 
                     for (int i = 0; i < local.Count; i++)
-                    {
-                        Routine routine = local[i];
-                        if (!routine.IsCancelationRequested)
-                            Next(local[i]);
-                    }
+                        Next(local[i], new UpdateNextCallback());
 
-                    ConcurrentBag<Routine> bag = onUpdate.Concurrent;
-                    while (bag.TryTake(out Routine routine))
-                        if (!routine.IsCancelationRequested)
-                            Next(routine);
+                    ConcurrentBag<T> bag = onUpdate.Concurrent;
+                    while (bag.TryTake(out T routine))
+                        Next(routine, new UpdateNextCallback());
 
                     local.Clear();
                     tmpT = local;
@@ -104,19 +120,14 @@ namespace Enderlook.Unity.Coroutines
 
                 public override void OnLateUpdate()
                 {
-                    RawList<Routine> local = onLateUpdate.Swap(tmpT);
+                    RawList<T> local = onLateUpdate.Swap(tmpT);
 
                     for (int i = 0; i < local.Count; i++)
-                    {
-                        Routine routine = local[i];
-                        if (!routine.IsCancelationRequested)
-                            Next(local[i]);
-                    }
+                        Next(local[i], new LateUpdateNextCallback());
 
-                    ConcurrentBag<Routine> bag = onLateUpdate.Concurrent;
-                    while (bag.TryTake(out Routine routine))
-                        if (!routine.IsCancelationRequested)
-                            Next(routine);
+                    ConcurrentBag<T> bag = onLateUpdate.Concurrent;
+                    while (bag.TryTake(out T routine))
+                        Next(routine, new LateUpdateNextCallback());
 
                     local.Clear();
                     tmpT = local;
@@ -124,19 +135,14 @@ namespace Enderlook.Unity.Coroutines
 
                 public override void OnFixedUpdate()
                 {
-                    RawList<Routine> local = onFixedUpdate.Swap(tmpT);
+                    RawList<T> local = onFixedUpdate.Swap(tmpT);
 
                     for (int i = 0; i < local.Count; i++)
-                    {
-                        Routine routine = local[i];
-                        if (!routine.IsCancelationRequested)
-                            Next(local[i]);
-                    }
+                        Next(local[i], new FixedUpdateNextCallback());
 
-                    ConcurrentBag<Routine> bag = onFixedUpdate.Concurrent;
-                    while (bag.TryTake(out Routine routine))
-                        if (!routine.IsCancelationRequested)
-                            Next(routine);
+                    ConcurrentBag<T> bag = onFixedUpdate.Concurrent;
+                    while (bag.TryTake(out T routine))
+                        Next(routine, new FixedUpdateNextCallback());
 
                     local.Clear();
                     tmpT = local;
@@ -144,37 +150,31 @@ namespace Enderlook.Unity.Coroutines
 
                 public override void OnEndOfFrame()
                 {
-                    RawList<Routine> local = onEndOfFrame.Swap(tmpT);
+                    RawList<T> local = onEndOfFrame.Swap(tmpT);
 
                     for (int i = 0; i < local.Count; i++)
-                    {
-                        Routine routine = local[i];
-                        if (!routine.IsCancelationRequested)
-                            Next(local[i]);
-                    }
+                        Next(local[i], new EndOfFrameNextCallback());
 
-                    ConcurrentBag<Routine> bag = onEndOfFrame.Concurrent;
-                    while (bag.TryTake(out Routine routine))
-                        if (!routine.IsCancelationRequested)
-                            Next(routine);
+                    ConcurrentBag<T> bag = onEndOfFrame.Concurrent;
+                    while (bag.TryTake(out T routine))
+                        Next(routine, new EndOfFrameNextCallback());
 
                     local.Clear();
                     tmpT = local;
                 }
 
-                public override int PollCount() => onPoll.Count;
+                public override int PollCount() => onUnityPoll.Count;
 
                 public override bool OnPoll(int until, ref int i, int to)
                 {
-                    onPoll.DrainConcurrent();
-                    RawQueue<Routine> local = onPoll.Swap(tmpTQueue);
+                    onUnityPoll.DrainConcurrent();
+                    RawQueue<T> local = onUnityPoll.Swap(tmpTQueue);
 
                     bool completed = true;
-                    while (local.TryDequeue(out Routine routine))
+                    while (local.TryDequeue(out T routine))
                     {
                         i++;
-                        if (!routine.IsCancelationRequested)
-                            Next(routine);
+                        Next(routine, new PollNextCallback());
                         if (DateTime.Now.Millisecond >= until && i < to)
                         {
                             completed = false;
@@ -182,13 +182,12 @@ namespace Enderlook.Unity.Coroutines
                         }
                     }
 
-                    RawQueue<Routine> tmp = onPoll.Queue;
-
+                    RawQueue<T> tmp = onUnityPoll.Queue;
                     // TODO: This may be improved with Array.Copy or similar.
-                    while (tmp.TryDequeue(out Routine routine))
+                    while (tmp.TryDequeue(out T routine))
                         local.Enqueue(routine);
 
-                    onPoll.Queue = local;
+                    onUnityPoll.Queue = local;
                     tmpTQueue = tmp;
 
                     return completed;
@@ -196,28 +195,24 @@ namespace Enderlook.Unity.Coroutines
 
                 private void OnWaitForSeconds()
                 {
-                    RawList<(float, Routine)> local = onTime.Swap(tmpFloat);
+                    RawList<(float, T)> local = onWaitSeconds.Swap(tmpFloat);
 
                     for (int i = 0; i < local.Count; i++)
                     {
-                        (float condition, Routine routine) tmp = local[i];
-                        if (tmp.routine.IsCancelationRequested)
-                            continue;
+                        (float condition, T routine) tmp = local[i];
                         if (tmp.condition <= Time.time)
-                            Next(tmp.routine);
+                            Next(tmp.routine, new WaitForSecondsNextCallback(tmp.condition));
                         else
-                            onTime.Add(tmp);
+                            onWaitSeconds.Add(tmp);
                     }
 
-                    ConcurrentBag<(float condition, Routine routine)> bag = onTime.Concurrent;
-                    while (bag.TryTake(out (float condition, Routine routine) tmp))
+                    ConcurrentBag<(float condition, T routine)> bag = onWaitSeconds.Concurrent;
+                    while (bag.TryTake(out (float condition, T routine) tmp))
                     {
-                        if (tmp.routine.IsCancelationRequested)
-                            continue;
                         if (tmp.condition <= Time.time)
-                            Next(tmp.routine);
+                            Next(tmp.routine, new WaitForSecondsNextCallback(tmp.condition));
                         else
-                            onTime.Add(tmp);
+                            onWaitSeconds.Add(tmp);
                     }
 
                     local.Clear();
@@ -226,28 +221,24 @@ namespace Enderlook.Unity.Coroutines
 
                 private void OnWaitForRealtimeSeconds()
                 {
-                    RawList<(float, Routine)> local = onRealtime.Swap(tmpFloat);
+                    RawList<(float, T)> local = onWaitRealtimeSeconds.Swap(tmpFloat);
 
                     for (int i = 0; i < local.Count; i++)
                     {
-                        (float condition, Routine routine) tmp = local[i];
-                        if (tmp.routine.IsCancelationRequested)
-                            continue;
+                        (float condition, T routine) tmp = local[i];
                         if (tmp.condition <= Time.realtimeSinceStartup)
-                            Next(tmp.routine);
+                            Next(tmp.routine, new WaitForRealtimeSecondsNextCallback(tmp.condition));
                         else
-                            onRealtime.Add(tmp);
+                            onWaitRealtimeSeconds.Add(tmp);
                     }
 
-                    ConcurrentBag<(float condition, Routine routine)> bag = onRealtime.Concurrent;
-                    while (bag.TryTake(out (float condition, Routine routine) tmp))
+                    ConcurrentBag<(float condition, T routine)> bag = onWaitRealtimeSeconds.Concurrent;
+                    while (bag.TryTake(out (float condition, T routine) tmp))
                     {
-                        if (tmp.routine.IsCancelationRequested)
-                            continue;
                         if (tmp.condition <= Time.realtimeSinceStartup)
-                            Next(tmp.routine);
+                            Next(tmp.routine, new WaitForRealtimeSecondsNextCallback(tmp.condition));
                         else
-                            onTime.Add(tmp);
+                            onWaitSeconds.Add(tmp);
                     }
 
                     local.Clear();
@@ -256,28 +247,24 @@ namespace Enderlook.Unity.Coroutines
 
                 private void OnCustom()
                 {
-                    RawList<(CustomYieldInstruction, Routine)> local = onCustom.Swap(tmpCustom);
+                    RawList<(CustomYieldInstruction, T)> local = onCustom.Swap(tmpCustom);
 
                     for (int i = 0; i < local.Count; i++)
                     {
-                        (CustomYieldInstruction condition, Routine routine) tmp = local[i];
-                        if (tmp.routine.IsCancelationRequested)
-                            continue;
+                        (CustomYieldInstruction condition, T routine) tmp = local[i];
                         if (tmp.condition.keepWaiting)
                             onCustom.Add(tmp);
                         else
-                            Next(tmp.routine);
+                            Next(tmp.routine, new CustomNextCallback(tmp.condition));
                     }
 
-                    ConcurrentBag<(CustomYieldInstruction condition, Routine routine)> bag = onCustom.Concurrent;
-                    while (bag.TryTake(out (CustomYieldInstruction condition, Routine routine) tmp))
+                    ConcurrentBag<(CustomYieldInstruction condition, T routine)> bag = onCustom.Concurrent;
+                    while (bag.TryTake(out (CustomYieldInstruction condition, T routine) tmp))
                     {
-                        if (tmp.routine.IsCancelationRequested)
-                            continue;
                         if (tmp.condition.keepWaiting)
                             onCustom.Add(tmp);
                         else
-                            Next(tmp.routine);
+                            Next(tmp.routine, new CustomNextCallback(tmp.condition));
                     }
 
                     local.Clear();
@@ -286,28 +273,40 @@ namespace Enderlook.Unity.Coroutines
 
                 private void OnWhile()
                 {
-                    RawList<(Func<bool>, Routine)> local = onWhile.Swap(tmpFuncBool);
+                    RawList<(Func<bool>, T)> local = onWhile.Swap(tmpFuncBool);
 
                     for (int i = 0; i < local.Count; i++)
                     {
-                        (Func<bool> condition, Routine routine) tmp = local[i];
-                        if (tmp.routine.IsCancelationRequested)
-                            continue;
-                        if (tmp.condition())
-                            onWhile.Add(tmp);
-                        else
-                            Next(tmp.routine);
+                        (Func<bool> condition, T routine) tmp = local[i];
+                        switch (tmp.routine.State)
+                        {
+                            case ValueCoroutineState.Continue:
+                                if (tmp.condition())
+                                    onWhile.Add(tmp);
+                                else
+                                    Next(tmp.routine, new WhileNextCallback(tmp.condition));
+                                break;
+                            case ValueCoroutineState.Suspended:
+                                onWhile.Add(tmp);
+                                break;
+                        }
                     }
 
-                    ConcurrentBag<(Func<bool> condition, Routine routine)> bag = onWhile.Concurrent;
-                    while (bag.TryTake(out (Func<bool> condition, Routine routine) tmp))
+                    ConcurrentBag<(Func<bool> condition, T routine)> bag = onWhile.Concurrent;
+                    while (bag.TryTake(out (Func<bool> condition, T routine) tmp))
                     {
-                        if (tmp.routine.IsCancelationRequested)
-                            continue;
-                        if (tmp.condition())
-                            onWhile.Add(tmp);
-                        else
-                            Next(tmp.routine);
+                        switch (tmp.routine.State)
+                        {
+                            case ValueCoroutineState.Continue:
+                                if (tmp.condition())
+                                    onWhile.Add(tmp);
+                                else
+                                    Next(tmp.routine, new WhileNextCallback(tmp.condition));
+                                break;
+                            case ValueCoroutineState.Suspended:
+                                onWhile.Add(tmp);
+                                break;
+                        }
                     }
 
                     local.Clear();
@@ -316,28 +315,40 @@ namespace Enderlook.Unity.Coroutines
 
                 private void OnUntil()
                 {
-                    RawList<(Func<bool>, Routine)> local = onUntil.Swap(tmpFuncBool);
+                    RawList<(Func<bool>, T)> local = onUntil.Swap(tmpFuncBool);
 
                     for (int i = 0; i < local.Count; i++)
                     {
-                        (Func<bool> condition, Routine routine) tmp = local[i];
-                        if (tmp.routine.IsCancelationRequested)
-                            continue;
-                        if (tmp.condition())
-                            Next(tmp.routine);
-                        else
-                            onUntil.Add(tmp);
+                        (Func<bool> condition, T routine) tmp = local[i];
+                        switch (tmp.routine.State)
+                        {
+                            case ValueCoroutineState.Continue:
+                                if (!tmp.condition())
+                                    onWhile.Add(tmp);
+                                else
+                                    Next(tmp.routine, new UntilNextCallback(tmp.condition));
+                                break;
+                            case ValueCoroutineState.Suspended:
+                                onWhile.Add(tmp);
+                                break;
+                        }
                     }
 
-                    ConcurrentBag<(Func<bool> condition, Routine routine)> bag = onUntil.Concurrent;
-                    while (bag.TryTake(out (Func<bool> condition, Routine routine) tmp))
+                    ConcurrentBag<(Func<bool> condition, T routine)> bag = onUntil.Concurrent;
+                    while (bag.TryTake(out (Func<bool> condition, T routine) tmp))
                     {
-                        if (tmp.routine.IsCancelationRequested)
-                            continue;
-                        if (tmp.condition())
-                            Next(tmp.routine);
-                        else
-                            onWhile.Add(tmp);
+                        switch (tmp.routine.State)
+                        {
+                            case ValueCoroutineState.Continue:
+                                if (!tmp.condition())
+                                    onWhile.Add(tmp);
+                                else
+                                    Next(tmp.routine, new UntilNextCallback(tmp.condition));
+                                break;
+                            case ValueCoroutineState.Suspended:
+                                onWhile.Add(tmp);
+                                break;
+                        }
                     }
 
                     local.Clear();
@@ -346,26 +357,26 @@ namespace Enderlook.Unity.Coroutines
 
                 private void OnTask()
                 {
-                    RawList<(ValueTask, Routine)> local = onTask.Swap(tmpTask);
+                    RawList<(ValueTask, T)> local = onTask.Swap(tmpTask);
 
                     for (int i = 0; i < local.Count; i++)
                     {
-                        (ValueTask condition, Routine routine) tmp = local[i];
-                        if (tmp.routine.IsCancelationRequested)
-                            continue;
-                        if (tmp.condition.IsCompleted)
-                            Next(tmp.routine);
+                        (ValueTask condition, T routine) tmp = local[i];
+                        if (tmp.condition.IsFaulted)
+                            Debug.LogException(tmp.condition.AsTask().Exception);
+                        else if (tmp.condition.IsCompleted)
+                            Next(tmp.routine, new ValueTaskNextCallback(tmp.condition));
                         else
                             onTask.Add(tmp);
                     }
 
-                    ConcurrentBag<(ValueTask condition, Routine routine)> bag = onTask.Concurrent;
-                    while (bag.TryTake(out (ValueTask condition, Routine routine) tmp))
+                    ConcurrentBag<(ValueTask condition, T routine)> bag = onTask.Concurrent;
+                    while (bag.TryTake(out (ValueTask condition, T routine) tmp))
                     {
-                        if (tmp.routine.IsCancelationRequested)
-                            continue;
-                        if (tmp.condition.IsCompleted)
-                            Next(tmp.routine);
+                        if (tmp.condition.IsFaulted)
+                            Debug.LogException(tmp.condition.AsTask().Exception);
+                        else if (tmp.condition.IsCompleted)
+                            Next(tmp.routine, new ValueTaskNextCallback(tmp.condition));
                         else
                             onTask.Add(tmp);
                     }
@@ -376,31 +387,27 @@ namespace Enderlook.Unity.Coroutines
 
                 private void OnJobHandle()
                 {
-                    RawList<(JobHandle, Routine)> local = onJobHandle.Swap(tmpJobHandle);
+                    RawList<(JobHandle, T)> local = onJobHandle.Swap(tmpJobHandle);
 
                     for (int i = 0; i < local.Count; i++)
                     {
-                        (JobHandle condition, Routine routine) tmp = local[i];
-                        if (tmp.routine.IsCancelationRequested)
-                            continue;
+                        (JobHandle condition, T routine) tmp = local[i];
                         if (tmp.condition.IsCompleted)
                         {
                             tmp.condition.Complete();
-                            Next(tmp.routine);
+                            Next(tmp.routine, new JobHandleNextCallback(tmp.condition));
                         }
                         else
                             onJobHandle.Add(tmp);
                     }
 
-                    ConcurrentBag<(JobHandle condition, Routine routine)> bag = onJobHandle.Concurrent;
-                    while (bag.TryTake(out (JobHandle condition, Routine routine) tmp))
+                    ConcurrentBag<(JobHandle condition, T routine)> bag = onJobHandle.Concurrent;
+                    while (bag.TryTake(out (JobHandle condition, T routine) tmp))
                     {
-                        if (tmp.routine.IsCancelationRequested)
-                            continue;
                         if (tmp.condition.IsCompleted)
                         {
                             tmp.condition.Complete();
-                            Next(tmp.routine);
+                            Next(tmp.routine, new JobHandleNextCallback(tmp.condition));
                         }
                         else
                             onJobHandle.Add(tmp);
@@ -412,26 +419,22 @@ namespace Enderlook.Unity.Coroutines
 
                 private void OnValueCoroutine()
                 {
-                    RawList<(ValueCoroutine, Routine)> local = onValueCoroutine.Swap(tmpValueCoroutine);
+                    RawList<(ValueCoroutine, T)> local = onValueCoroutine.Swap(tmpValueCoroutine);
 
                     for (int i = 0; i < local.Count; i++)
                     {
-                        (ValueCoroutine condition, Routine routine) tmp = local[i];
-                        if (tmp.routine.IsCancelationRequested)
-                            continue;
+                        (ValueCoroutine condition, T routine) tmp = local[i];
                         if (tmp.condition.IsCompleted)
-                            Next(tmp.routine);
+                            Next(tmp.routine, new ValueCoroutineNextCallback(tmp.condition));
                         else
                             onValueCoroutine.Add(tmp);
                     }
 
-                    ConcurrentBag<(ValueCoroutine condition, Routine routine)> bag = onValueCoroutine.Concurrent;
-                    while (bag.TryTake(out (ValueCoroutine condition, Routine routine) tmp))
+                    ConcurrentBag<(ValueCoroutine condition, T routine)> bag = onValueCoroutine.Concurrent;
+                    while (bag.TryTake(out (ValueCoroutine condition, T routine) tmp))
                     {
-                        if (tmp.routine.IsCancelationRequested)
-                            continue;
                         if (tmp.condition.IsCompleted)
-                            Next(tmp.routine);
+                            Next(tmp.routine, new ValueCoroutineNextCallback(tmp.condition));
                         else
                             onValueCoroutine.Add(tmp);
                     }
@@ -455,235 +458,413 @@ namespace Enderlook.Unity.Coroutines
 
                 private void CheckUnityCoroutines()
                 {
-                    RawList<(U, UnityEngine.Coroutine)> onUnityCoroutine = this.onUnityCoroutine;
-                    for (int i = onUnityCoroutine.Count - 1; i >= 0; i--)
+                    RawList<(Coroutine, T)> local = onUnityCoroutine.Swap(tmpUnityCoroutine);
+                    for (int i = local.Count - 1; i >= 0; i--)
                     {
-                        (U condition, UnityEngine.Coroutine coroutine) tmp = this.onUnityCoroutine[i];
-                        if (tmp.condition.IsCancelationRequested)
+                        (Coroutine coroutine, T condition) tmp = local[i];
+                        switch (tmp.condition.State)
                         {
-                            manager.StopUnityCoroutine(tmp.coroutine);
-                            this.onUnityCoroutine.RemoveAt(i);
+                            case ValueCoroutineState.Finalized:
+                                manager.StopUnityCoroutine(tmp.coroutine);
+                                local.RemoveAt(i);
+                                break;
+                            case ValueCoroutineState.Suspended:
+                                Debug.LogWarning("A value coroutine that yielded a Unity coroutine cannot be suspended until the Unity coroutine ends.");
+                                break;
                         }
                     }
 
-                    ConcurrentBag<(U condition, IEnumerator coroutine)> bag = onUnityCoroutineBag;
-                    while (bag.TryTake(out (U condition, IEnumerator coroutine) tmp))
+                    local.Clear();
+                    tmpUnityCoroutine = local;
+
+                    ConcurrentBag<(Coroutine, T)> bag = onUnityCoroutine.Concurrent;
+                    while (bag.TryTake(out (Coroutine coroutine, T condition) tmp))
                     {
-                        if (tmp.condition.IsCancelationRequested)
-                            continue;
-                        UnityEngine.Coroutine coroutine = manager.StartUnityCoroutine(tmp.coroutine);
-                        this.onUnityCoroutine.Add((tmp.condition, coroutine));
+                        switch (tmp.condition.State)
+                        {
+                            case ValueCoroutineState.Finalized:
+                                manager.StopUnityCoroutine(tmp.coroutine);
+                                break;
+                            case ValueCoroutineState.Suspended:
+                                onUnityCoroutine.Add(tmp);
+                                Debug.LogWarning("A value coroutine that yielded a Unity coroutine cannot be suspended until the Unity coroutine ends.");
+                                break;
+                            case ValueCoroutineState.Continue:
+                                onUnityCoroutine.Add(tmp);
+                                break;
+                        }
                     }
                 }
 
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public void Next(Routine routine)
+                public override void OnBackground()
                 {
-                    if (routine.MoveNext())
+                    ConcurrentQueue<Task> tasks = backgroundTasks;
+                    int count = tasks.Count;
+                    while (count-- > 0 && tasks.TryDequeue(out Task task))
                     {
-                        ValueYieldInstruction instruction = routine.Current;
-                        switch (instruction.Mode)
+                        if (task.IsFaulted)
+                            Debug.LogException(task.Exception);
+                        else if (!task.IsCompleted)
+                            tasks.Enqueue(task);
+                    }
+
+                    ConcurrentQueue<(ValueCoroutineStateBoxed, T)> local = suspendedBackgroundShort;
+                    count = local.Count;
+                    while (count-- > 0 && local.TryDequeue(out (ValueCoroutineStateBoxed state, T routine) tmp))
+                    {
+                        switch (tmp.state.State)
                         {
-                            case ValueYieldInstruction.Type.ToUpdate:
-                                onUpdate.Add(routine);
+                            case ValueCoroutineState.Continue:
+                                Task.Factory.StartNew(shortBackground, (this, tmp.state, tmp.routine));
                                 break;
-                            case ValueYieldInstruction.Type.ToLateUpdate:
-                                onLateUpdate.Add(routine);
+                            case ValueCoroutineState.Finalized:
+                                tmp.routine.Dispose();
                                 break;
-                            case ValueYieldInstruction.Type.ToFixedUpdate:
-                                onFixedUpdate.Add(routine);
+                            case ValueCoroutineState.Suspended:
+                                local.Enqueue(tmp);
                                 break;
-                            case ValueYieldInstruction.Type.ToEndOfFrame:
-                                onEndOfFrame.Add(routine);
+                        }
+                    }
+
+                    local = suspendedBackgroundLong;
+                    count = local.Count;
+                    while (count-- > 0 && local.TryDequeue(out (ValueCoroutineStateBoxed state, T routine) tmp))
+                    {
+                        switch (tmp.state.State)
+                        {
+                            case ValueCoroutineState.Continue:
+                                Task.Factory.StartNew(longBackground, (this, tmp.state, tmp.routine));
                                 break;
-                            case ValueYieldInstruction.Type.ForSeconds:
-                                onTime.Add((instruction.Float + Time.time, routine));
+                            case ValueCoroutineState.Finalized:
+                                tmp.routine.Dispose();
                                 break;
-                            case ValueYieldInstruction.Type.ForRealtimeSeconds:
-                                onRealtime.Add((instruction.Float + Time.realtimeSinceStartup, routine));
-                                break;
-                            case ValueYieldInstruction.Type.Until:
-                                onUntil.Add((instruction.FuncBool, routine));
-                                break;
-                            case ValueYieldInstruction.Type.While:
-                                onWhile.Add((instruction.FuncBool, routine));
-                                break;
-                            case ValueYieldInstruction.Type.CustomYieldInstruction:
-                                onCustom.Add((instruction.CustomYieldInstruction, routine));
-                                break;
-                            case ValueYieldInstruction.Type.ValueTask:
-                                onTask.Add((instruction.ValueTask, routine));
-                                break;
-                            case ValueYieldInstruction.Type.JobHandle:
-                                onJobHandle.Add((instruction.JobHandle, routine));
-                                break;
-                            case ValueYieldInstruction.Type.ValueEnumerator:
-                                manager.Start(new NestedEnumerator<T, U>(this, routine, instruction.ValueEnumerator), routine.cancellator);
-                                break;
-                            case ValueYieldInstruction.Type.BoxedEnumerator:
-                            {
-                                onUnityCoroutine.Add((routine.cancellator, manager.StartUnityCoroutine(Work(instruction.BoxedEnumerator))));
-                                break;
-                                IEnumerator Work(IEnumerator enumerator)
-                                {
-                                    yield return enumerator;
-                                    Next(routine);
-                                }
-                            }
-                            case ValueYieldInstruction.Type.ValueCoroutine:
-                                onValueCoroutine.Add((instruction.ValueCoroutine, routine));
-                                break;
-                            case ValueYieldInstruction.Type.ToUnity:
-#if UNITY_EDITOR
-                                Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToUnity)} was yielded from main thread. This will be ignored.");
-#endif
-                                Next(routine);
-                                break;
-                            case ValueYieldInstruction.Type.ToBackground:
-                                if (Application.platform == RuntimePlatform.WebGLPlayer)
-                                {
-#if UNITY_EDITOR
-                                    Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded but this platform doesn't support multithreading. A fallback to {nameof(Yield)}.{nameof(Yield.Poll)} was used. Be warned that this may produce deadlocks very easily.");
-#endif
-                                    onPoll.Enqueue(routine);
-                                }
-                                else
-                                    Task.Factory.StartNew(nextShortBackgroundAction, routine);
-                                break;
-                            case ValueYieldInstruction.Type.ToLongBackground:
-                                if (Application.platform == RuntimePlatform.WebGLPlayer)
-                                {
-#if UNITY_EDITOR
-                                    Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded but this platform doesn't support multithreading. A fallback to {nameof(Yield)}.{nameof(Yield.Poll)} was used. Be warned that this may produce deadlocks very easily.");
-#endif
-                                    onPoll.Enqueue(routine);
-                                }
-                                else
-                                    Task.Factory.StartNew(nextShortBackgroundAction, routine, TaskCreationOptions.LongRunning);
-                                break;
-                            case ValueYieldInstruction.Type.YieldInstruction:
-                            {
-                                onUnityCoroutine.Add((routine.cancellator, manager.StartUnityCoroutine(Work(instruction.YieldInstruction))));
-                                break;
-                                IEnumerator Work(YieldInstruction yieldInstruction)
-                                {
-                                    yield return yieldInstruction;
-                                    Next(routine);
-                                }
-                            }
-                            case ValueYieldInstruction.Type.Poll:
-                                onPoll.Enqueue(routine);
+                            case ValueCoroutineState.Suspended:
+                                local.Enqueue(tmp);
                                 break;
                         }
                     }
                 }
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public void NextBackground(Routine routine, int mode)
+                public void Next<U>(T routine, U callback) where U : INextCallback<T>
+                {
+                    start:
+                    ValueYieldInstruction instruction = routine.Next();
+                    switch (instruction.Mode)
+                    {
+                        case ValueYieldInstruction.Type.ToUpdate:
+                            onUpdate.Add(routine);
+                            break;
+                        case ValueYieldInstruction.Type.ToLateUpdate:
+                            onLateUpdate.Add(routine);
+                            break;
+                        case ValueYieldInstruction.Type.ToFixedUpdate:
+                            onFixedUpdate.Add(routine);
+                            break;
+                        case ValueYieldInstruction.Type.ToEndOfFrame:
+                            onEndOfFrame.Add(routine);
+                            break;
+                        case ValueYieldInstruction.Type.ForSeconds:
+                            onWaitSeconds.Add((instruction.Float + Time.time, routine));
+                            break;
+                        case ValueYieldInstruction.Type.ForRealtimeSeconds:
+                            onWaitRealtimeSeconds.Add((instruction.Float + Time.realtimeSinceStartup, routine));
+                            break;
+                        case ValueYieldInstruction.Type.Until:
+                            onUntil.Add((instruction.FuncBool, routine));
+                            break;
+                        case ValueYieldInstruction.Type.While:
+                            onWhile.Add((instruction.FuncBool, routine));
+                            break;
+                        case ValueYieldInstruction.Type.CustomYieldInstruction:
+                            onCustom.Add((instruction.CustomYieldInstruction, routine));
+                            break;
+                        case ValueYieldInstruction.Type.ValueTask:
+                            onTask.Add((instruction.ValueTask, routine));
+                            break;
+                        case ValueYieldInstruction.Type.JobHandle:
+                            onJobHandle.Add((instruction.JobHandle, routine));
+                            break;
+                        case ValueYieldInstruction.Type.ValueEnumerator:
+                            manager.Start(new NestedEnumerator<T, ValueCoroutineEnumerator<IEnumerator<ValueYieldInstruction>>, U>(this, routine, new ValueCoroutineEnumerator<IEnumerator<ValueYieldInstruction>>(instruction.ValueEnumerator), callback));
+                            break;
+                        case ValueYieldInstruction.Type.UnityEnumerator:
+                            manager.Start(new NestedEnumerator<T, UnityCoroutineEnumerator, U>(this, routine, new UnityCoroutineEnumerator(instruction.UnityEnumerator), callback));
+                            break;
+                        case ValueYieldInstruction.Type.ValueCoroutine:
+                            onValueCoroutine.Add((instruction.ValueCoroutine, routine));
+                            break;
+                        case ValueYieldInstruction.Type.UnityCoroutine:
+                            onUnityCoroutine.Add((instruction.UnityCoroutine, routine));
+                            break;
+                        case ValueYieldInstruction.Type.ToUnity:
+#if UNITY_EDITOR
+                            Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToUnity)} was yielded from main thread. This will be ignored.");
+#endif
+                            goto start;
+                        case ValueYieldInstruction.Type.ToBackground:
+                            if (Application.platform == RuntimePlatform.WebGLPlayer)
+                            {
+#if UNITY_EDITOR
+                                Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded but this platform doesn't support multithreading. A fallback to {nameof(Yield)}.{nameof(Yield.Poll)} was used. Be warned that this may produce deadlocks very easily.");
+#endif
+                                onUnityPoll.Enqueue(routine);
+                            }
+                            else
+                                Task.Factory.StartNew(shortBackground, (this, manager.state, routine));
+                            break;
+                        case ValueYieldInstruction.Type.ToLongBackground:
+                            if (Application.platform == RuntimePlatform.WebGLPlayer)
+                            {
+#if UNITY_EDITOR
+                                Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded but this platform doesn't support multithreading. A fallback to {nameof(Yield)}.{nameof(Yield.Poll)} was used. Be warned that this may produce deadlocks very easily.");
+#endif
+                                onUnityPoll.Enqueue(routine);
+                            }
+                            else
+                                Task.Factory.StartNew(longBackground, (this, manager.state, routine), TaskCreationOptions.LongRunning);
+                            break;
+                        case ValueYieldInstruction.Type.YieldInstruction:
+                        {
+                            ValueCoroutineStateBoxed state = manager.state;
+                            onUnityCoroutine.Add((manager.StartUnityCoroutine(Work(instruction.YieldInstruction)), routine));
+                            break;
+                            IEnumerator Work(YieldInstruction yieldInstruction)
+                            {
+                                while (true)
+                                {
+                                    switch (state.State)
+                                    {
+                                        case ValueCoroutineState.Continue:
+                                            switch (routine.State)
+                                            {
+                                                case ValueCoroutineState.Continue:
+                                                    yield return yieldInstruction;
+                                                    while (true)
+                                                    {
+                                                        switch (state.State)
+                                                        {
+                                                            case ValueCoroutineState.Continue:
+                                                                switch (routine.State)
+                                                                {
+                                                                    case ValueCoroutineState.Continue:
+                                                                        Next(routine, callback);
+                                                                        yield break;
+                                                                    case ValueCoroutineState.Suspended:
+                                                                        yield return null;
+                                                                        break;
+                                                                    case ValueCoroutineState.Finalized:
+                                                                        routine.Dispose();
+                                                                        yield break;
+                                                                }
+                                                                break;
+                                                            case ValueCoroutineState.Suspended:
+                                                                yield return null;
+                                                                break;
+                                                            case ValueCoroutineState.Finalized:
+                                                                routine.Dispose();
+                                                                yield break;
+                                                        }
+                                                    }
+                                                case ValueCoroutineState.Suspended:
+                                                    yield return null;
+                                                    break;
+                                                case ValueCoroutineState.Finalized:
+                                                    routine.Dispose();
+                                                    yield break;
+                                            }
+                                            yield break;
+                                        case ValueCoroutineState.Suspended:
+                                            yield return null;
+                                            break;
+                                        case ValueCoroutineState.Finalized:
+                                            routine.Dispose();
+                                            yield break;
+                                    }
+                                }
+                            }
+                        }
+                        case ValueYieldInstruction.Type.UnityPoll:
+                            onUnityPoll.Enqueue(routine);
+                            break;
+                        case ValueYieldInstruction.Type.Finalized:
+                            routine.Dispose();
+                            break;
+                        case ValueYieldInstruction.Type.Suspended:
+                            callback.Suspend(this, routine);
+                            return;
+                    }
+                }
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void NextBackground<U>(T routine, U callback, ValueCoroutineStateBoxed state, ThreadMode mode) where U : INextCallback<T>
                 {
 #if DEBUG
                     Debug.Assert(Application.platform != RuntimePlatform.WebGLPlayer);
 #endif
-                    if (routine.MoveNext())
+                    start:
+                    switch (state.ConcurrentState)
                     {
-                        ValueYieldInstruction instruction = routine.Current;
-                        switch (instruction.Mode)
-                        {
-                            case ValueYieldInstruction.Type.ToUpdate:
-                                onUpdate.ConcurrentAdd(routine);
-                                break;
-                            case ValueYieldInstruction.Type.ToLateUpdate:
-                                onLateUpdate.ConcurrentAdd(routine);
-                                break;
-                            case ValueYieldInstruction.Type.ToFixedUpdate:
-                                onFixedUpdate.ConcurrentAdd(routine);
-                                break;
-                            case ValueYieldInstruction.Type.ToEndOfFrame:
-                                onEndOfFrame.ConcurrentAdd(routine);
-                                break;
-                            case ValueYieldInstruction.Type.ForSeconds:
-                                onTime.ConcurrentAdd((instruction.Float + Time.time, routine));
-                                break;
-                            case ValueYieldInstruction.Type.ForRealtimeSeconds:
-                                onRealtime.ConcurrentAdd((instruction.Float + Time.realtimeSinceStartup, routine));
-                                break;
-                            case ValueYieldInstruction.Type.Until:
-                                onUntil.ConcurrentAdd((instruction.FuncBool, routine));
-                                break;
-                            case ValueYieldInstruction.Type.While:
-                                onWhile.ConcurrentAdd((instruction.FuncBool, routine));
-                                break;
-                            case ValueYieldInstruction.Type.CustomYieldInstruction:
-                                onCustom.ConcurrentAdd((instruction.CustomYieldInstruction, routine));
-                                break;
-                            case ValueYieldInstruction.Type.ValueTask:
-                                onTask.ConcurrentAdd((instruction.ValueTask, routine));
-                                break;
-                            case ValueYieldInstruction.Type.JobHandle:
-                                onJobHandle.ConcurrentAdd((instruction.JobHandle, routine));
-                                break;
-                            case ValueYieldInstruction.Type.ValueEnumerator:
-                                manager.ConcurrentStart(new NestedEnumeratorBackground<T, U>(this, routine, instruction.ValueEnumerator, mode), routine.cancellator, mode);
-                                break;
-                            case ValueYieldInstruction.Type.BoxedEnumerator:
+                        case ValueCoroutineState.Finalized:
+                            routine.Dispose();
+                            break;
+                        case ValueCoroutineState.Suspended:
+                            callback.ConcurrentSuspend(this, routine);
+                            break;
+                        case ValueCoroutineState.Continue:
+                            ValueYieldInstruction instruction = routine.ConcurrentNext(state, mode);
+                            switch (instruction.Mode)
                             {
-                                onUnityCoroutineBag.Add((routine.cancellator, Work(instruction.BoxedEnumerator)));
-                                break;
-                                IEnumerator Work(IEnumerator enumerator)
+                                case ValueYieldInstruction.Type.ToUpdate:
+                                    onUpdate.ConcurrentAdd(routine);
+                                    break;
+                                case ValueYieldInstruction.Type.ToLateUpdate:
+                                    onLateUpdate.ConcurrentAdd(routine);
+                                    break;
+                                case ValueYieldInstruction.Type.ToFixedUpdate:
+                                    onFixedUpdate.ConcurrentAdd(routine);
+                                    break;
+                                case ValueYieldInstruction.Type.ToEndOfFrame:
+                                    onEndOfFrame.ConcurrentAdd(routine);
+                                    break;
+                                case ValueYieldInstruction.Type.ForSeconds:
+                                    onWaitSeconds.ConcurrentAdd((instruction.Float + Time.time, routine));
+                                    break;
+                                case ValueYieldInstruction.Type.ForRealtimeSeconds:
+                                    onWaitRealtimeSeconds.ConcurrentAdd((instruction.Float + Time.realtimeSinceStartup, routine));
+                                    break;
+                                case ValueYieldInstruction.Type.Until:
+                                    onUntil.ConcurrentAdd((instruction.FuncBool, routine));
+                                    break;
+                                case ValueYieldInstruction.Type.While:
+                                    onWhile.ConcurrentAdd((instruction.FuncBool, routine));
+                                    break;
+                                case ValueYieldInstruction.Type.CustomYieldInstruction:
+                                    onCustom.ConcurrentAdd((instruction.CustomYieldInstruction, routine));
+                                    break;
+                                case ValueYieldInstruction.Type.ValueTask:
+                                    onTask.ConcurrentAdd((instruction.ValueTask, routine));
+                                    break;
+                                case ValueYieldInstruction.Type.JobHandle:
+                                    onJobHandle.ConcurrentAdd((instruction.JobHandle, routine));
+                                    break;
+                                case ValueYieldInstruction.Type.ValueEnumerator:
+                                    manager.ConcurrentStart(new NestedEnumeratorBackground<T, ValueCoroutineEnumerator<IEnumerator<ValueYieldInstruction>>, U>(this, routine, new ValueCoroutineEnumerator<IEnumerator<ValueYieldInstruction>>(instruction.ValueEnumerator), callback, state, mode));
+                                    break;
+                                case ValueYieldInstruction.Type.UnityEnumerator:
+                                    manager.ConcurrentStart(new NestedEnumerator<T, UnityCoroutineEnumerator, U>(this, routine, new UnityCoroutineEnumerator(instruction.UnityEnumerator), callback));
+                                    break;
+                                case ValueYieldInstruction.Type.ValueCoroutine:
+                                    onValueCoroutine.ConcurrentAdd((instruction.ValueCoroutine, routine));
+                                    break;
+                                case ValueYieldInstruction.Type.UnityCoroutine:
+                                    onUnityCoroutine.Add((instruction.UnityCoroutine, routine));
+                                    break;
+                                case ValueYieldInstruction.Type.ToUnity:
+#if DEBUG
+                                    Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToUnity)} was yielded and it allocates memory. Alternatively you could use other methods such as {nameof(Yield)}.{nameof(Yield.ToUpdate)} which doesn't allocate and has a similar effect.");
+#endif
+                                    // TODO: Allocations can be reduced.
+                                    UnityThread.RunLater(() => Next(routine, callback));
+                                    break;
+                                case ValueYieldInstruction.Type.ToBackground:
+#if DEBUG
+                                    Debug.Assert(Application.platform != RuntimePlatform.WebGLPlayer);
+#endif
+                                    if (mode == ThreadMode.Short)
+                                    {
+#if DEBUG
+                                        Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded from a background thread. This will be ignored.");
+#endif
+                                        goto start;
+                                    }
+                                    else
+                                        Task.Factory.StartNew(shortBackground, (this, state, routine));
+                                    break;
+                                case ValueYieldInstruction.Type.ToLongBackground:
+#if DEBUG
+                                    Debug.Assert(Application.platform != RuntimePlatform.WebGLPlayer);
+#endif
+                                    if (mode == ThreadMode.Long)
+                                    {
+#if DEBUG
+                                        Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded from a long background thread. This will be ignored.");
+#endif
+                                        goto start;
+                                    }
+                                    else
+                                        Task.Factory.StartNew(longBackground, (this, state, routine), TaskCreationOptions.LongRunning);
+                                    break;
+                                case ValueYieldInstruction.Type.YieldInstruction:
                                 {
-                                    yield return enumerator;
-                                    Next(routine);
+                                    onUnityCoroutine.ConcurrentAdd((manager.StartUnityCoroutine(Work(instruction.YieldInstruction)), routine));
+                                    break;
+                                    IEnumerator Work(YieldInstruction yieldInstruction)
+                                    {
+                                        while (true)
+                                        {
+                                            switch (state.State)
+                                            {
+                                                case ValueCoroutineState.Continue:
+                                                    switch (routine.State)
+                                                    {
+                                                        case ValueCoroutineState.Continue:
+                                                            yield return yieldInstruction;
+                                                            while (true)
+                                                            {
+                                                                switch (state.State)
+                                                                {
+                                                                    case ValueCoroutineState.Continue:
+                                                                        switch (routine.State)
+                                                                        {
+                                                                            case ValueCoroutineState.Continue:
+                                                                                NextBackground(routine, callback, state, mode);
+                                                                                yield break;
+                                                                            case ValueCoroutineState.Suspended:
+                                                                                yield return null;
+                                                                                break;
+                                                                            case ValueCoroutineState.Finalized:
+                                                                                routine.Dispose();
+                                                                                yield break;
+                                                                        }
+                                                                        break;
+                                                                    case ValueCoroutineState.Suspended:
+                                                                        yield return null;
+                                                                        break;
+                                                                    case ValueCoroutineState.Finalized:
+                                                                        routine.Dispose();
+                                                                        yield break;
+                                                                }
+                                                            }
+                                                        case ValueCoroutineState.Suspended:
+                                                            yield return null;
+                                                            break;
+                                                        case ValueCoroutineState.Finalized:
+                                                            routine.Dispose();
+                                                            yield break;
+                                                    }
+                                                    yield break;
+                                                case ValueCoroutineState.Suspended:
+                                                    yield return null;
+                                                    break;
+                                                case ValueCoroutineState.Finalized:
+                                                    routine.Dispose();
+                                                    yield break;
+                                            }
+                                        }
+                                    }
                                 }
+                                case ValueYieldInstruction.Type.UnityPoll:
+                                    onUnityPoll.ConcurrentEnqueue(routine);
+                                    break;
+                                case ValueYieldInstruction.Type.Finalized:
+                                    routine.Dispose();
+                                    break;
+                                case ValueYieldInstruction.Type.Suspended:
+                                    callback.ConcurrentSuspend(this, routine);
+                                    return;
                             }
-                            case ValueYieldInstruction.Type.ValueCoroutine:
-                                onValueCoroutine.ConcurrentAdd((instruction.ValueCoroutine, routine));
-                                break;
-                            case ValueYieldInstruction.Type.ToUnity:
-#if DEBUG
-                                Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToUnity)} was yielded and it allocates memory. Alternatively you could use other methods such as {nameof(Yield)}.{nameof(Yield.ToUpdate)} which doesn't allocate and has a similar effect.");
-#endif
-                                // TODO: Allocations can be reduced.
-                                UnityThread.RunLater(() => Next(routine));
-                                break;
-                            case ValueYieldInstruction.Type.ToBackground:
-#if DEBUG
-                                Debug.Assert(Application.platform != RuntimePlatform.WebGLPlayer);
-#endif
-                                if (mode == ShortThread)
-                                {
-#if DEBUG
-                                    Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded from a background thread. This will be ignored.");
-#endif
-                                    NextBackground(routine, mode);
-                                }
-                                else
-                                    Task.Factory.StartNew(nextLongBackgroundAction, routine);
-                                break;
-                            case ValueYieldInstruction.Type.ToLongBackground:
-#if DEBUG
-                                Debug.Assert(Application.platform != RuntimePlatform.WebGLPlayer);
-#endif
-                                if (mode == LongThread)
-                                {
-#if DEBUG
-                                    Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded from a long background thread. This will be ignored.");
-#endif
-                                    NextBackground(routine, mode);
-                                }
-                                else
-                                    Task.Factory.StartNew(nextLongBackgroundAction, routine, TaskCreationOptions.LongRunning);
-                                break;
-                            case ValueYieldInstruction.Type.YieldInstruction:
-                            {
-                                onUnityCoroutineBag.Add((routine.cancellator, Work(instruction.YieldInstruction)));
-                                break;
-                                IEnumerator Work(YieldInstruction yieldInstruction)
-                                {
-                                    yield return yieldInstruction;
-                                    Next(routine);
-                                }
-                            }
-                        }
+                            break;
                     }
                 }
 
@@ -693,24 +874,38 @@ namespace Enderlook.Unity.Coroutines
                     onFixedUpdate.Dispose();
                     onLateUpdate.Dispose();
                     onEndOfFrame.Dispose();
-                    onPoll.Dispose();
+                    onUnityPoll.Dispose();
                     onCustom.Dispose();
                     onWhile.Dispose();
                     onUntil.Dispose();
                     onTask.Dispose();
                     onJobHandle.Dispose();
-                    onTime.Dispose();
-                    onRealtime.Dispose();
+                    onWaitSeconds.Dispose();
+                    onWaitRealtimeSeconds.Dispose();
                     onValueCoroutine.Dispose();
+                    suspendedEntry.Dispose();
 
-                    RawList<(U, UnityEngine.Coroutine)> onUnityCoroutine = this.onUnityCoroutine;
+                    RawList<(Coroutine, T)> onUnityCoroutine = this.onUnityCoroutine.Swap(tmpUnityCoroutine);
                     for (int i = 0; i < onUnityCoroutine.Count; i++)
-                        manager.StopUnityCoroutine(onUnityCoroutine[i].Item2);
-                    this.onUnityCoroutine.Clear();
+                    {
+                        (Coroutine, T) tmp = onUnityCoroutine[i];
+                        manager.StopUnityCoroutine(tmp.Item1);
+                        tmp.Item2.Dispose();
+                    }
 
-                    ConcurrentBag<(U, IEnumerator)> onUnityCoroutineBag = this.onUnityCoroutineBag;
-                    // TODO: In .Net Standard 2.1, ConcurrentBag<T>.Clear() method exists.
-                    while (onUnityCoroutineBag.TryTake(out _)) ;
+                    onUnityCoroutine.Clear();
+                    tmpUnityCoroutine = onUnityCoroutine;
+
+                    ConcurrentBag<(Coroutine, T)> onUnityCoroutineBag = this.onUnityCoroutine.Concurrent;
+                    while (onUnityCoroutineBag.TryTake(out (Coroutine, T) tmp))
+                    {
+                        manager.StopUnityCoroutine(tmp.Item1);
+                        tmp.Item2.Dispose();
+                    }
+
+                    ConcurrentQueue<(ValueCoroutineStateBoxed, T)> suspendedBackgroundShort = this.suspendedBackgroundShort;
+                    while (suspendedBackgroundShort.TryDequeue(out (ValueCoroutineStateBoxed, T) tmp))
+                        tmp.Item2.Dispose();
                 }
             }
         }

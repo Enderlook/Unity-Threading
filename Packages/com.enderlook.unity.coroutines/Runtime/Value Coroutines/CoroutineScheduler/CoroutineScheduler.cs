@@ -1,7 +1,6 @@
 ﻿using Enderlook.Unity.Threading;
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
@@ -10,13 +9,14 @@ using UnityEngine;
 namespace Enderlook.Unity.Coroutines
 {
     /// <summary>
-    /// Represent a manager of value coroutines.<br/>
-    /// This object should not be copied nor stored in readonly fields, and should be passed by reference.
+    /// Represent a manager of value coroutines.
     /// </summary>
+    /// <remarks>This object should not be copied nor stored in readonly fields, and should be passed by reference.</remarks>
     [Serializable]
     public partial struct CoroutineScheduler : IDisposable
     {
-        internal static readonly Managers Shared = new Managers();
+        private static readonly Managers shared = new Managers();
+        internal static CoroutineScheduler Shared => new CoroutineScheduler(shared);
 
         static CoroutineScheduler()
         {
@@ -25,10 +25,21 @@ namespace Enderlook.Unity.Coroutines
             Manager.OnFixedUpdate += Shared.OnFixedUpdate;
             Manager.OnEndOfFrame += Shared.OnEndOfFrame;
             Manager.OnLateUpdate += Shared.OnEndOfFrame;
+            shared.Initialize(Manager.Shared);
         }
 
         [SerializeField, HideInInspector]
         private Managers core;
+
+        private Managers Core {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get {
+                Managers manager = core;
+                if (manager is null)
+                    ThrowDisposed();
+                return manager;
+            }
+        }
 
         /// <summary>
         /// Amount of miliseconds spent in executing poll coroutines per call to <see cref="OnPoll"/>.
@@ -46,6 +57,9 @@ namespace Enderlook.Unity.Coroutines
             set => core.MinimumPercentOfExecutionsPerFrameOnPoll = value;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private CoroutineScheduler(Managers core) => this.core = core;
+
         /// <summary>
         /// Creates a manager whose events must be called manually.
         /// </summary>
@@ -54,12 +68,11 @@ namespace Enderlook.Unity.Coroutines
         public static CoroutineScheduler Create(MonoBehaviour monoBehaviour)
         {
             Managers core = ConcurrentPool.Rent<Managers>();
-            core.SetMonoBehaviour(monoBehaviour);
-            return new CoroutineScheduler
+            core.Initialize(monoBehaviour);
+            return new CoroutineScheduler(core)
             {
-                core = core,
-                MilisecondsExecutedPerFrameOnPoll = Coroutine.MilisecondsExecutedPerFrameOnPoll,
-                MinimumPercentOfExecutionsPerFrameOnPoll = Coroutine.MinimumPercentOfExecutionsPerFrameOnPoll,
+                MilisecondsExecutedPerFrameOnPoll = ValueCoroutine.MilisecondsExecutedPerFrameOnPoll,
+                MinimumPercentOfExecutionsPerFrameOnPoll = ValueCoroutine.MinimumPercentOfExecutionsPerFrameOnPoll,
             };
         }
 
@@ -73,222 +86,13 @@ namespace Enderlook.Unity.Coroutines
         public static CoroutineScheduler Create(MonoBehaviour monoBehaviour, int milisecondsExecutedPerFrameOnPoll, int minimumPercentOfExecutionsPerFrameOnPoll)
         {
             Managers core = ConcurrentPool.Rent<Managers>();
-            core.SetMonoBehaviour(monoBehaviour);
-            return new CoroutineScheduler
+            core.Initialize(monoBehaviour);
+            return new CoroutineScheduler(core)
             {
-                core = core,
                 MilisecondsExecutedPerFrameOnPoll = milisecondsExecutedPerFrameOnPoll,
                 MinimumPercentOfExecutionsPerFrameOnPoll = minimumPercentOfExecutionsPerFrameOnPoll,
             };
         }
-
-        /// <summary>
-        /// Start a value coroutine.<br/>
-        /// This method must be executed from the Unity thread.
-        /// </summary>
-        /// <typeparam name="T">Type of routine to start.</typeparam>
-        /// <param name="routine">Coroutine to start.</param>
-        /// <param name="cancellator">Object that determines when the coroutine should be cancelled.</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Start<T, U>(T routine, U cancellator)
-            where T : IEnumerator<ValueYieldInstruction>
-            where U : ICancellable
-        {
-            Managers manager = core;
-            if (manager is null)
-                ThrowDisposed();
-            manager.Start(routine, cancellator);
-        }
-
-        /// <summary>
-        /// Start a value coroutine.<br/>
-        /// This method must be executed from the Unity thread.
-        /// </summary>
-        /// <typeparam name="T">Type of routine to start.</typeparam>
-        /// <param name="routine">Coroutine to start.</param>
-        /// <param name="cancellator">Object that determines when the coroutine should be cancelled.</param>
-        /// <returns>Handle of the coroutine.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueCoroutine StartWithHandle<T, U>(T routine, U cancellator)
-            where T : IEnumerator<ValueYieldInstruction>
-            where U : ICancellable
-        {
-            Managers manager = core;
-            if (manager is null)
-                ThrowDisposed();
-            return manager.StartWithHandle(routine, cancellator);
-        }
-
-        /// <summary>
-        /// Start a value coroutine.<br/>
-        /// This method is can be executed from any thread.
-        /// </summary>
-        /// <typeparam name="T">Type of routine to start.</typeparam>
-        /// <param name="routine">Coroutine to start.</param>
-        /// <param name="cancellator">Object that determines when the coroutine should be cancelled.</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ConcurrentStart<T, U>(T routine, U cancellator)
-            where T : IEnumerator<ValueYieldInstruction>
-            where U : ICancellable
-        {
-            Managers manager = core;
-            if (manager is null)
-                ThrowDisposed();
-            manager.ConcurrentStart(routine, cancellator);
-        }
-
-        /// <summary>
-        /// Start a value coroutine.<br/>
-        /// This method is can be executed from any thread.
-        /// </summary>
-        /// <typeparam name="T">Type of routine to start.</typeparam>
-        /// <param name="routine">Coroutine to start.</param>
-        /// <param name="cancellator">Object that determines when the coroutine should be cancelled.</param>
-        /// <returns>Handle of the coroutine.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueCoroutine ConcurrentStartWithHandle<T, U>(T routine, U cancellator)
-            where T : IEnumerator<ValueYieldInstruction>
-            where U : ICancellable
-        {
-            Managers manager = core;
-            if (manager is null)
-                ThrowDisposed();
-            return manager.ConcurrentStartWithHandle(routine, cancellator);
-        }
-
-        /// <summary>
-        /// Start a value coroutine.<br/>
-        /// This method must be executed from the Unity thread.
-        /// </summary>
-        /// <typeparam name="T">Type of routine to start.</typeparam>
-        /// <param name="routine">Coroutine to start.</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Start<T>(T routine) where T : IEnumerator<ValueYieldInstruction>
-            => Start(routine, new Uncancellable());
-
-        /// <summary>
-        /// Start a value coroutine.<br/>
-        /// This method is can be executed from any thread.
-        /// </summary>
-        /// <typeparam name="T">Type of routine to start.</typeparam>
-        /// <param name="routine">Coroutine to start.</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ConcurrentStart<T>(T routine) where T : IEnumerator<ValueYieldInstruction>
-            => ConcurrentStart(routine, new Uncancellable());
-
-        /// <summary>
-        /// Start a value coroutine.<br/>
-        /// This method must be executed from the Unity thread.
-        /// </summary>
-        /// <typeparam name="T">Type of routine to start.</typeparam>
-        /// <param name="routine">Coroutine to start.</param>
-        /// <returns>Handle of the coroutine.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueCoroutine StartWithHandle<T>(T routine) where T : IEnumerator<ValueYieldInstruction>
-            => StartWithHandle(routine, new Uncancellable());
-
-        /// <summary>
-        /// Start a value coroutine.<br/>
-        /// This method is can be executed from any thread.
-        /// </summary>
-        /// <typeparam name="T">Type of routine to start.</typeparam>
-        /// <param name="routine">Coroutine to start.</param>
-        /// <returns>Handle of the coroutine.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueCoroutine ConcurrentStartWithHandle<T>(T routine) where T : IEnumerator<ValueYieldInstruction>
-            => ConcurrentStartWithHandle(routine, new Uncancellable());
-
-        /// <summary>
-        /// Start a value coroutine.<br/>
-        /// This method must be executed from the Unity thread.
-        /// </summary>
-        /// <typeparam name="T">Type of routine to start.</typeparam>
-        /// <param name="routine">Coroutine to start.</param>
-        /// <param name="cancellator">Object than when is destroyed ends the coroutine.</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Start<T>(T routine, UnityEngine.Object cancellator) where T : IEnumerator<ValueYieldInstruction>
-            => Start(routine, new CancellableUnityObject(cancellator));
-
-        /// <summary>
-        /// Start a value coroutine.<br/>
-        /// This method is can be executed from any thread.
-        /// </summary>
-        /// <typeparam name="T">Type of routine to start.</typeparam>
-        /// <param name="routine">Coroutine to start.</param>
-        /// <param name="cancellator">Object than when is destroyed ends the coroutine.</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ConcurrentStart<T>(T routine, UnityEngine.Object cancellator) where T : IEnumerator<ValueYieldInstruction>
-            => ConcurrentStart(routine, new CancellableUnityObject(cancellator));
-
-        /// <summary>
-        /// Start a value coroutine.<br/>
-        /// This method must be executed from the Unity thread.
-        /// </summary>
-        /// <typeparam name="T">Type of routine to start.</typeparam>
-        /// <param name="routine">Coroutine to start.</param>
-        /// <param name="cancellator">Object than when is destroyed ends the coroutine.</param>
-        /// <returns>Handle of the coroutine.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueCoroutine StartWithHandle<T>(T routine, UnityEngine.Object cancellator) where T : IEnumerator<ValueYieldInstruction>
-            => StartWithHandle(routine, new CancellableUnityObject(cancellator));
-
-        /// <summary>
-        /// Start a value coroutine.<br/>
-        /// This method is can be executed from any thread.
-        /// </summary>
-        /// <typeparam name="T">Type of routine to start.</typeparam>
-        /// <param name="routine">Coroutine to start.</param>
-        /// <param name="cancellator">Object than when is destroyed ends the coroutine.</param>
-        /// <returns>Handle of the coroutine.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueCoroutine ConcurrentStartWithHandle<T>(T routine, UnityEngine.Object cancellator) where T : IEnumerator<ValueYieldInstruction>
-            => ConcurrentStartWithHandle(routine, new CancellableUnityObject(cancellator));
-
-        /// <summary>
-        /// Start a value coroutine.<br/>
-        /// This method must be executed from the Unity thread.
-        /// </summary>
-        /// <typeparam name="T">Type of routine to start.</typeparam>
-        /// <param name="routine">Coroutine to start.</param>
-        /// <param name="cancellator">Cancelation token of the coroutine.</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Start<T>(T routine, CancellationToken cancellator) where T : IEnumerator<ValueYieldInstruction>
-            => Start(routine, new CancellableCancellationToken(cancellator));
-
-        /// <summary>
-        /// Start a value coroutine.<br/>
-        /// This method is can be executed from any thread.
-        /// </summary>
-        /// <typeparam name="T">Type of routine to start.</typeparam>
-        /// <param name="routine">Coroutine to start.</param>
-        /// <param name="cancellator">Cancelation token of the coroutine.</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ConcurrentStart<T>(T routine, CancellationToken cancellator) where T : IEnumerator<ValueYieldInstruction>
-            => ConcurrentStart(routine, new CancellableCancellationToken(cancellator));
-
-        /// <summary>
-        /// Start a value coroutine.<br/>
-        /// This method must be executed from the Unity thread.
-        /// </summary>
-        /// <typeparam name="T">Type of routine to start.</typeparam>
-        /// <param name="routine">Coroutine to start.</param>
-        /// <param name="cancellator">Cancelation token of the coroutine.</param>
-        /// <returns>Handle of the coroutine.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueCoroutine StartWithHandle<T>(T routine, CancellationToken cancellator) where T : IEnumerator<ValueYieldInstruction>
-            => StartWithHandle(routine, new CancellableCancellationToken(cancellator));
-
-        /// <summary>
-        /// Start a value coroutine.<br/>
-        /// This method is can be executed from any thread.
-        /// </summary>
-        /// <typeparam name="T">Type of routine to start.</typeparam>
-        /// <param name="routine">Coroutine to start.</param>
-        /// <param name="cancellator">Cancelation token of the coroutine.</param>
-        /// <returns>Handle of the coroutine.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueCoroutine ConcurrentStartWithHandle<T>(T routine, CancellationToken cancellator) where T : IEnumerator<ValueYieldInstruction>
-            => ConcurrentStartWithHandle(routine, new CancellableCancellationToken(cancellator));
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void ThrowDisposed()

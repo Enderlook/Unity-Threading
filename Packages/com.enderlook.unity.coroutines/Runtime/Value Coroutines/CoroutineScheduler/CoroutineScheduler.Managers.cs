@@ -1,10 +1,12 @@
 ﻿using Enderlook.Collections.LowLevel;
+using Enderlook.Threading;
 using Enderlook.Unity.Threading;
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 using UnityEngine;
 
@@ -15,16 +17,14 @@ namespace Enderlook.Unity.Coroutines
         [Serializable]
         internal partial class Managers
         {
-            private const byte UnknownThread = 0;
-            private const byte ShortThread = 1;
-            private const byte LongThread = 2;
-
+            private ValueCoroutineStateBoxed state;
             private MonoBehaviour monoBehaviour;
-            private Dictionary<(Type enumerator, Type cancellator), ManagerBase> managersDictionary = new Dictionary<(Type enumerator, Type cancellator), ManagerBase>();
+            private Dictionary<Type, ManagerBase> managersDictionary = new Dictionary<Type, ManagerBase>();
             private RawList<ManagerBase> managersList = RawList<ManagerBase>.Create();
             private ReadWriterLock managerLock;
 
             private PollEnumerator pollEnumerator;
+            private readonly Action<ValueCoroutineStateBoxed> backgroundAction;
 
             public int MilisecondsExecutedPerFrameOnPoll {
                 get => milisecondsExecutedPerFrameOnPoll;
@@ -48,9 +48,31 @@ namespace Enderlook.Unity.Coroutines
             [SerializeField, Range(0, 1), Tooltip("Percentage of total execution that must be executed on poll coroutines regardless of timeout.")]
             private float minimumPercentOfExecutionsPerFrameOnPoll = .025f;
 
-            public Managers() => pollEnumerator = new PollEnumerator(this);
+            public Managers()
+            {
+                pollEnumerator = new PollEnumerator(this);
+                if (Application.platform != RuntimePlatform.WebGLPlayer)
+                {
+                    backgroundAction = (ValueCoroutineStateBoxed s) =>
+                    {
+                        int index = 0;
+                        while (s.State != ValueCoroutineState.Finalized)
+                        {
+                            managerLock.ReadBegin();
+                            RawList<ManagerBase> managersList = this.managersList;
+                            managerLock.ReadEnd();
+                            if (index < managersList.Count)
+                                managersList[index++].OnBackground();
+                            else
+                                index = 0;
+                        }
+                    };
+                }
+            }
 
-            public void SetMonoBehaviour(MonoBehaviour monoBehaviour)
+            ~Managers() => Free();
+
+            public void Initialize(MonoBehaviour monoBehaviour)
             {
                 if (monoBehaviour is null)
                     throw new ArgumentNullException(nameof(monoBehaviour));
@@ -59,95 +81,61 @@ namespace Enderlook.Unity.Coroutines
                     this.monoBehaviour = monoBehaviour;
                 else
                     throw new InvalidOperationException($"Already has set a {nameof(MonoBehaviour)}.");
+
+                state = new ValueCoroutineStateBoxed() { State = ValueCoroutineState.Continue };
+                if (Application.platform == RuntimePlatform.WebGLPlayer)
+                    Task.Factory.StartNew(backgroundAction, state, TaskCreationOptions.LongRunning);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Start<T, U>(T routine, U cancellator)
-                where T : IEnumerator<ValueYieldInstruction>
-                where U : ICancellable
+            public void Start<T>(T coroutine) where T : IValueCoroutineEnumerator
             {
                 if (typeof(T).IsValueType)
-                {
-                    if (typeof(U).IsValueType)
-                        StartInner(routine, cancellator);
-                    else
-                        StartInner(routine, (ICancellable)cancellator);
-                }
+                    StartInner(coroutine);
                 else
-                {
-                    if (typeof(U).IsValueType)
-                        StartInner((IEnumerator<ValueYieldInstruction>)routine, new Uncancellable());
-                    else
-                        StartInner((IEnumerator<ValueYieldInstruction>)routine, (ICancellable)cancellator);
-                }
+                    StartInner((IValueCoroutineEnumerator)coroutine);
             }
 
-            private void StartInner<T, U>(T routine, U cancellator)
-                where T : IEnumerator<ValueYieldInstruction>
-                where U : ICancellable
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private void StartInner<T>(T coroutine) where T : IValueCoroutineEnumerator
             {
-                Type enumerator_ = typeof(T);
-                Type cancellator_ = typeof(U);
-
+                Type type = typeof(T);
                 managerLock.ReadBegin();
-                if (managersDictionary.TryGetValue((enumerator_, cancellator_), out ManagerBase manager))
+                if (managersDictionary.TryGetValue(type, out ManagerBase manager))
                 {
                     managerLock.ReadEnd();
-                    ((TypedManager<T, U>)manager).Start(cancellator, routine);
+                    ((TypedManager<T>)manager).Start(coroutine);
                 }
                 else
                 {
                     managerLock.UpgradeFromReaderToWriter();
-                    TypedManager<T, U> manager_ = new TypedManager<T, U>(this);
-                    managersDictionary.Add((enumerator_, cancellator_), manager_);
+                    TypedManager<T> manager_ = new TypedManager<T>(this);
+                    managersDictionary.Add(type, manager_);
                     managersList.Add(manager_);
                     managerLock.WriteEnd();
-                    manager_.Start(cancellator, routine);
+                    manager_.Start(coroutine);
                 }
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ValueCoroutine StartWithHandle<T, U>(T routine, U cancellator)
-               where T : IEnumerator<ValueYieldInstruction>
-               where U : ICancellable
-                => ValueCoroutine.Start(this, cancellator, routine);
+            public ValueCoroutine StartWithHandle<T>(T routine) where T : IValueCoroutineEnumerator
+                => ValueCoroutine.Start(this, routine);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ValueCoroutine ConcurrentStartWithHandle<T, U>(T routine, U cancellator)
-               where T : IEnumerator<ValueYieldInstruction>
-               where U : ICancellable
-                => ValueCoroutine.ConcurrentStart(this, cancellator, routine);
+            public ValueCoroutine ConcurrentStartWithHandle<T>(T routine) where T : IValueCoroutineEnumerator
+                => ValueCoroutine.ConcurrentStart(this, routine);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void ConcurrentStart<T, U>(T routine, U cancellator)
-               where T : IEnumerator<ValueYieldInstruction>
-               where U : ICancellable
-                => ConcurrentStart(routine, cancellator, UnknownThread);
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private void ConcurrentStart<T, U>(T routine, U cancellator, int mode)
-                where T : IEnumerator<ValueYieldInstruction>
-                where U : ICancellable
+            public void ConcurrentStart<T>(T routine) where T : IValueCoroutineEnumerator
             {
                 if (typeof(T).IsValueType)
-                {
-                    if (typeof(U).IsValueType)
-                        ConcurrentStartInner(routine, cancellator, mode);
-                    else
-                        ConcurrentStartInner(routine, (ICancellable)cancellator, mode);
-                }
+                    ConcurrentStartInner(routine, ThreadMode.Unknown);
                 else
-                {
-                    if (typeof(U).IsValueType)
-                        ConcurrentStartInner((IEnumerator<ValueYieldInstruction>)routine, new Uncancellable(), mode);
-                    else
-                        ConcurrentStartInner((IEnumerator<ValueYieldInstruction>)routine, (ICancellable)cancellator, mode);
-                }
+                    ConcurrentStartInner((IValueCoroutineEnumerator)routine, ThreadMode.Unknown);
             }
 
-            private void ConcurrentStartInner<T, U>(T routine, U cancellator, int mode)
-                where T : IEnumerator<ValueYieldInstruction>
-                where U : ICancellable
+            private void ConcurrentStartInner<T>(T routine, ThreadMode mode)
+                where T : IValueCoroutineEnumerator
             {
 #if DEBUG
                 if (Application.platform == RuntimePlatform.WebGLPlayer)
@@ -157,22 +145,21 @@ namespace Enderlook.Unity.Coroutines
 #endif
 
                 Type enumerator_ = typeof(T);
-                Type cancellator_ = typeof(U);
 
                 managerLock.ReadBegin();
-                if (managersDictionary.TryGetValue((enumerator_, cancellator_), out ManagerBase manager))
+                if (managersDictionary.TryGetValue(enumerator_, out ManagerBase manager))
                 {
                     managerLock.ReadEnd();
-                    ((TypedManager<T, U>)manager).ConcurrentStart(cancellator, routine, UnknownThread);
+                    ((TypedManager<T>)manager).ConcurrentStart(routine, mode);
                 }
                 else
                 {
                     managerLock.UpgradeFromReaderToWriter();
-                    TypedManager<T, U> manager_ = new TypedManager<T, U>(this);
-                    managersDictionary.Add((enumerator_, cancellator_), manager_);
+                    TypedManager<T> manager_ = new TypedManager<T>(this);
+                    managersDictionary.Add(enumerator_, manager_);
                     managersList.Add(manager_);
                     managerLock.WriteEnd();
-                    manager_.ConcurrentStart(cancellator, routine, mode);
+                    manager_.ConcurrentStart(routine, mode);
                 }
             }
 
@@ -239,6 +226,7 @@ namespace Enderlook.Unity.Coroutines
             public void Free()
             {
                 managerLock.WriteBegin();
+                state.State = ValueCoroutineState.Finalized;
                 foreach (ManagerBase manager in managersDictionary.Values)
                     manager.Free();
                 monoBehaviour = null;
@@ -246,11 +234,11 @@ namespace Enderlook.Unity.Coroutines
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private void StopUnityCoroutine(UnityEngine.Coroutine coroutine)
+            private void StopUnityCoroutine(Coroutine coroutine)
                 => monoBehaviour.StopCoroutine(coroutine);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private UnityEngine.Coroutine StartUnityCoroutine(IEnumerator coroutine)
+            private Coroutine StartUnityCoroutine(IEnumerator coroutine)
                 => monoBehaviour.StartCoroutine(coroutine);
 
             private struct PollEnumerator

@@ -13,6 +13,25 @@ namespace Enderlook.Unity.Coroutines
     public static class Yield
     {
         /// <summary>
+        /// Executes the code in a background thread.<br/>
+        /// If the platform doesn't support multithreading, this fallback to <see cref="Poll"/>.
+        /// </summary>
+        public static ValueYieldInstruction BackgroundPoll {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new ValueYieldInstruction() { Mode = ValueYieldInstruction.Type.BackgroundPoll };
+        }
+
+        /// <summary>
+        /// Determines that coroutine has finalized (or has been cancelled).<br/>
+        /// After this value, all yielded values from the coroutine must also be <see cref="Finalized"/>.<br/>
+        /// Coroutines that implements <see cref="IEnumerator{T}"/> (or <see cref="IEnumerator"/>) instead of <see cref="IValueCoroutineEnumerator"/> shall not return this value or will result in undefined behaviour.
+        /// </summary>
+        internal static ValueYieldInstruction Finalized {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new ValueYieldInstruction() { Mode = ValueYieldInstruction.Type.Finalized };
+        }
+
+        /// <summary>
         /// Suspend coroutine execution during the given amount of realtime seconds.
         /// </summary>
         /// <param name="seconds">Amount of seconds to wait.</param>
@@ -27,7 +46,6 @@ namespace Enderlook.Unity.Coroutines
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ValueYieldInstruction ForSeconds(float seconds)
             => new ValueYieldInstruction() { Mode = ValueYieldInstruction.Type.ForSeconds, Float = seconds };
-
 
         /// <summary>
         /// Suspend coroutine execution until the <paramref name="coroutine"/> finalizes.
@@ -48,18 +66,36 @@ namespace Enderlook.Unity.Coroutines
             if (coroutine is IEnumerator<ValueYieldInstruction>)
                 Debug.LogError($"Using {nameof(Yield)}.{nameof(From)}({nameof(IEnumerator)}).\n"
                     + $"But concrete type is {nameof(IEnumerator<ValueYieldInstruction>)}.\n"
-                    + $"Downcast {nameof(IEnumerator)} to {nameof(IEnumerator<ValueYieldInstruction>)} or the coroutine will fail in undefined behaviour.\n"
-                    + "This becomes a silent error on release");
+                    + $"Downcast {nameof(IEnumerator)} to {nameof(IEnumerator<ValueYieldInstruction>)} or the coroutine will fail in undefined behaviour.");
 #endif
-            return new ValueYieldInstruction() { Mode = ValueYieldInstruction.Type.BoxedEnumerator, BoxedEnumerator = coroutine };
+            return new ValueYieldInstruction() { Mode = ValueYieldInstruction.Type.UnityEnumerator, UnityEnumerator = coroutine };
         }
 
         /// <summary>
-        /// Suspend coroutine execution if the frame is delayed.
+        /// Suspend coroutine execution until the <paramref name="coroutine"/> finalizes.
+        /// </summary>
+        /// <param name="coroutine">Coroutine to run.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static ValueYieldInstruction From(IValueCoroutineEnumerator coroutine)
+            => new ValueYieldInstruction() { Mode = ValueYieldInstruction.Type.IValueCoroutine, IValueCoroutine = coroutine };
+
+        /// <summary>
+        /// Suspend coroutine execution if the frame is delayed.<br/>
+        /// Code is runned in the main thread.
         /// </summary>
         public static ValueYieldInstruction Poll {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new ValueYieldInstruction() { Mode = ValueYieldInstruction.Type.Poll };
+            get => new ValueYieldInstruction() { Mode = ValueYieldInstruction.Type.UnityPoll };
+        }
+
+        /// <summary>
+        /// Determines that coroutine is supended.<br/>
+        /// The coroutine must yield this value as long as it's suspended.<br/>
+        /// Coroutines that implements <see cref="IEnumerator{T}"/> (or <see cref="IEnumerator"/>) instead of <see cref="IValueCoroutineEnumerator"/> shall not return this value or will result in undefined behaviour.
+        /// </summary>
+        internal static ValueYieldInstruction Suspended {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new ValueYieldInstruction() { Mode = ValueYieldInstruction.Type.Suspended };
         }
 
         /// <summary>

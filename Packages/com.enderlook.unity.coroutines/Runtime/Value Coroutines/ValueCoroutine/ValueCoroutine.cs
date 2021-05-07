@@ -1,7 +1,6 @@
 ﻿using Enderlook.Unity.Threading;
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace Enderlook.Unity.Coroutines
@@ -28,22 +27,20 @@ namespace Enderlook.Unity.Coroutines
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static ValueCoroutine Start<T, U>(CoroutineScheduler.Managers managers, U cancellator, T routine)
-            where T : IEnumerator<ValueYieldInstruction>
-            where U : ICancellable
+        internal static ValueCoroutine Start<T>(CoroutineScheduler.Managers managers, T routine)
+            where T : IValueCoroutineEnumerator
         {
             Handle handler = ConcurrentPool.Rent<Handle>();
-            managers.Start(new Enumerator<T>(handler, routine), cancellator);
+            managers.Start(new Coroutine<T>(handler, routine));
             return new ValueCoroutine(handler);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static ValueCoroutine ConcurrentStart<T, U>(CoroutineScheduler.Managers managers, U cancellator, T routine)
-            where T : IEnumerator<ValueYieldInstruction>
-            where U : ICancellable
+        internal static ValueCoroutine ConcurrentStart<T>(CoroutineScheduler.Managers managers, T routine)
+            where T : IValueCoroutineEnumerator
         {
             Handle handler = ConcurrentPool.Rent<Handle>();
-            managers.ConcurrentStart(new Enumerator<T>(handler, routine), cancellator);
+            managers.ConcurrentStart(new Coroutine<T>(handler, routine));
             return new ValueCoroutine(handler);
         }
 

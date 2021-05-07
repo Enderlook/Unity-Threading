@@ -56,8 +56,18 @@ namespace Enderlook.Unity.Coroutines
             set => obj = value;
         }
 
-        internal IEnumerator BoxedEnumerator {
+        internal IValueCoroutineEnumerator IValueCoroutine {
+            get => (IValueCoroutineEnumerator)obj;
+            set => obj = value;
+        }
+
+        internal IEnumerator UnityEnumerator {
             get => (IEnumerator)obj;
+            set => obj = value;
+        }
+
+        internal Coroutine UnityCoroutine {
+            get => (Coroutine)obj;
             set => obj = value;
         }
 
@@ -87,8 +97,9 @@ namespace Enderlook.Unity.Coroutines
         internal enum Type
         {
             ToUpdate = 0,
-            BoxedEnumerator,
+            BackgroundPoll,
             CustomYieldInstruction,
+            IValueCoroutine,
             JobHandle,
             ToBackground,
             ToEndOfFrame,
@@ -98,13 +109,17 @@ namespace Enderlook.Unity.Coroutines
             ToUnity,
             ForRealtimeSeconds,
             ForSeconds,
-            Poll,
+            UnityCoroutine,
+            UnityEnumerator,
+            UnityPoll,
             Until,
             While,
             ValueEnumerator,
             ValueTask,
             YieldInstruction,
             ValueCoroutine,
+            Finalized,
+            Suspended,
         }
 
         /// <summary>
@@ -224,6 +239,14 @@ namespace Enderlook.Unity.Coroutines
             => new ValueYieldInstruction() { Mode = Type.ValueTask, ValueTask = source };
 
         /// <summary>
+        /// Convert a <see cref="ValueTask"/> into a <see cref="ValueYieldInstruction"/>.
+        /// </summary>
+        /// <param name="source">Yield instruction.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator ValueYieldInstruction(Task source)
+            => new ValueYieldInstruction() { Mode = Type.ValueTask, ValueTask = new ValueTask(source) };
+
+        /// <summary>
         /// Convert a <see cref="JobHandle"/> into a <see cref="ValueYieldInstruction"/>.
         /// </summary>
         /// <param name="source">Yield instruction.</param>
@@ -238,6 +261,14 @@ namespace Enderlook.Unity.Coroutines
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator ValueYieldInstruction(ValueCoroutine source)
             => new ValueYieldInstruction() { Mode = Type.ValueCoroutine, ValueCoroutine = source };
+
+        /// <summary>
+        /// Convert a <see cref="Coroutine"/> into a <see cref="ValueYieldInstruction"/>.
+        /// </summary>
+        /// <param name="source">Yield instruction.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator ValueYieldInstruction(Coroutine source)
+            => new ValueYieldInstruction() { Mode = Type.UnityCoroutine, UnityCoroutine = source };
 
         /// <summary>
         /// Convert a <see cref="YieldInstruction"/> into a <see cref="ValueYieldInstruction"/>.
@@ -263,5 +294,21 @@ namespace Enderlook.Unity.Coroutines
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void ThrowSourceIsNull() => throw new ArgumentNullException("source");
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining), System.Diagnostics.Conditional("DEBUG")]
+        public void DebugAssertIsAllowedInEnumerators()
+        {
+#if DEBUG
+            switch (Mode)
+            {
+                case Type.Finalized:
+                    Debug.LogError($"A value coroutine that implements {nameof(IEnumerator<ValueYieldInstruction>)} (or {nameof(IEnumerator)}) yielded {nameof(Yield)}.{nameof(Yield.Finalized)}. This is undefined behaviour.");
+                    break;
+                case Type.Suspended:
+                    Debug.LogError($"A value coroutine that implements {nameof(IEnumerator<ValueYieldInstruction>)} (or {nameof(IEnumerator)}) yielded {nameof(Yield)}.{nameof(Yield.Suspended)}. This is undefined behaviour.");
+                    break;
+            }
+#endif
+        }
     }
 }
