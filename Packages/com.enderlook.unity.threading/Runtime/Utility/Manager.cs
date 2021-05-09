@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 using UnityEngine;
@@ -18,7 +19,7 @@ namespace Enderlook.Unity.Threading
         public static event Action OnFixedUpdate;
         public static event Action OnLateUpdate;
         public static event Action OnEndOfFrame;
-        public static event Action<Manager> ToInitialize;
+        private static event Action onInitialize;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Initialize1()
@@ -35,6 +36,9 @@ namespace Enderlook.Unity.Threading
 #endif
                 DontDestroyOnLoad(gameObject);
                 Shared = gameObject.AddComponent<Manager>();
+
+                Action action = Interlocked.Exchange(ref onInitialize, null);
+                action?.Invoke();
             }
         }
 
@@ -65,8 +69,6 @@ namespace Enderlook.Unity.Threading
                     while (true)
                     {
                         yield return endOfFrame;
-                        Action<Manager> action = Interlocked.Exchange(ref ToInitialize, null);
-                        action?.Invoke(this);
                         OnEndOfFrame?.Invoke();
                     }
                 }
@@ -97,27 +99,26 @@ namespace Enderlook.Unity.Threading
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
-        private void Update()
-        {
-            Action<Manager> action = Interlocked.Exchange(ref ToInitialize, null);
-            action?.Invoke(this);
-            OnUpdate?.Invoke();
-        }
+        private void Update() => OnUpdate?.Invoke();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
-        private void LateUpdate()
-        {
-            Action<Manager> action = Interlocked.Exchange(ref ToInitialize, null);
-            action?.Invoke(this);
-            OnLateUpdate?.Invoke();
-        }
+        private void LateUpdate() => OnLateUpdate?.Invoke();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
-        private void FixedUpdate()
+        private void FixedUpdate() => OnFixedUpdate?.Invoke();
+
+        public static void OnInitialized(Action manager)
         {
-            Action<Manager> action = Interlocked.Exchange(ref ToInitialize, null);
-            action?.Invoke(this);
-            OnFixedUpdate?.Invoke();
+            if (manager is null)
+                ThrowArgumenNullException(manager);
+
+            if (Shared != null)
+                manager();
+            else
+                onInitialize += manager;
         }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowArgumenNullException(Action manager) => throw new ArgumentNullException(nameof(manager));
     }
 }
