@@ -40,9 +40,9 @@ namespace Enderlook.Unity.Coroutines
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ValueYieldInstruction ConcurrentNext(ValueCoroutineStateBoxed state, ThreadMode mode)
+            public ValueYieldInstruction ConcurrentNext(ThreadMode mode)
             {
-                ValueYieldInstruction instruction = coroutine.ConcurrentNext(state, mode);
+                ValueYieldInstruction instruction = coroutine.ConcurrentNext(mode);
                 if (instruction.Mode == ValueYieldInstruction.Type.Finalized)
                     handler.Complete();
                 return instruction;

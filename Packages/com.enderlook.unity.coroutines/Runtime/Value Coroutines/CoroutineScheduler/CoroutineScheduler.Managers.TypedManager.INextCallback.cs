@@ -191,45 +191,35 @@ namespace Enderlook.Unity.Coroutines
 
                 private readonly struct BackgroundShortNextCallback : INextCallback<T>
                 {
-                    private readonly ValueCoroutineStateBoxed state;
-
-                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    public BackgroundShortNextCallback(ValueCoroutineStateBoxed state) => this.state = state;
-
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
                     public void Suspend(TypedManager<T> manager, T routine)
                     {
                         Debug.Assert(Application.platform != RuntimePlatform.WebGLPlayer);
-                        manager.suspendedBackgroundShort.Enqueue((state, routine));
+                        manager.suspendedBackgroundShort.Enqueue(routine);
                     }
 
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
                     public void ConcurrentSuspend(TypedManager<T> manager, T routine)
                     {
                         Debug.Assert(Application.platform != RuntimePlatform.WebGLPlayer);
-                        manager.suspendedBackgroundShort.Enqueue((state, routine));
+                        manager.suspendedBackgroundShort.Enqueue(routine);
                     }
                 }
 
                 private readonly struct BackgroundLongNextCallback : INextCallback<T>
                 {
-                    private readonly ValueCoroutineStateBoxed state;
-
-                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    public BackgroundLongNextCallback(ValueCoroutineStateBoxed state) => this.state = state;
-
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
                     public void Suspend(TypedManager<T> manager, T routine)
                     {
                         Debug.Assert(Application.platform != RuntimePlatform.WebGLPlayer);
-                        manager.suspendedBackgroundLong.Enqueue((state, routine));
+                        manager.suspendedBackgroundLong.Enqueue(routine);
                     }
 
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
                     public void ConcurrentSuspend(TypedManager<T> manager, T routine)
                     {
                         Debug.Assert(Application.platform != RuntimePlatform.WebGLPlayer);
-                        manager.suspendedBackgroundLong.Enqueue((state, routine));
+                        manager.suspendedBackgroundLong.Enqueue(routine);
                     }
                 }
             }

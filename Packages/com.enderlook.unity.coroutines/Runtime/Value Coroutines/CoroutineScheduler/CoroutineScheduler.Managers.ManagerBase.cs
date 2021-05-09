@@ -21,6 +21,8 @@
                 public abstract void Free();
 
                 public abstract void OnBackground();
+
+                public abstract bool OnBackgroundFlushErrors();
             }
         }
     }

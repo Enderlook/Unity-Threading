@@ -66,7 +66,7 @@ namespace Enderlook.Unity.Coroutines
                 }
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public ValueYieldInstruction ConcurrentNext(ValueCoroutineStateBoxed state, ThreadMode mode)
+                public ValueYieldInstruction ConcurrentNext(ThreadMode mode)
                 {
                     switch (parent.ConcurrentState)
                     {
@@ -75,9 +75,9 @@ namespace Enderlook.Unity.Coroutines
                         case ValueCoroutineState.Suspended:
                             return Yield.Suspended;
                         case ValueCoroutineState.Continue:
-                            ValueYieldInstruction instruction = child.ConcurrentNext(state, mode);
+                            ValueYieldInstruction instruction = child.ConcurrentNext(mode);
                             if (instruction.Mode == ValueYieldInstruction.Type.Finalized)
-                                parentManager.NextBackground(parent, callback, state, mode);
+                                parentManager.NextBackground(parent, callback, mode);
                             return instruction;
                         default:
                             Debug.Assert(false, "Impossible state.");

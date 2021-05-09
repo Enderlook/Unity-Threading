@@ -17,17 +17,15 @@ namespace Enderlook.Unity.Coroutines
                 private TEnumerator1 parent;
                 private TEnumerator2 child;
                 private TCallback callback;
-                private ValueCoroutineStateBoxed state;
                 private ThreadMode mode;
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public NestedEnumeratorBackground(TypedManager<TEnumerator1> parentManager, TEnumerator1 parent, TEnumerator2 child, TCallback callback, ValueCoroutineStateBoxed state, ThreadMode mode)
+                public NestedEnumeratorBackground(TypedManager<TEnumerator1> parentManager, TEnumerator1 parent, TEnumerator2 child, TCallback callback, ThreadMode mode)
                 {
                     this.parentManager = parentManager;
                     this.parent = parent;
                     this.child = child;
                     this.callback = callback;
-                    this.state = state;
                     this.mode = mode;
                 }
 
@@ -73,7 +71,7 @@ namespace Enderlook.Unity.Coroutines
                         case ValueCoroutineState.Continue:
                             ValueYieldInstruction instruction = child.Next();
                             if (instruction.Mode == ValueYieldInstruction.Type.Finalized)
-                                parentManager.NextBackground(parent, callback, state, mode);
+                                parentManager.NextBackground(parent, callback, mode);
                             return instruction;
                         case ValueCoroutineState.Finalized:
                             return Yield.Finalized;
@@ -88,14 +86,14 @@ namespace Enderlook.Unity.Coroutines
                 }
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public ValueYieldInstruction ConcurrentNext(ValueCoroutineStateBoxed state, ThreadMode mode)
+                public ValueYieldInstruction ConcurrentNext(ThreadMode mode)
                 {
                     switch (parent.ConcurrentState)
                     {
                         case ValueCoroutineState.Continue:
-                            ValueYieldInstruction instruction = child.ConcurrentNext(state, mode);
+                            ValueYieldInstruction instruction = child.ConcurrentNext(mode);
                             if (instruction.Mode == ValueYieldInstruction.Type.Finalized)
-                                parentManager.NextBackground(parent, callback, state, mode);
+                                parentManager.NextBackground(parent, callback, mode);
                             return instruction;
                         case ValueCoroutineState.Finalized:
                             return Yield.Finalized;

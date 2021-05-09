@@ -17,14 +17,14 @@ namespace Enderlook.Unity.Coroutines
         [Serializable]
         internal partial class Managers
         {
-            private ValueCoroutineStateBoxed state;
+            private ValueCoroutineState state;
             private MonoBehaviour monoBehaviour;
             private Dictionary<Type, ManagerBase> managersDictionary = new Dictionary<Type, ManagerBase>();
             private RawList<ManagerBase> managersList = RawList<ManagerBase>.Create();
             private ReadWriterLock managerLock;
 
             private PollEnumerator pollEnumerator;
-            private readonly Action<ValueCoroutineStateBoxed> backgroundAction;
+            private static readonly Action<Managers> backgroundAction;
 
             public int MilisecondsExecutedPerFrameOnPoll {
                 get => milisecondsExecutedPerFrameOnPoll;
@@ -48,23 +48,45 @@ namespace Enderlook.Unity.Coroutines
             [SerializeField, Range(0, 1), Tooltip("Percentage of total execution that must be executed on poll coroutines regardless of timeout.")]
             private float minimumPercentOfExecutionsPerFrameOnPoll = .025f;
 
-            public Managers()
+            public Managers() => pollEnumerator = new PollEnumerator(this);
+
+            static Managers()
             {
-                pollEnumerator = new PollEnumerator(this);
                 if (Application.platform != RuntimePlatform.WebGLPlayer)
                 {
-                    backgroundAction = (ValueCoroutineStateBoxed s) =>
+                    backgroundAction = (Managers manager) =>
                     {
                         int index = 0;
-                        while (s.State != ValueCoroutineState.Finalized)
+                        while (manager.state != ValueCoroutineState.Finalized)
                         {
-                            managerLock.ReadBegin();
-                            RawList<ManagerBase> managersList = this.managersList;
-                            managerLock.ReadEnd();
+                            manager.managerLock.ReadBegin();
+                            RawList<ManagerBase> managersList = manager.managersList;
+                            manager.managerLock.ReadEnd();
                             if (index < managersList.Count)
-                                managersList[index++].OnBackground();
+                            {
+                                ManagerBase managerBase = managersList[index++];
+                                if (manager.state != ValueCoroutineState.Suspended)
+                                {
+                                    managerBase.OnBackgroundFlushErrors();
+                                    managerBase.OnBackground();
+                                }
+                                else
+                                    managerBase.OnBackgroundFlushErrors();
+                            }
                             else
                                 index = 0;
+                        }
+
+                        while (true)
+                        {
+                            bool keep = false;
+                            manager.managerLock.ReadBegin();
+                            RawList<ManagerBase> managersList = manager.managersList;
+                            manager.managerLock.ReadEnd();
+                            for (int i = 0; i < managersList.Count; i++)
+                                keep |= managersList[i].OnBackgroundFlushErrors();
+                            if (!keep)
+                                return;
                         }
                     };
                 }
@@ -82,39 +104,9 @@ namespace Enderlook.Unity.Coroutines
                 else
                     throw new InvalidOperationException($"Already has set a {nameof(MonoBehaviour)}.");
 
-                state = new ValueCoroutineStateBoxed() { State = ValueCoroutineState.Continue };
+                state = ValueCoroutineState.Continue;
                 if (Application.platform == RuntimePlatform.WebGLPlayer)
-                    Task.Factory.StartNew(backgroundAction, state, TaskCreationOptions.LongRunning);
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Start<T>(T coroutine) where T : IValueCoroutineEnumerator
-            {
-                if (typeof(T).IsValueType)
-                    StartInner(coroutine);
-                else
-                    StartInner((IValueCoroutineEnumerator)coroutine);
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private void StartInner<T>(T coroutine) where T : IValueCoroutineEnumerator
-            {
-                Type type = typeof(T);
-                managerLock.ReadBegin();
-                if (managersDictionary.TryGetValue(type, out ManagerBase manager))
-                {
-                    managerLock.ReadEnd();
-                    ((TypedManager<T>)manager).Start(coroutine);
-                }
-                else
-                {
-                    managerLock.UpgradeFromReaderToWriter();
-                    TypedManager<T> manager_ = new TypedManager<T>(this);
-                    managersDictionary.Add(type, manager_);
-                    managersList.Add(manager_);
-                    managerLock.WriteEnd();
-                    manager_.Start(coroutine);
-                }
+                    Task.Factory.StartNew(backgroundAction, this, TaskCreationOptions.LongRunning);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -126,15 +118,42 @@ namespace Enderlook.Unity.Coroutines
                 => ValueCoroutine.ConcurrentStart(this, routine);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void ConcurrentStart<T>(T routine) where T : IValueCoroutineEnumerator
+            public void Start<T>(T coroutine) where T : IValueCoroutineEnumerator
             {
+                if (state == ValueCoroutineState.Finalized)
+                    ThrowObjectDisposedException();
+
                 if (typeof(T).IsValueType)
-                    ConcurrentStartInner(routine, ThreadMode.Unknown);
+                    StartInner(coroutine);
                 else
-                    ConcurrentStartInner((IValueCoroutineEnumerator)routine, ThreadMode.Unknown);
+                    StartInner((IValueCoroutineEnumerator)coroutine);
             }
 
-            private void ConcurrentStartInner<T>(T routine, ThreadMode mode)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private void StartInner<T>(T coroutine) where T : IValueCoroutineEnumerator
+            {
+                Type enumerator_ = typeof(T);
+                managerLock.ReadBegin();
+                bool found = managersDictionary.TryGetValue(enumerator_, out ManagerBase manager);
+                managerLock.ReadEnd();
+                if (!found)
+                    manager = CreateManager<T>();
+                ((TypedManager<T>)manager).Start(coroutine);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void ConcurrentStart<T>(T coroutine) where T : IValueCoroutineEnumerator
+            {
+                if (state == ValueCoroutineState.Finalized)
+                    ThrowObjectDisposedException();
+
+                if (typeof(T).IsValueType)
+                    ConcurrentStartInner(coroutine, ThreadMode.Unknown);
+                else
+                    ConcurrentStartInner((IValueCoroutineEnumerator)coroutine, ThreadMode.Unknown);
+            }
+
+            private void ConcurrentStartInner<T>(T coroutine, ThreadMode mode)
                 where T : IValueCoroutineEnumerator
             {
 #if DEBUG
@@ -145,22 +164,23 @@ namespace Enderlook.Unity.Coroutines
 #endif
 
                 Type enumerator_ = typeof(T);
-
                 managerLock.ReadBegin();
-                if (managersDictionary.TryGetValue(enumerator_, out ManagerBase manager))
-                {
-                    managerLock.ReadEnd();
-                    ((TypedManager<T>)manager).ConcurrentStart(routine, mode);
-                }
-                else
-                {
-                    managerLock.UpgradeFromReaderToWriter();
-                    TypedManager<T> manager_ = new TypedManager<T>(this);
-                    managersDictionary.Add(enumerator_, manager_);
-                    managersList.Add(manager_);
-                    managerLock.WriteEnd();
-                    manager_.ConcurrentStart(routine, mode);
-                }
+                bool found = managersDictionary.TryGetValue(enumerator_, out ManagerBase manager);
+                managerLock.ReadEnd();
+                if (!found)
+                    manager = CreateManager<T>();
+                ((TypedManager<T>)manager).ConcurrentStart(coroutine, mode);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private TypedManager<T> CreateManager<T>() where T : IValueCoroutineEnumerator
+            {
+                managerLock.WriteBegin();
+                ManagerBase manager = new TypedManager<T>(this);
+                managersDictionary.Add(typeof(T), manager);
+                managersList.Add(manager);
+                managerLock.WriteEnd();
+                return (TypedManager<T>)manager;
             }
 
             public void OnUpdate()
@@ -174,6 +194,11 @@ namespace Enderlook.Unity.Coroutines
 
             public void OnLateUpdate()
             {
+                if (state == ValueCoroutineState.Finalized)
+                    ThrowObjectDisposedException();
+                else if (state == ValueCoroutineState.Suspended)
+                    return;
+
                 managerLock.ReadBegin();
                 RawList<ManagerBase> managers = managersList;
                 managerLock.ReadEnd();
@@ -183,6 +208,11 @@ namespace Enderlook.Unity.Coroutines
 
             public void OnFixedUpdate()
             {
+                if (state == ValueCoroutineState.Finalized)
+                    ThrowObjectDisposedException();
+                else if (state == ValueCoroutineState.Suspended)
+                    return;
+
                 managerLock.ReadBegin();
                 RawList<ManagerBase> managers = managersList;
                 managerLock.ReadEnd();
@@ -192,6 +222,11 @@ namespace Enderlook.Unity.Coroutines
 
             public void OnEndOfFrame()
             {
+                if (state == ValueCoroutineState.Finalized)
+                    ThrowObjectDisposedException();
+                else if (state == ValueCoroutineState.Suspended)
+                    return;
+
                 managerLock.ReadBegin();
                 RawList<ManagerBase> managers = managersList;
                 managerLock.ReadEnd();
@@ -201,6 +236,11 @@ namespace Enderlook.Unity.Coroutines
 
             public void OnPoll()
             {
+                if (state == ValueCoroutineState.Finalized)
+                    ThrowObjectDisposedException();
+                else if (state == ValueCoroutineState.Suspended)
+                    return;
+
                 int total = 0;
                 {
                     managerLock.ReadBegin();
@@ -225,8 +265,11 @@ namespace Enderlook.Unity.Coroutines
 
             public void Free()
             {
+                if (state == ValueCoroutineState.Finalized)
+                    return;
+
                 managerLock.WriteBegin();
-                state.State = ValueCoroutineState.Finalized;
+                state = ValueCoroutineState.Finalized;
                 foreach (ManagerBase manager in managersDictionary.Values)
                     manager.Free();
                 monoBehaviour = null;
@@ -274,6 +317,9 @@ namespace Enderlook.Unity.Coroutines
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             private static void ThrowOutOfRangeMilisecondsExecuted() => throw new ArgumentOutOfRangeException("milisecondsExecuted", "Can't be negative.");
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private static void ThrowObjectDisposedException() => throw new ObjectDisposedException("Manager");
         }
     }
 }

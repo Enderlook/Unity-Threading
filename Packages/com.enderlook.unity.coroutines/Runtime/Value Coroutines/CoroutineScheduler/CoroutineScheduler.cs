@@ -67,7 +67,7 @@ namespace Enderlook.Unity.Coroutines
         /// <returns>A new manager.</returns>
         public static CoroutineScheduler Create(MonoBehaviour monoBehaviour)
         {
-            Managers core = ConcurrentPool.Rent<Managers>();
+            Managers core = new Managers();
             core.Initialize(monoBehaviour);
             return new CoroutineScheduler(core)
             {
@@ -85,7 +85,7 @@ namespace Enderlook.Unity.Coroutines
         /// <returns>A new manager.</returns>
         public static CoroutineScheduler Create(MonoBehaviour monoBehaviour, int milisecondsExecutedPerFrameOnPoll, int minimumPercentOfExecutionsPerFrameOnPoll)
         {
-            Managers core = ConcurrentPool.Rent<Managers>();
+            Managers core = new Managers();
             core.Initialize(monoBehaviour);
             return new CoroutineScheduler(core)
             {

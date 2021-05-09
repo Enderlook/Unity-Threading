@@ -23,11 +23,11 @@ namespace Enderlook.Unity.Coroutines
 
             private partial class TypedManager<T> : ManagerBase where T : IValueCoroutineEnumerator
             {
-                private static readonly Action<(TypedManager<T> manager, ValueCoroutineStateBoxed state, T routine)> shortBackground =
-                    e => e.manager.NextBackground(e.routine, new BackgroundShortNextCallback(e.state), e.state, ThreadMode.Short);
+                private static readonly Action<(TypedManager<T> manager, T routine)> shortBackground =
+                    e => e.manager.NextBackground(e.routine, new BackgroundShortNextCallback(), ThreadMode.Short);
 
-                private static readonly Action<(TypedManager<T> manager, ValueCoroutineStateBoxed state, T routine)> longBackground =
-                     e => e.manager.NextBackground(e.routine, new BackgroundShortNextCallback(e.state), e.state, ThreadMode.Long);
+                private static readonly Action<(TypedManager<T> manager, T routine)> longBackground =
+                     e => e.manager.NextBackground(e.routine, new BackgroundShortNextCallback(), ThreadMode.Long);
 
                 private readonly Managers manager;
 
@@ -51,8 +51,8 @@ namespace Enderlook.Unity.Coroutines
 
                 private PackList<T> suspendedEntry = PackList<T>.Create();
 
-                private readonly ConcurrentQueue<(ValueCoroutineStateBoxed, T)> suspendedBackgroundShort;
-                private readonly ConcurrentQueue<(ValueCoroutineStateBoxed, T)> suspendedBackgroundLong;
+                private readonly ConcurrentQueue<T> suspendedBackgroundShort;
+                private readonly ConcurrentQueue<T> suspendedBackgroundLong;
                 private readonly ConcurrentQueue<Task> backgroundTasks;
 
                 private RawList<T> tmpT = RawList<T>.Create();
@@ -70,19 +70,29 @@ namespace Enderlook.Unity.Coroutines
                     this.manager = manager;
                     if (Application.platform != RuntimePlatform.WebGLPlayer)
                     {
-                        suspendedBackgroundShort = new ConcurrentQueue<(ValueCoroutineStateBoxed, T)>();
-                        suspendedBackgroundLong = new ConcurrentQueue<(ValueCoroutineStateBoxed, T)>();
+                        suspendedBackgroundShort = new ConcurrentQueue<T>();
+                        suspendedBackgroundLong = new ConcurrentQueue<T>();
                         backgroundTasks = new ConcurrentQueue<Task>();
                     }
                 }
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Start(T coroutine)
-                    => Next(coroutine, new EntryNextCallback());
+                {
+                    if (manager.state == ValueCoroutineState.Suspended)
+                        new EntryNextCallback().Suspend(this, coroutine);
+                    else
+                        Next(coroutine, new EntryNextCallback());
+                }
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void ConcurrentStart(T coroutine, ThreadMode mode)
-                    => NextBackground(coroutine, new EntryNextCallback(), manager.state, mode);
+                {
+                    if (manager.state == ValueCoroutineState.Suspended)
+                        new EntryNextCallback().ConcurrentSuspend(this, coroutine);
+                    else
+                        NextBackground(coroutine, new EntryNextCallback(), mode);
+                }
 
                 private void OnEntry()
                 {
@@ -496,7 +506,7 @@ namespace Enderlook.Unity.Coroutines
                     }
                 }
 
-                public override void OnBackground()
+                public override bool OnBackgroundFlushErrors()
                 {
                     ConcurrentQueue<Task> tasks = backgroundTasks;
                     int count = tasks.Count;
@@ -507,39 +517,43 @@ namespace Enderlook.Unity.Coroutines
                         else if (!task.IsCompleted)
                             tasks.Enqueue(task);
                     }
+                    return tasks.Count > 0;
+                }
 
-                    ConcurrentQueue<(ValueCoroutineStateBoxed, T)> local = suspendedBackgroundShort;
-                    count = local.Count;
-                    while (count-- > 0 && local.TryDequeue(out (ValueCoroutineStateBoxed state, T routine) tmp))
+                public override void OnBackground()
+                {
+                    ConcurrentQueue<T> local = suspendedBackgroundShort;
+                    int count = local.Count;
+                    while (count-- > 0 && local.TryDequeue(out T routine))
                     {
-                        switch (tmp.state.State)
+                        switch (manager.state)
                         {
                             case ValueCoroutineState.Continue:
-                                Task.Factory.StartNew(shortBackground, (this, tmp.state, tmp.routine));
+                                Task.Factory.StartNew(shortBackground, (this, routine));
                                 break;
                             case ValueCoroutineState.Finalized:
-                                tmp.routine.Dispose();
+                                routine.Dispose();
                                 break;
                             case ValueCoroutineState.Suspended:
-                                local.Enqueue(tmp);
+                                local.Enqueue(routine);
                                 break;
                         }
                     }
 
                     local = suspendedBackgroundLong;
                     count = local.Count;
-                    while (count-- > 0 && local.TryDequeue(out (ValueCoroutineStateBoxed state, T routine) tmp))
+                    while (count-- > 0 && local.TryDequeue(out T routine))
                     {
-                        switch (tmp.state.State)
+                        switch (manager.state)
                         {
                             case ValueCoroutineState.Continue:
-                                Task.Factory.StartNew(longBackground, (this, tmp.state, tmp.routine));
+                                Task.Factory.StartNew(longBackground, (this, routine));
                                 break;
                             case ValueCoroutineState.Finalized:
-                                tmp.routine.Dispose();
+                                routine.Dispose();
                                 break;
                             case ValueCoroutineState.Suspended:
-                                local.Enqueue(tmp);
+                                local.Enqueue(routine);
                                 break;
                         }
                     }
@@ -611,7 +625,7 @@ namespace Enderlook.Unity.Coroutines
                                 onUnityPoll.Enqueue(routine);
                             }
                             else
-                                Task.Factory.StartNew(shortBackground, (this, manager.state, routine));
+                                backgroundTasks.Enqueue(Task.Factory.StartNew(shortBackground, (this, routine)));
                             break;
                         case ValueYieldInstruction.Type.ToLongBackground:
                             if (Application.platform == RuntimePlatform.WebGLPlayer)
@@ -622,18 +636,17 @@ namespace Enderlook.Unity.Coroutines
                                 onUnityPoll.Enqueue(routine);
                             }
                             else
-                                Task.Factory.StartNew(longBackground, (this, manager.state, routine), TaskCreationOptions.LongRunning);
+                                backgroundTasks.Enqueue(Task.Factory.StartNew(longBackground, (this, routine), TaskCreationOptions.LongRunning));
                             break;
                         case ValueYieldInstruction.Type.YieldInstruction:
                         {
-                            ValueCoroutineStateBoxed state = manager.state;
                             onUnityCoroutine.Add((manager.StartUnityCoroutine(Work(instruction.YieldInstruction)), routine));
                             break;
                             IEnumerator Work(YieldInstruction yieldInstruction)
                             {
                                 while (true)
                                 {
-                                    switch (state.State)
+                                    switch (manager.state)
                                     {
                                         case ValueCoroutineState.Continue:
                                             switch (routine.State)
@@ -642,7 +655,7 @@ namespace Enderlook.Unity.Coroutines
                                                     yield return yieldInstruction;
                                                     while (true)
                                                     {
-                                                        switch (state.State)
+                                                        switch (manager.state)
                                                         {
                                                             case ValueCoroutineState.Continue:
                                                                 switch (routine.State)
@@ -697,13 +710,13 @@ namespace Enderlook.Unity.Coroutines
                 }
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public void NextBackground<U>(T routine, U callback, ValueCoroutineStateBoxed state, ThreadMode mode) where U : INextCallback<T>
+                public void NextBackground<U>(T routine, U callback, ThreadMode mode) where U : INextCallback<T>
                 {
 #if DEBUG
                     Debug.Assert(Application.platform != RuntimePlatform.WebGLPlayer);
 #endif
                     start:
-                    switch (state.ConcurrentState)
+                    switch (manager.state)
                     {
                         case ValueCoroutineState.Finalized:
                             routine.Dispose();
@@ -712,7 +725,7 @@ namespace Enderlook.Unity.Coroutines
                             callback.ConcurrentSuspend(this, routine);
                             break;
                         case ValueCoroutineState.Continue:
-                            ValueYieldInstruction instruction = routine.ConcurrentNext(state, mode);
+                            ValueYieldInstruction instruction = routine.ConcurrentNext(mode);
                             switch (instruction.Mode)
                             {
                                 case ValueYieldInstruction.Type.ToUpdate:
@@ -749,7 +762,7 @@ namespace Enderlook.Unity.Coroutines
                                     onJobHandle.ConcurrentAdd((instruction.JobHandle, routine));
                                     break;
                                 case ValueYieldInstruction.Type.ValueEnumerator:
-                                    manager.ConcurrentStart(new NestedEnumeratorBackground<T, ValueCoroutineEnumerator<IEnumerator<ValueYieldInstruction>>, U>(this, routine, new ValueCoroutineEnumerator<IEnumerator<ValueYieldInstruction>>(instruction.ValueEnumerator), callback, state, mode));
+                                    manager.ConcurrentStart(new NestedEnumeratorBackground<T, ValueCoroutineEnumerator<IEnumerator<ValueYieldInstruction>>, U>(this, routine, new ValueCoroutineEnumerator<IEnumerator<ValueYieldInstruction>>(instruction.ValueEnumerator), callback, mode));
                                     break;
                                 case ValueYieldInstruction.Type.UnityEnumerator:
                                     manager.ConcurrentStart(new NestedEnumerator<T, UnityCoroutineEnumerator, U>(this, routine, new UnityCoroutineEnumerator(instruction.UnityEnumerator), callback));
@@ -779,7 +792,7 @@ namespace Enderlook.Unity.Coroutines
                                         goto start;
                                     }
                                     else
-                                        Task.Factory.StartNew(shortBackground, (this, state, routine));
+                                        backgroundTasks.Enqueue(Task.Factory.StartNew(shortBackground, (this, routine)));
                                     break;
                                 case ValueYieldInstruction.Type.ToLongBackground:
 #if DEBUG
@@ -793,7 +806,7 @@ namespace Enderlook.Unity.Coroutines
                                         goto start;
                                     }
                                     else
-                                        Task.Factory.StartNew(longBackground, (this, state, routine), TaskCreationOptions.LongRunning);
+                                        backgroundTasks.Enqueue(Task.Factory.StartNew(longBackground, (this, routine), TaskCreationOptions.LongRunning));
                                     break;
                                 case ValueYieldInstruction.Type.YieldInstruction:
                                 {
@@ -803,7 +816,7 @@ namespace Enderlook.Unity.Coroutines
                                     {
                                         while (true)
                                         {
-                                            switch (state.State)
+                                            switch (manager.state)
                                             {
                                                 case ValueCoroutineState.Continue:
                                                     switch (routine.State)
@@ -812,13 +825,13 @@ namespace Enderlook.Unity.Coroutines
                                                             yield return yieldInstruction;
                                                             while (true)
                                                             {
-                                                                switch (state.State)
+                                                                switch (manager.state)
                                                                 {
                                                                     case ValueCoroutineState.Continue:
                                                                         switch (routine.State)
                                                                         {
                                                                             case ValueCoroutineState.Continue:
-                                                                                NextBackground(routine, callback, state, mode);
+                                                                                NextBackground(routine, callback, mode);
                                                                                 yield break;
                                                                             case ValueCoroutineState.Suspended:
                                                                                 yield return null;
@@ -903,9 +916,9 @@ namespace Enderlook.Unity.Coroutines
                         tmp.Item2.Dispose();
                     }
 
-                    ConcurrentQueue<(ValueCoroutineStateBoxed, T)> suspendedBackgroundShort = this.suspendedBackgroundShort;
-                    while (suspendedBackgroundShort.TryDequeue(out (ValueCoroutineStateBoxed, T) tmp))
-                        tmp.Item2.Dispose();
+                    ConcurrentQueue<T> suspendedBackgroundShort = this.suspendedBackgroundShort;
+                    while (suspendedBackgroundShort.TryDequeue(out T routine))
+                        routine.Dispose();
                 }
             }
         }

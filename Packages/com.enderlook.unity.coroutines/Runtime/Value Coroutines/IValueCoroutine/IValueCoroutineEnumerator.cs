@@ -30,11 +30,10 @@ namespace Enderlook.Unity.Coroutines
         /// <summary>
         /// Advances the coroutine by one.
         /// </summary>
-        /// <param name="state">Boxed state.</param>
         /// <param name="mode">Type of thread where this function is being executed.</param>
         /// <returns>Instruction of how coroutione should continue its execution.</returns>
         /// <remarks>While <see cref="State"/> is <see cref="ValueCoroutineState.Suspended"/> this must return <see cref="Yield.Suspended"/>.<br/>
         /// If <see cref="State"/> is <see cref="ValueCoroutineState.Finalized"/> this must return <see cref="Yield.Finalized"/>.</remarks>
-        ValueYieldInstruction ConcurrentNext(ValueCoroutineStateBoxed state, ThreadMode mode);
+        ValueYieldInstruction ConcurrentNext(ThreadMode mode);
     }
 }

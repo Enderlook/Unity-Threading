@@ -6,7 +6,6 @@ namespace Enderlook.Unity.Threading
     {
         private int locked;
         private int readers;
-        private bool reserved;
 
         private void Lock()
         {
@@ -29,26 +28,6 @@ namespace Enderlook.Unity.Threading
             Unlock();
         }
 
-        public void UpgradeFromReaderToWriter()
-        {
-            Lock();
-            readers--;
-            reserved = true;
-            Unlock();
-
-            while (true)
-            {
-                Lock();
-                if (readers > 0)
-                    Unlock();
-                else
-                {
-                    reserved = false;
-                    break;
-                }
-            }
-        }
-
         public void WriteBegin()
         {
             while (true)
@@ -56,13 +35,8 @@ namespace Enderlook.Unity.Threading
                 Lock();
                 if (readers > 0)
                     Unlock();
-                else if (reserved)
-                    Unlock();
                 else
-                {
-                    reserved = false;
                     break;
-                }
             }
         }
 
