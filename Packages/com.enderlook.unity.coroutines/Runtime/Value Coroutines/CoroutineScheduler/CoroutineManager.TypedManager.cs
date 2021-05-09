@@ -601,10 +601,10 @@ namespace Enderlook.Unity.Coroutines
                         onJobHandle.Add((instruction.JobHandle, routine));
                         break;
                     case ValueYieldInstruction.Type.ValueEnumerator:
-                        manager.StartEnumerator(new NestedEnumerator<T, ValueCoroutineEnumerator<IEnumerator<ValueYieldInstruction>>, U>(this, routine, new ValueCoroutineEnumerator<IEnumerator<ValueYieldInstruction>>(instruction.ValueEnumerator), callback));
+                        manager.StartNestedEnumerator(new NestedEnumerator<T, ValueCoroutineEnumerator<IEnumerator<ValueYieldInstruction>>, U>(this, routine, new ValueCoroutineEnumerator<IEnumerator<ValueYieldInstruction>>(instruction.ValueEnumerator), callback));
                         break;
                     case ValueYieldInstruction.Type.UnityEnumerator:
-                        manager.StartEnumerator(new NestedEnumerator<T, UnityCoroutineEnumerator, U>(this, routine, new UnityCoroutineEnumerator(instruction.UnityEnumerator), callback));
+                        manager.StartNestedEnumerator(new NestedEnumerator<T, UnityCoroutineEnumerator, U>(this, routine, new UnityCoroutineEnumerator(instruction.UnityEnumerator), callback));
                         break;
                     case ValueYieldInstruction.Type.ValueCoroutine:
                         onValueCoroutine.Add((instruction.ValueCoroutine, routine));
@@ -763,10 +763,10 @@ namespace Enderlook.Unity.Coroutines
                                 onJobHandle.ConcurrentAdd((instruction.JobHandle, routine));
                                 break;
                             case ValueYieldInstruction.Type.ValueEnumerator:
-                                manager.ConcurrentStartEnumerator(new NestedEnumeratorBackground<T, ValueCoroutineEnumerator<IEnumerator<ValueYieldInstruction>>, U>(this, routine, new ValueCoroutineEnumerator<IEnumerator<ValueYieldInstruction>>(instruction.ValueEnumerator), callback, mode));
+                                manager.ConcurrentStartNestedEnumerator(new NestedEnumeratorBackground<T, ValueCoroutineEnumerator<IEnumerator<ValueYieldInstruction>>, U>(this, routine, new ValueCoroutineEnumerator<IEnumerator<ValueYieldInstruction>>(instruction.ValueEnumerator), callback, mode), mode);
                                 break;
                             case ValueYieldInstruction.Type.UnityEnumerator:
-                                manager.ConcurrentStartEnumerator(new NestedEnumerator<T, UnityCoroutineEnumerator, U>(this, routine, new UnityCoroutineEnumerator(instruction.UnityEnumerator), callback));
+                                manager.ConcurrentStartNestedEnumerator(new NestedEnumerator<T, UnityCoroutineEnumerator, U>(this, routine, new UnityCoroutineEnumerator(instruction.UnityEnumerator), callback), mode);
                                 break;
                             case ValueYieldInstruction.Type.ValueCoroutine:
                                 onValueCoroutine.ConcurrentAdd((instruction.ValueCoroutine, routine));

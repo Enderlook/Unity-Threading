@@ -77,23 +77,11 @@ namespace Enderlook.Unity.Coroutines
             where T : IEnumerator<ValueYieldInstruction>
             => manager.Start(coroutine);
 
-        /// <inheritdoc cref="CoroutineManager.StartConcurrent{T}(T)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ConcurrentStart<T>(T coroutine)
-            where T : IEnumerator<ValueYieldInstruction>
-            => manager.ConcurrentStart(coroutine);
-
         /// <inheritdoc cref="CoroutineManager.Start{T}(T)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ValueCoroutine StartWithHandle<T>(T coroutine)
             where T : IEnumerator<ValueYieldInstruction>
             => manager.StartWithHandle(coroutine);
-
-        /// <inheritdoc cref="CoroutineManager.StartConcurrent{T}(T)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueCoroutine ConcurrentStartWithHandle<T>(T coroutine)
-            where T : IEnumerator<ValueYieldInstruction>
-            => manager.ConcurrentStartWithHandle(coroutine);
 
         /// <inheritdoc cref="CoroutineManager.Start{T}(T, CancellationToken)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -101,23 +89,11 @@ namespace Enderlook.Unity.Coroutines
             where T : IEnumerator<ValueYieldInstruction>
             => manager.Start(coroutine, token);
 
-        /// <inheritdoc cref="CoroutineManager.StartConcurrent{T}(T, CancellationToken)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ConcurrentStart<T>(T coroutine, CancellationToken token)
-            where T : IEnumerator<ValueYieldInstruction>
-            => manager.ConcurrentStart(coroutine, token);
-
         /// <inheritdoc cref="CoroutineManager.Start{T}(T, CancellationToken)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ValueCoroutine StartWithHandle<T>(T coroutine, CancellationToken token)
             where T : IEnumerator<ValueYieldInstruction>
             => manager.StartWithHandle(coroutine, token);
-
-        /// <inheritdoc cref="CoroutineManager.StartConcurrent{T}(T, CancellationToken)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueCoroutine ConcurrentStartWithHandle<T>(T coroutine, CancellationToken token)
-            where T : IEnumerator<ValueYieldInstruction>
-            => manager.ConcurrentStartWithHandle(coroutine, token);
 
         /// <inheritdoc cref="CoroutineManager.Start{T}(T, Object)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -125,23 +101,11 @@ namespace Enderlook.Unity.Coroutines
             where T : IEnumerator<ValueYieldInstruction>
             => manager.Start(coroutine, source);
 
-        /// <inheritdoc cref="CoroutineManager.StartConcurrent{T}(T, Object)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ConcurrentStart<T>(T coroutine, Object source)
-            where T : IEnumerator<ValueYieldInstruction>
-            => manager.ConcurrentStart(coroutine, source);
-
         /// <inheritdoc cref="CoroutineManager.Start{T}(T, Object)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ValueCoroutine StartWithHandle<T>(T coroutine, Object source)
             where T : IEnumerator<ValueYieldInstruction>
             => manager.StartWithHandle(coroutine, source);
-
-        /// <inheritdoc cref="CoroutineManager.StartConcurrent{T}(T, Object)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueCoroutine ConcurrentStartWithHandle<T>(T coroutine, Object source)
-            where T : IEnumerator<ValueYieldInstruction>
-            => manager.ConcurrentStartWithHandle(coroutine, source);
 
         /// <inheritdoc cref="CoroutineManager.Start{T}(T, GameObject)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -149,23 +113,11 @@ namespace Enderlook.Unity.Coroutines
             where T : IEnumerator<ValueYieldInstruction>
             => manager.Start(coroutine, source);
 
-        /// <inheritdoc cref="CoroutineManager.StartConcurrent{T}(T, GameObject)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ConcurrentStart<T>(T coroutine, GameObject source)
-            where T : IEnumerator<ValueYieldInstruction>
-            => manager.ConcurrentStart(coroutine, source);
-
         /// <inheritdoc cref="CoroutineManager.Start{T}(T, GameObject)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ValueCoroutine StartWithHandle<T>(T coroutine, GameObject source)
             where T : IEnumerator<ValueYieldInstruction>
             => manager.StartWithHandle(coroutine, source);
-
-        /// <inheritdoc cref="CoroutineManager.StartConcurrent{T}(T, GameObject)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueCoroutine ConcurrentStartWithHandle<T>(T coroutine, GameObject source)
-            where T : IEnumerator<ValueYieldInstruction>
-            => manager.ConcurrentStartWithHandle(coroutine, source);
 
         /// <inheritdoc cref="CoroutineManager.Start{T}(T, MonoBehaviour, bool)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -173,22 +125,10 @@ namespace Enderlook.Unity.Coroutines
             where T : IEnumerator<ValueYieldInstruction>
             => manager.Start(coroutine, source, suspendWhenSourceIsDisabled);
 
-        /// <inheritdoc cref="CoroutineManager.StartConcurrent{T}(T, MonoBehaviour, bool)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ConcurrentStart<T>(T coroutine, MonoBehaviour source, bool suspendWhenSourceIsDisabled = false)
-            where T : IEnumerator<ValueYieldInstruction>
-            => manager.ConcurrentStart(coroutine, source, suspendWhenSourceIsDisabled);
-
         /// <inheritdoc cref="CoroutineManager.Start{T}(T, MonoBehaviour, bool)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ValueCoroutine StartWithHandle<T>(T coroutine, MonoBehaviour source, bool suspendWhenSourceIsDisabled = false)
             where T : IEnumerator<ValueYieldInstruction>
             => manager.StartWithHandle(coroutine, source, suspendWhenSourceIsDisabled);
-
-        /// <inheritdoc cref="CoroutineManager.StartConcurrent{T}(T, MonoBehaviour, bool)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueCoroutine ConcurrentStartWithHandle<T>(T coroutine, MonoBehaviour source, bool suspendWhenSourceIsDisabled = false)
-            where T : IEnumerator<ValueYieldInstruction>
-            => manager.ConcurrentStartWithHandle(coroutine, source, suspendWhenSourceIsDisabled);
     }
 }

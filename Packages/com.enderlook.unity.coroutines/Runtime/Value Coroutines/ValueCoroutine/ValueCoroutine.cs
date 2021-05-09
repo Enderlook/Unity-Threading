@@ -35,15 +35,6 @@ namespace Enderlook.Unity.Coroutines
             return new ValueCoroutine(handler);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static ValueCoroutine ConcurrentStartEnumerator<T>(CoroutineManager manager, T routine)
-            where T : IValueCoroutineEnumerator
-        {
-            Handle handler = ConcurrentPool.Rent<Handle>();
-            manager.ConcurrentStartEnumerator(new Coroutine<T>(handler, routine));
-            return new ValueCoroutine(handler);
-        }
-
         /// <summary>
         /// Whenever the value coroutine has completed or not.
         /// </summary>

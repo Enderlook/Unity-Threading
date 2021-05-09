@@ -114,13 +114,8 @@ namespace Enderlook.Unity.Coroutines
             => ValueCoroutine.StartEnumerator(this, routine);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal ValueCoroutine ConcurrentStartEnumeratorWithHandle<T>(T routine) where T : IValueCoroutineEnumerator
-            => ValueCoroutine.ConcurrentStartEnumerator(this, routine);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void StartEnumerator<T>(T coroutine) where T : IValueCoroutineEnumerator
         {
-            CheckThread();
             if (typeof(T).IsValueType)
                 StartEnumeratorInner(coroutine);
             else
@@ -135,28 +130,15 @@ namespace Enderlook.Unity.Coroutines
             managerLock.ReadEnd();
             if (!found)
                 manager = CreateManager<T>();
-            ((TypedManager<T>)manager).Start(coroutine);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void ConcurrentStartEnumerator<T>(T coroutine) where T : IValueCoroutineEnumerator
-        {
-            if (typeof(T).IsValueType)
-                ConcurrentStartEnumeratorInner(coroutine, ThreadMode.Unknown);
+            TypedManager<T> manager_ = (TypedManager<T>)manager;
+            if (UnityThread.IsMainThread)
+                manager_.Start(coroutine);
             else
-                ConcurrentStartEnumeratorInner((IValueCoroutineEnumerator)coroutine, ThreadMode.Unknown);
+                manager_.ConcurrentStart(coroutine, ThreadMode.Unknown);
         }
 
-        private void ConcurrentStartEnumeratorInner<T>(T coroutine, ThreadMode mode)
-            where T : IValueCoroutineEnumerator
+        private void StartEnumeratorInner<T>(T coroutine, ThreadMode mode) where T : IValueCoroutineEnumerator
         {
-#if DEBUG
-            if (Application.platform == RuntimePlatform.WebGLPlayer)
-                Debug.LogWarning("This platform doesn't support multithreading. This doesn't mean that the function will fail (it works), but it would be more perfomant to call the non-concurrent version instead.");
-            else if (UnityThread.IsMainThread)
-                Debug.LogWarning("This function was executed in the main thread. This is not an error, thought it's more perfomant to call the non-concurrent version instead.");
-#endif
-
             Type enumerator_ = typeof(T);
             managerLock.ReadBegin();
             bool found = managersDictionary.TryGetValue(enumerator_, out ManagerBase manager);
@@ -164,6 +146,30 @@ namespace Enderlook.Unity.Coroutines
             if (!found)
                 manager = CreateManager<T>();
             ((TypedManager<T>)manager).ConcurrentStart(coroutine, mode);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void StartNestedEnumerator<T>(T coroutine) where T : IValueCoroutineEnumerator
+        {
+            if (state == ValueCoroutineState.Finalized)
+                return;
+
+            if (typeof(T).IsValueType)
+                StartEnumeratorInner(coroutine);
+            else
+                StartEnumeratorInner((IValueCoroutineEnumerator)coroutine);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ConcurrentStartNestedEnumerator<T>(T coroutine, ThreadMode mode) where T : IValueCoroutineEnumerator
+        {
+            if (state == ValueCoroutineState.Finalized)
+                return;
+
+            if (typeof(T).IsValueType)
+                StartEnumeratorInner(coroutine, mode);
+            else
+                StartEnumeratorInner((IValueCoroutineEnumerator)coroutine, mode);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -223,13 +229,14 @@ namespace Enderlook.Unity.Coroutines
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void ThrowObjectDisposedException() => throw new ObjectDisposedException("Manager");
 
-        [System.Diagnostics.Conditional("DEBUG")]
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowNonUnityThread() => throw new InvalidOperationException("This function can only be executed in the Unity thread.");
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void CheckThread()
         {
-#if DEBUG
             if (!UnityThread.IsMainThread)
-                Debug.LogError("This function can only be executed in the Unity thread. This has produced undefined behaviour.");
-#endif
+                ThrowNonUnityThread();
         }
     }
 }

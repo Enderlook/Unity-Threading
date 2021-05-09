@@ -34,23 +34,11 @@ namespace Enderlook.Unity.Coroutines
             where T : IEnumerator<ValueYieldInstruction>
             => CoroutineManager.Shared.Start(routine);
 
-        /// <inheritdoc cref="CoroutineSchedulerCoresExtensions.ConcurrentStart{T}(Cores, T)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ConcurrentStart<T>(T routine)
-            where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineManager.Shared.ConcurrentStart(routine);
-
         /// <inheritdoc cref="CoroutineSchedulerCoresExtensions.StartWithHandle{T}(Cores, T)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ValueCoroutine StartWithHandle<T>(T routine)
             where T : IEnumerator<ValueYieldInstruction>
             => CoroutineManager.Shared.StartWithHandle(routine);
-
-        /// <inheritdoc cref="CoroutineSchedulerCoresExtensions.ConcurrentStartWithHandle{T}(Cores, T)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ValueCoroutine ConcurrentStartWithHandle<T>(T routine)
-            where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineManager.Shared.ConcurrentStartWithHandle(routine);
 
         /// <inheritdoc cref="CoroutineSchedulerCoresExtensions.Start{T}(Cores, T, CancellationToken)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -58,23 +46,11 @@ namespace Enderlook.Unity.Coroutines
             where T : IEnumerator<ValueYieldInstruction>
             => CoroutineManager.Shared.Start(routine, token);
 
-        /// <inheritdoc cref="CoroutineSchedulerCoresExtensions.ConcurrentStart{T}(Cores, T, CancellationToken)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ConcurrentStart<T>(T routine, CancellationToken token)
-            where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineManager.Shared.ConcurrentStart(routine, token);
-
         /// <inheritdoc cref="CoroutineSchedulerCoresExtensions.StartWithHandle{T}(Cores, T, CancellationToken)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ValueCoroutine StartWithHandle<T>(T routine, CancellationToken token)
             where T : IEnumerator<ValueYieldInstruction>
             => CoroutineManager.Shared.StartWithHandle(routine, token);
-
-        /// <inheritdoc cref="CoroutineSchedulerCoresExtensions.ConcurrentStartWithHandle{T}(Cores, T, CancellationToken)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ValueCoroutine ConcurrentStartWithHandle<T>(T routine, CancellationToken token)
-            where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineManager.Shared.ConcurrentStartWithHandle(routine, token);
 
         /// <inheritdoc cref="CoroutineSchedulerCoresExtensions.Start{T}(Cores, T, Object)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -82,23 +58,11 @@ namespace Enderlook.Unity.Coroutines
             where T : IEnumerator<ValueYieldInstruction>
             => CoroutineManager.Shared.Start(routine, source);
 
-        /// <inheritdoc cref="CoroutineSchedulerCoresExtensions.ConcurrentStart{T}(Cores, T, Object)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ConcurrentStart<T>(T routine, Object source)
-            where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineManager.Shared.ConcurrentStart(routine, source);
-
         /// <inheritdoc cref="CoroutineSchedulerCoresExtensions.StartWithHandle{T}(Cores, T, Object)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ValueCoroutine StartWithHandle<T>(T routine, Object source)
             where T : IEnumerator<ValueYieldInstruction>
             => CoroutineManager.Shared.StartWithHandle(routine, source);
-
-        /// <inheritdoc cref="CoroutineSchedulerCoresExtensions.ConcurrentStartWithHandle{T}(Cores, T, Object)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ValueCoroutine ConcurrentStartWithHandle<T>(T routine, Object source)
-            where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineManager.Shared.ConcurrentStartWithHandle(routine, source);
 
         /// <inheritdoc cref="CoroutineSchedulerCoresExtensions.Start{T}(Cores, T, GameObject)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -106,23 +70,11 @@ namespace Enderlook.Unity.Coroutines
             where T : IEnumerator<ValueYieldInstruction>
             => CoroutineManager.Shared.Start(routine, source);
 
-        /// <inheritdoc cref="CoroutineSchedulerCoresExtensions.ConcurrentStart{T}(Cores, T, GameObject)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ConcurrentStart<T>(T routine, GameObject source)
-            where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineManager.Shared.ConcurrentStart(routine, source);
-
         /// <inheritdoc cref="CoroutineSchedulerCoresExtensions.StartWithHandle{T}(Cores, T, GameObject)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ValueCoroutine StartWithHandle<T>(T routine, GameObject source)
             where T : IEnumerator<ValueYieldInstruction>
             => CoroutineManager.Shared.StartWithHandle(routine, source);
-
-        /// <inheritdoc cref="CoroutineSchedulerCoresExtensions.ConcurrentStartWithHandle{T}(Cores, T, GameObject)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ValueCoroutine ConcurrentStartWithHandle<T>(T routine, GameObject source)
-            where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineManager.Shared.ConcurrentStartWithHandle(routine, source);
 
         /// <inheritdoc cref="CoroutineSchedulerCoresExtensions.Start{T}(Cores, T, MonoBehaviour, bool)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -130,22 +82,10 @@ namespace Enderlook.Unity.Coroutines
             where T : IEnumerator<ValueYieldInstruction>
             => CoroutineManager.Shared.Start(routine, source, suspendWhenSourceIsDisabled);
 
-        /// <inheritdoc cref="CoroutineSchedulerCoresExtensions.ConcurrentStart{T}(Cores, T, MonoBehaviour, bool)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ConcurrentStart<T>(T routine, MonoBehaviour source, bool suspendWhenSourceIsDisabled = false)
-            where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineManager.Shared.ConcurrentStart(routine, source, suspendWhenSourceIsDisabled);
-
         /// <inheritdoc cref="CoroutineSchedulerCoresExtensions.StartWithHandle{T}(Cores, T, MonoBehaviour, bool)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ValueCoroutine StartWithHandle<T>(T routine, MonoBehaviour source, bool suspendWhenSourceIsDisabled = false)
             where T : IEnumerator<ValueYieldInstruction>
             => CoroutineManager.Shared.StartWithHandle(routine, source, suspendWhenSourceIsDisabled);
-
-        /// <inheritdoc cref="CoroutineSchedulerCoresExtensions.ConcurrentStartWithHandle{T}(Cores, T, MonoBehaviour, bool)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ValueCoroutine ConcurrentStartWithHandle<T>(T routine, MonoBehaviour source, bool suspendWhenSourceIsDisabled = false)
-            where T : IEnumerator<ValueYieldInstruction>
-            => CoroutineManager.Shared.ConcurrentStartWithHandle(routine, source, suspendWhenSourceIsDisabled);
     }
 }
