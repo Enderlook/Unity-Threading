@@ -15,7 +15,7 @@ namespace Enderlook.Unity.Coroutines
     [Serializable]
     public sealed partial class CoroutineManager
     {
-        internal static readonly CoroutineManager Shared;
+        internal static CoroutineManager Shared;
 
         private ValueCoroutineState state;
         private MonoBehaviour monoBehaviour;
@@ -65,22 +65,29 @@ namespace Enderlook.Unity.Coroutines
             state = ValueCoroutineState.Continue;
         }
 
-        static CoroutineManager()
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void Initialize()
         {
-            Shared = new CoroutineManager(Manager.Shared);
-            Manager.OnUpdate += Shared.OnUpdate;
-            Manager.OnUpdate += Shared.OnPoll;
-            Manager.OnFixedUpdate += Shared.OnFixedUpdate;
-            Manager.OnEndOfFrame += Shared.OnEndOfFrame;
-            Manager.OnLateUpdate += Shared.OnEndOfFrame;
+            if (!(Shared is null))
+                return;
 
-            if (Application.platform != RuntimePlatform.WebGLPlayer)
+            Manager.OnInitialized(() =>
             {
-                new Thread(() => {
-                    while (true)
-                        Shared.OnBackground();
-                }).Start();
-            }
+                Shared = new CoroutineManager(Manager.Shared);
+                Manager.OnUpdate += Shared.OnUpdate;
+                Manager.OnUpdate += Shared.OnPoll;
+                Manager.OnFixedUpdate += Shared.OnFixedUpdate;
+                Manager.OnEndOfFrame += Shared.OnEndOfFrame;
+                Manager.OnLateUpdate += Shared.OnEndOfFrame;
+
+                if (Application.platform != RuntimePlatform.WebGLPlayer)
+                {
+                    new Thread(() => {
+                        while (true)
+                            Shared.OnBackground();
+                    }).Start();
+                }
+            });
         }
 
         ~CoroutineManager() => Dispose();
