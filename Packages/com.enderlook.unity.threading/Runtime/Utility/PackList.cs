@@ -38,7 +38,7 @@ namespace Enderlook.Unity.Threading
         {
 #if DEBUG
             if (!UnityThread.IsMainThread)
-                Debug.LogError("This function can only be executed in the Unity thread. This has produced undefined behaviour. This error will not shown on release.");
+                Debug.LogError("This function can only be executed in the Unity thread. This has produced undefined behaviour.");
 #endif
             List.Add(element);
         }
