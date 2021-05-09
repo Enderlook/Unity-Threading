@@ -17,27 +17,27 @@ namespace Enderlook.Unity.Coroutines
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void StartValueCoroutine<T>(this GameObject source, T routine)
             where T : IEnumerator<ValueYieldInstruction>
-           => CoroutineScheduler.Shared.Start(routine, source);
+           => CoroutineManager.Shared.Start(routine, source);
 
         /// <inheritdoc cref="CoroutineScheduler.StartWithValueHandle{T}(T, GameObject)"/>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ValueCoroutine StartValueCoroutineWithValueHandle<T>(this GameObject source, T routine)
             where T : IEnumerator<ValueYieldInstruction>
-           => CoroutineScheduler.Shared.StartWithHandle(routine, source);
+           => CoroutineManager.Shared.StartWithHandle(routine, source);
 
         /// <inheritdoc cref="CoroutineScheduler.Start{T}(T, MonoBehaviour, bool)"/>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void StartValueCoroutine<T>(this MonoBehaviour source, T routine, bool suspendWhenSourceIsDisabled = false)
             where T : IEnumerator<ValueYieldInstruction>
-           => CoroutineScheduler.Shared.Start(routine, source, suspendWhenSourceIsDisabled);
+           => CoroutineManager.Shared.Start(routine, source, suspendWhenSourceIsDisabled);
 
         /// <inheritdoc cref="CoroutineScheduler.StartWithValueHandle{T}(T, MonoBehaviour, bool)"/>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ValueCoroutine StartValueCoroutineWithValueHandle<T>(this MonoBehaviour source, T routine, bool suspendWhenSourceIsDisabled = false)
             where T : IEnumerator<ValueYieldInstruction>
-           => CoroutineScheduler.Shared.StartWithHandle(routine, source, suspendWhenSourceIsDisabled);
+           => CoroutineManager.Shared.StartWithHandle(routine, source, suspendWhenSourceIsDisabled);
     }
 }

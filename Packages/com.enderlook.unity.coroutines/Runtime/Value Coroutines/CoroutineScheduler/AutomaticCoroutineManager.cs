@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Threading.Tasks;
 
 using UnityEngine;
 
@@ -12,12 +13,12 @@ namespace Enderlook.Unity.Coroutines
     public sealed class AutomaticCoroutineScheduler : MonoBehaviour
     {
         [SerializeField, HideInInspector]
-        private CoroutineScheduler manager;
+        private CoroutineManager manager;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
         private void Awake()
         {
-            manager = CoroutineScheduler.Create(this);
+            manager = new CoroutineManager(this);
             StartCoroutine(Work());
             IEnumerator Work()
             {
@@ -26,6 +27,17 @@ namespace Enderlook.Unity.Coroutines
                     yield return Wait.ForEndOfFrame;
                     manager.OnEndOfFrame();
                 }
+            }
+            if (Application.platform != RuntimePlatform.WebGLPlayer)
+            {
+                Task.Factory.StartNew(async () =>
+                {
+                    while (manager != null)
+                    {
+                        manager.OnBackground();
+                        await Task.Delay(5);
+                    }
+                }, TaskCreationOptions.LongRunning);
             }
         }
 
@@ -43,6 +55,11 @@ namespace Enderlook.Unity.Coroutines
         private void FixedUpdate() => manager.OnFixedUpdate();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
-        private void OnDestroy() => manager.Dispose();
+        private void OnDestroy()
+        {
+            CoroutineManager m = manager;
+            manager = null;
+            m.Dispose();
+        }
     }
 }

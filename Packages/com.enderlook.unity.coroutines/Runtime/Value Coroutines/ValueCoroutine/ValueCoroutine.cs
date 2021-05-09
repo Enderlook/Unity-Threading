@@ -27,20 +27,20 @@ namespace Enderlook.Unity.Coroutines
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static ValueCoroutine Start<T>(CoroutineScheduler.Managers managers, T routine)
+        internal static ValueCoroutine StartEnumerator<T>(CoroutineManager manager, T routine)
             where T : IValueCoroutineEnumerator
         {
             Handle handler = ConcurrentPool.Rent<Handle>();
-            managers.Start(new Coroutine<T>(handler, routine));
+            manager.StartEnumerator(new Coroutine<T>(handler, routine));
             return new ValueCoroutine(handler);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static ValueCoroutine ConcurrentStart<T>(CoroutineScheduler.Managers managers, T routine)
+        internal static ValueCoroutine ConcurrentStartEnumerator<T>(CoroutineManager manager, T routine)
             where T : IValueCoroutineEnumerator
         {
             Handle handler = ConcurrentPool.Rent<Handle>();
-            managers.ConcurrentStart(new Coroutine<T>(handler, routine));
+            manager.ConcurrentStartEnumerator(new Coroutine<T>(handler, routine));
             return new ValueCoroutine(handler);
         }
 
