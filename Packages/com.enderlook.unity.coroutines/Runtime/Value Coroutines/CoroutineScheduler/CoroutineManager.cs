@@ -85,6 +85,30 @@ namespace Enderlook.Unity.Coroutines
 
         ~CoroutineManager() => Dispose();
 
+        /// <summary>
+        /// Suspend the execution of the coroutines of this manager.
+        /// </summary>
+        public void Suspend()
+        {
+            if (state == ValueCoroutineState.Finalized)
+                ThrowObjectDisposedException();
+            if (state == ValueCoroutineState.Suspended)
+                throw new InvalidOperationException("The manager is already suspended.");
+            state = ValueCoroutineState.Suspended;
+        }
+
+        /// <summary>
+        /// Suspend the execution of the coroutines of this manager.
+        /// </summary>
+        public void Reanude()
+        {
+            if (state == ValueCoroutineState.Finalized)
+                ThrowObjectDisposedException();
+            if (state == ValueCoroutineState.Continue)
+                throw new InvalidOperationException("The manager is not suspended");
+            state = ValueCoroutineState.Suspended;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal ValueCoroutine StartEnumeratorWithHandle<T>(T routine) where T : IValueCoroutineEnumerator
             => ValueCoroutine.StartEnumerator(this, routine);
@@ -195,6 +219,9 @@ namespace Enderlook.Unity.Coroutines
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void ThrowMonoBehaviourNullException() => throw new ArgumentNullException("monoBehaviour");
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowObjectDisposedException() => throw new ObjectDisposedException("Manager");
 
         [System.Diagnostics.Conditional("DEBUG")]
         private void CheckThread()
