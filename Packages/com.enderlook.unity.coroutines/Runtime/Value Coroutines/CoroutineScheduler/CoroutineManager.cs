@@ -80,13 +80,12 @@ namespace Enderlook.Unity.Coroutines
                 Manager.OnEndOfFrame += Shared.OnEndOfFrame;
                 Manager.OnLateUpdate += Shared.OnEndOfFrame;
 
-                if (Application.platform != RuntimePlatform.WebGLPlayer)
-                {
-                    new Thread(() => {
-                        while (true)
-                            Shared.OnBackground();
-                    }).Start();
-                }
+#if !UNITY_WEBGL
+                new Thread(() => {
+                    while (true)
+                        Shared.OnBackground();
+                }).Start();
+#endif
             });
         }
 

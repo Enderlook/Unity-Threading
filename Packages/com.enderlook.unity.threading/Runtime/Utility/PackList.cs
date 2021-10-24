@@ -47,11 +47,13 @@ namespace Enderlook.Unity.Threading
         public void ConcurrentAdd(T element)
         {
 #if DEBUG
-            if (Application.platform == RuntimePlatform.WebGLPlayer)
-                Debug.LogWarning("This platform doesn't support multithreading. This doesn't mean that the function will fail (it works), but it would be more perfomant to call the non-concurrent version instead.");
-            else if (UnityThread.IsMainThread)
+#if UNITY_WEBGL
+            Debug.LogWarning("This platform doesn't support multithreading. This doesn't mean that the function will fail (it works), but it would be more perfomant to call the non-concurrent version instead.");
+#else
+            if (UnityThread.IsMainThread)
                 Debug.LogWarning("This function was executed in the main thread. This is not an error, thought it's more perfomant to call the non-concurrent version instead.");
 #endif
+            #endif
             Concurrent.Add(element);
         }
     }

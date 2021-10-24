@@ -64,12 +64,11 @@ namespace Enderlook.Unity.Coroutines
             public TypedManager(CoroutineManager manager)
             {
                 this.manager = manager;
-                if (Application.platform != RuntimePlatform.WebGLPlayer)
-                {
-                    suspendedBackgroundShort = new ConcurrentQueue<T>();
-                    suspendedBackgroundLong = new ConcurrentQueue<T>();
-                    backgroundTasks = new ConcurrentQueue<Task>();
-                }
+#if !UNITY_WEBGL
+                suspendedBackgroundShort = new ConcurrentQueue<T>();
+                suspendedBackgroundLong = new ConcurrentQueue<T>();
+                backgroundTasks = new ConcurrentQueue<Task>();
+#endif
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -618,26 +617,24 @@ namespace Enderlook.Unity.Coroutines
 #endif
                         goto start;
                     case ValueYieldInstruction.Type.ToBackground:
-                        if (Application.platform == RuntimePlatform.WebGLPlayer)
-                        {
-#if UNITY_EDITOR
-                            Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded but this platform doesn't support multithreading. A fallback to {nameof(Yield)}.{nameof(Yield.Poll)} was used. Be warned that this may produce deadlocks very easily.");
+#if UNITY_WEBGL
+#if DEBUG
+                        Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded but this platform doesn't support multithreading. A fallback to {nameof(Yield)}.{nameof(Yield.Poll)} was used. Be warned that this may produce deadlocks very easily.");
 #endif
-                            onUnityPoll.Enqueue(routine);
-                        }
-                        else
-                            backgroundTasks.Enqueue(Task.Factory.StartNew(shortBackground, (this, routine)));
+                        onUnityPoll.Enqueue(routine);
+#else
+                        backgroundTasks.Enqueue(Task.Factory.StartNew(shortBackground, (this, routine)));
+#endif
                         break;
                     case ValueYieldInstruction.Type.ToLongBackground:
-                        if (Application.platform == RuntimePlatform.WebGLPlayer)
-                        {
-#if UNITY_EDITOR
-                            Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded but this platform doesn't support multithreading. A fallback to {nameof(Yield)}.{nameof(Yield.Poll)} was used. Be warned that this may produce deadlocks very easily.");
+#if UNITY_WEBGL
+#if DEBUG
+                        Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded but this platform doesn't support multithreading. A fallback to {nameof(Yield)}.{nameof(Yield.Poll)} was used. Be warned that this may produce deadlocks very easily.");
 #endif
-                            onUnityPoll.Enqueue(routine);
-                        }
-                        else
-                            backgroundTasks.Enqueue(Task.Factory.StartNew(longBackground, (this, routine), TaskCreationOptions.LongRunning));
+                        onUnityPoll.Enqueue(routine);
+#else
+                        backgroundTasks.Enqueue(Task.Factory.StartNew(longBackground, (this, routine), TaskCreationOptions.LongRunning));
+#endif
                         break;
                     case ValueYieldInstruction.Type.YieldInstruction:
                     {
@@ -713,8 +710,8 @@ namespace Enderlook.Unity.Coroutines
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void NextBackground<U>(T routine, U callback, ThreadMode mode) where U : INextCallback<T>
             {
-#if DEBUG
-                Debug.Assert(Application.platform != RuntimePlatform.WebGLPlayer);
+#if DEBUG && UNITY_WEBGL
+                Debug.Assert(false);
 #endif
                 start:
                 switch (manager.state)
@@ -782,8 +779,8 @@ namespace Enderlook.Unity.Coroutines
                                 UnityThread.RunLater(() => Next(routine, callback));
                                 break;
                             case ValueYieldInstruction.Type.ToBackground:
-#if DEBUG
-                                Debug.Assert(Application.platform != RuntimePlatform.WebGLPlayer);
+#if DEBUG && UNITY_WEBGL
+                                Debug.Assert(false);
 #endif
                                 if (mode == ThreadMode.Short)
                                 {
@@ -796,8 +793,8 @@ namespace Enderlook.Unity.Coroutines
                                     backgroundTasks.Enqueue(Task.Factory.StartNew(shortBackground, (this, routine)));
                                 break;
                             case ValueYieldInstruction.Type.ToLongBackground:
-#if DEBUG
-                                Debug.Assert(Application.platform != RuntimePlatform.WebGLPlayer);
+#if DEBUG && UNITY_WEBGL
+                                Debug.Assert(false);
 #endif
                                 if (mode == ThreadMode.Long)
                                 {

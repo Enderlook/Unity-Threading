@@ -31,17 +31,16 @@ namespace Enderlook.Unity.Coroutines
                     manager.OnEndOfFrame();
                 }
             }
-            if (Application.platform != RuntimePlatform.WebGLPlayer)
+#if !UNITY_WEBGL
+            Task.Factory.StartNew(async () =>
             {
-                Task.Factory.StartNew(async () =>
+                while (manager != null)
                 {
-                    while (manager != null)
-                    {
-                        manager.OnBackground();
-                        await Task.Delay(5);
-                    }
-                }, TaskCreationOptions.LongRunning);
-            }
+                    manager.OnBackground();
+                    await Task.Delay(5);
+                }
+            }, TaskCreationOptions.LongRunning);
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]

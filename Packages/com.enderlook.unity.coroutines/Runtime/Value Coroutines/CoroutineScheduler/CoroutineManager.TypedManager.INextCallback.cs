@@ -190,14 +190,18 @@ namespace Enderlook.Unity.Coroutines
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Suspend(TypedManager<T> manager, T routine)
                 {
-                    Debug.Assert(Application.platform != RuntimePlatform.WebGLPlayer);
+#if DEBUG && UNITY_WEBGL
+                    Debug.Assert(false);
+#endif
                     manager.suspendedBackgroundShort.Enqueue(routine);
                 }
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void ConcurrentSuspend(TypedManager<T> manager, T routine)
                 {
-                    Debug.Assert(Application.platform != RuntimePlatform.WebGLPlayer);
+#if DEBUG && UNITY_WEBGL
+                    Debug.Assert(false);
+#endif
                     manager.suspendedBackgroundShort.Enqueue(routine);
                 }
             }
@@ -207,14 +211,18 @@ namespace Enderlook.Unity.Coroutines
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Suspend(TypedManager<T> manager, T routine)
                 {
-                    Debug.Assert(Application.platform != RuntimePlatform.WebGLPlayer);
+#if DEBUG && UNITY_WEBGL
+                    Debug.Assert(false);
+#endif
                     manager.suspendedBackgroundLong.Enqueue(routine);
                 }
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void ConcurrentSuspend(TypedManager<T> manager, T routine)
                 {
-                    Debug.Assert(Application.platform != RuntimePlatform.WebGLPlayer);
+#if DEBUG && UNITY_WEBGL
+                    Debug.Assert(false);
+#endif
                     manager.suspendedBackgroundLong.Enqueue(routine);
                 }
             }

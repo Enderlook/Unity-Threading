@@ -17,28 +17,26 @@ namespace Enderlook.Unity.Jobs
         /// <inheritdoc cref="IJobExtensions.Schedule{T}(T, JobHandle)"/>
         public static JobHandle Schedule(this IManagedJob job, JobHandle dependsOn = default)
         {
-            if (Application.platform == RuntimePlatform.WebGLPlayer)
-                return new JobWithKey(GlobalDictionary<IManagedJob>.Store(job)).Schedule(dependsOn);
-            else
-                return new JobWithHandle(GCHandle.Alloc(job, GCHandleType.Pinned)).Schedule(dependsOn);
+#if UNITY_WEBGL
+            return new JobWithKey(GlobalDictionary<IManagedJob>.Store(job)).Schedule(dependsOn);
+#else
+            return new JobWithHandle(GCHandle.Alloc(job, GCHandleType.Pinned)).Schedule(dependsOn);
+#endif
         }
 
         /// <inheritdoc cref="IJobExtensions.Schedule{T}(T, JobHandle)"/>
         public static JobHandle Schedule<T>(this T job, JobHandle dependsOn = default)
             where T : struct, IManagedJob
         {
-            if (Application.platform == RuntimePlatform.WebGLPlayer)
-            {
-                StrongBox<T> box = ConcurrentPool.Rent<StrongBox<T>>();
-                box.Value = job;
-                return new JobWithKey<T>(GlobalDictionary<StrongBox<T>>.Store(box)).Schedule(dependsOn);
-            }
-            else
-            {
-                StrongBox<T> box = ConcurrentPool.Rent<StrongBox<T>>();
-                box.Value = job;
-                return new JobWithHandle<T>(GCHandle.Alloc(box, GCHandleType.Pinned)).Schedule(dependsOn);
-            }
+#if UNITY_WEBGL
+            StrongBox<T> box = ConcurrentPool.Rent<StrongBox<T>>();
+            box.Value = job;
+            return new JobWithKey<T>(GlobalDictionary<StrongBox<T>>.Store(box)).Schedule(dependsOn);
+#else
+            StrongBox<T> box = ConcurrentPool.Rent<StrongBox<T>>();
+            box.Value = job;
+            return new JobWithHandle<T>(GCHandle.Alloc(box, GCHandleType.Pinned)).Schedule(dependsOn);
+#endif
         }
 
         /// <summary>
@@ -53,28 +51,26 @@ namespace Enderlook.Unity.Jobs
         /// <inheritdoc cref="IJobExtensions.Schedule{T}(T, JobHandle)"/>
         public static void Run(this IManagedJob job)
         {
-            if (Application.platform == RuntimePlatform.WebGLPlayer)
-                new JobWithKey(GlobalDictionary<IManagedJob>.Store(job)).Run();
-            else
-                new JobWithHandle(GCHandle.Alloc(job, GCHandleType.Pinned)).Run();
+#if UNITY_WEBGL
+            new JobWithKey(GlobalDictionary<IManagedJob>.Store(job)).Run();
+#else
+            new JobWithHandle(GCHandle.Alloc(job, GCHandleType.Pinned)).Run();
+#endif
         }
 
         /// <inheritdoc cref="IJobExtensions.Run{T}(T, JobHandle)"/>
         public static void Run<T>(this T job)
             where T : struct, IManagedJob
         {
-            if (Application.platform == RuntimePlatform.WebGLPlayer)
-            {
-                StrongBox<T> box = ConcurrentPool.Rent<StrongBox<T>>();
-                box.Value = job;
-                new JobWithKey<T>(GlobalDictionary<StrongBox<T>>.Store(box)).Run();
-            }
-            else
-            {
-                StrongBox<T> box = ConcurrentPool.Rent<StrongBox<T>>();
-                box.Value = job;
-                new JobWithHandle<T>(GCHandle.Alloc(box, GCHandleType.Pinned)).Run();
-            }
+#if UNITY_WEBGL
+            StrongBox<T> box = ConcurrentPool.Rent<StrongBox<T>>();
+            box.Value = job;
+            new JobWithKey<T>(GlobalDictionary<StrongBox<T>>.Store(box)).Run();
+#else
+            StrongBox<T> box = ConcurrentPool.Rent<StrongBox<T>>();
+            box.Value = job;
+            new JobWithHandle<T>(GCHandle.Alloc(box, GCHandleType.Pinned)).Run();
+#endif
         }
 
         private readonly struct JobWithHandle : IJob
