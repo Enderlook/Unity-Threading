@@ -14,15 +14,30 @@ namespace Enderlook.Unity.Threading
         private static readonly SendOrPostCallback callback = (obj) => ((Action)obj)();
 
         /// <summary>
+        /// Synchronization context used by Unity.
+        /// </summary>
+        public static readonly SynchronizationContext UnitySynchronizationContext = UnitySynchronizationContextUtility.UnitySynchronizationContext;
+
+        /// <summary>
+        /// Thread Id used by Unity main thread.
+        /// </summary>
+        public static readonly int UnityThreadId = UnitySynchronizationContextUtility.UnityThreadId;
+
+        /// <summary>
         /// A <see cref="TaskFactory"/> where all tasks are run on the main thread.
         /// </summary>
         public static readonly TaskFactory Factory = new TaskFactory(UnityThreadTaskScheduler.Instance);
 
         /// <summary>
-        /// Check if we are currently running in main thread.
+        /// Check if we are currently running in main (Unity) thread.
         /// </summary>
         /// <returns>Whenever we are running in main thread or not.</returns>
         public static bool IsMainThread => UnitySynchronizationContextUtility.IsUnityThread;
+
+        /// <summary>
+        /// Determines if we are in the Unity synchronization context.
+        /// </summary>
+        public static bool IsUnitySynchronizationContext => SynchronizationContext.Current == UnitySynchronizationContext;
 
         /// <summary>
         /// Executes the specified action on the Unity thread.<br/>
