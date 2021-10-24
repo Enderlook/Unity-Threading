@@ -1,7 +1,7 @@
 ﻿using Enderlook.Unity.Threading;
 
+using System;
 using System.Runtime.CompilerServices;
-using System.Threading;
 
 using UnityEngine;
 
@@ -9,21 +9,13 @@ namespace Enderlook.Unity.Coroutines
 {
     internal struct GameObjectFinalizeWhenNullAndSuspendWhenIsNotActive : IValueCoroutineState
     {
-        private static readonly SendOrPostCallback callback = e =>
-        {
-            StrongBox<(GameObject, bool)> box = (StrongBox<(GameObject, bool)>)e;
-            box.Value.Item2 = box.Value.Item1.activeInHierarchy;
-        };
+        private static readonly Func<GameObject, bool> callback = e => e.activeInHierarchy;
 
         private readonly GameObject gameObject;
-        private StrongBox<(GameObject, bool)> box;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public GameObjectFinalizeWhenNullAndSuspendWhenIsNotActive(GameObject gameObject)
-        {
-            this.gameObject = gameObject;
-            box = null;
-        }
+            => this.gameObject = gameObject;
 
         public ValueCoroutineState State {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -41,13 +33,7 @@ namespace Enderlook.Unity.Coroutines
             get {
                 if (gameObject == null)
                     return ValueCoroutineState.Finalized;
-                if (box is null)
-                {
-                    box = new StrongBox<(GameObject, bool)>();
-                    box.Value.Item1 = gameObject;
-                }
-                UnityThread.RunNow(callback, box);
-                if (!box.Value.Item2)
+                if (!UnityThread.RunNow(callback, gameObject))
                     return ValueCoroutineState.Suspended;
                 return ValueCoroutineState.Continue;
             }
