@@ -10,7 +10,9 @@ namespace Enderlook.Unity.Threading
 {
     internal struct PackQueue<T>
     {
-        public RawQueue<T> Queue { get; set; }
+        // This can't be a property because the struct would be copied instead of being mutated.
+        // Instead if this is a field, mutations would be on the reference.
+        public RawQueue<T> Queue;
 
         public ConcurrentQueue<T> Concurrent { get; private set; }
 
@@ -26,7 +28,7 @@ namespace Enderlook.Unity.Threading
         public RawQueue<T> Swap(RawQueue<T> queue)
         {
             // This is not atomic. However it does't matter since `Queue` and `Swap` are only used in the main thread.
-            RawQueue<T> old = queue;
+            RawQueue<T> old = Queue;
             Queue = queue;
             return old;
         }
