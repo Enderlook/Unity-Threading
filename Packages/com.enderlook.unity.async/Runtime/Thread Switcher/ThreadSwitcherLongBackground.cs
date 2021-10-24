@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
 
 using UnityEngine;
@@ -16,13 +15,27 @@ namespace Enderlook.Unity.Threading
 
         // Alternatively we may do something like https://github.com/svermeulen/Unity3dAsyncAwaitUtil/blob/master/UnityProject/Assets/Plugins/AsyncAwaitUtil/Source/WaitForBackgroundThread.cs
 
+        private static readonly IThreadSwitcher hasSwitchedGlobal = new ThreadSwitcherLongBackground() { hasSwitched = true };
+        private static readonly IThreadSwitcher hasNotSwitchedGlobal = new ThreadSwitcherLongBackground();
+
         private bool hasSwitched;
 
         /// <inheritdoc cref="IThreadSwitcher.GetAwaiter"/>
         public ThreadSwitcherLongBackground GetAwaiter() => this;
 
         /// <inheritdoc cref="IThreadSwitcher.IsCompleted"/>
-        public bool IsCompleted => SynchronizationContext.Current == null;
+        public bool IsCompleted {
+            get {
+#if UNITY_WEBGL
+#if DEBUG
+                Debug.LogWarning("Threading is not supported on this platform. A fallback to main thread has been used. Be warned that this may produce deadlocks very easily.");
+                return true;
+#endif
+#else
+                return !UnityThread.IsMainThread;
+#endif
+            }
+        }
 
         /// <inheritdoc cref="IThreadSwitcher.GetResult"/>
         public bool GetResult() => hasSwitched;
@@ -31,26 +44,30 @@ namespace Enderlook.Unity.Threading
         public void OnCompleted(Action continuation)
         {
             if (continuation is null)
-                throw new ArgumentNullException(nameof(continuation));
+                Switch.ThrowArgumentNullException_Continuation();
 
-            if (Application.platform == RuntimePlatform.WebGLPlayer)
-            {
-                // We don't need to set `hasSwitched` to false because it's already false
+#if UNITY_WEBGL
+            Debug.Assert(!hasSwitched);
 #if DEBUG
-                Debug.LogWarning("Threading is not supported this platform. A fallback to main thread has been used. Be warned that this may produce deadlocks very easily.");
+            Debug.LogWarning("Threading is not supported on this platform. A fallback to main thread has been used. Be warned that this may produce deadlocks very easily.");
 #endif
-                continuation();
-            }
-            else
-            {
-                hasSwitched = true;
-                // We always spawn a new thread regardless if we are already in a background thread
-                // because maybe that thread is from a pool and so it's not suitable for long running tasks.
-                Task.Factory.StartNew(continuation, TaskCreationOptions.LongRunning);
-            }
+            continuation();
+            #else
+            hasSwitched = true;
+            // We always spawn a new thread regardless if we are already in a background thread
+            // because maybe that thread is from a pool and so it's not suitable for long running tasks.
+            Task.Factory.StartNew(continuation, TaskCreationOptions.LongRunning);
+#endif
         }
 
         /// <inheritdoc cref="IThreadSwitcher.GetAwaiter"/>
-        IThreadSwitcher IThreadSwitcher.GetAwaiter() => this;
+        IThreadSwitcher IThreadSwitcher.GetAwaiter()
+        {
+#if UNITY_WEBGL
+            return hasSwitchedGlobal;
+#else
+            return hasSwitched ? hasSwitchedGlobal : hasNotSwitchedGlobal;
+#endif
+        }
     }
 }

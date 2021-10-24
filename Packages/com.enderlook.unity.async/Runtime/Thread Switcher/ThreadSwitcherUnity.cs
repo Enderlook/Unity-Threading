@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using System.Threading;
 
 using UnityEngine;
 
@@ -13,13 +12,16 @@ namespace Enderlook.Unity.Threading
     {
         // https://stackoverflow.com/a/58470597/7655838 from https://stackoverflow.com/questions/58469468/what-does-unitymainthreaddispatcher-do
 
+        private static readonly IThreadSwitcher hasSwitchedGlobal = new ThreadSwitcherUnity() { hasSwitched = true };
+        private static readonly IThreadSwitcher hasNotSwitchedGlobal = new ThreadSwitcherUnity();
+
         private bool hasSwitched;
 
         /// <inheritdoc cref="IThreadSwitcher.GetAwaiter"/>
         public ThreadSwitcherUnity GetAwaiter() => this;
 
         /// <inheritdoc cref="IThreadSwitcher.IsCompleted"/>
-        public bool IsCompleted => SynchronizationContext.Current == UnitySynchronizationContextUtility.UnitySynchronizationContext;
+        public bool IsCompleted => UnityThread.IsMainThread;
 
         /// <inheritdoc cref="IThreadSwitcher.GetResult"/>
         public bool GetResult() => hasSwitched;
@@ -28,7 +30,7 @@ namespace Enderlook.Unity.Threading
         public void OnCompleted(Action continuation)
         {
             if (continuation is null)
-                throw new ArgumentNullException(nameof(continuation));
+                Switch.ThrowArgumentNullException_Continuation();
 
             hasSwitched = !UnityThread.IsMainThread;
             if (!hasSwitched)
@@ -43,6 +45,13 @@ namespace Enderlook.Unity.Threading
         }
 
         /// <inheritdoc cref="IThreadSwitcher.GetAwaiter"/>
-        IThreadSwitcher IThreadSwitcher.GetAwaiter() => this;
+        IThreadSwitcher IThreadSwitcher.GetAwaiter()
+        {
+#if UNITY_WEBGL
+            return hasSwitchedGlobal;
+#else
+            return hasSwitched ? hasSwitchedGlobal : hasNotSwitchedGlobal;
+#endif
+        }
     }
 }

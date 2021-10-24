@@ -1,4 +1,6 @@
-﻿namespace Enderlook.Unity.Threading
+﻿using System;
+
+namespace Enderlook.Unity.Threading
 {
     /// <summary>
     /// A helper class which allows to switch to a particular thread.
@@ -24,5 +26,8 @@
         /// </summary>
         /// <returns>Object which switched to the thread.</returns>
         public static ThreadSwitcherUnity ToUnity => new ThreadSwitcherUnity();
+
+        internal static void ThrowArgumentNullException_Continuation()
+            => throw new ArgumentNullException("continuation");
     }
 }

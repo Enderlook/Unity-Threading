@@ -1,6 +1,6 @@
 {
   "name": "com.enderlook.unity.async",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "displayName": "Enderlook Unity Async",
   "description": "Provides utility methods for working with async/await.",
   "unity": "2019.2",
