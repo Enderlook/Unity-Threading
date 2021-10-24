@@ -32,7 +32,7 @@ namespace Enderlook.Unity.Threading
         /// Check if we are currently running in main (Unity) thread.
         /// </summary>
         /// <returns>Whenever we are running in main thread or not.</returns>
-        public static bool IsMainThread => UnitySynchronizationContextUtility.IsUnityThread;
+        public static bool IsMainThread => Thread.CurrentThread.ManagedThreadId == UnityThreadId;
 
         /// <summary>
         /// Determines if we are in the Unity synchronization context.
