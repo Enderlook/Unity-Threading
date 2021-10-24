@@ -1,6 +1,4 @@
-﻿using Enderlook.Unity.Threading.Tasks;
-
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,9 +22,14 @@ namespace Enderlook.Unity.Threading
         public static readonly int UnityThreadId = UnitySynchronizationContextUtility.UnityThreadId;
 
         /// <summary>
-        /// A <see cref="TaskFactory"/> where all tasks are run on the main thread.
+        /// Task Scheduler used by Unity.
         /// </summary>
-        public static readonly TaskFactory Factory = new TaskFactory(UnityThreadTaskScheduler.Instance);
+        public static readonly TaskScheduler UnityTaskScheduler = UnitySynchronizationContextUtility.UnityTaskScheduler;
+
+        /// <summary>
+        /// A <see cref="TaskFactory"/> where all tasks are run on the main (Unity) thread by using <see cref="UnityTaskScheduler"/>.
+        /// </summary>
+        public static readonly TaskFactory Factory = new TaskFactory(UnityTaskScheduler);
 
         /// <summary>
         /// Check if we are currently running in main (Unity) thread.
