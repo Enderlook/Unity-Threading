@@ -11,7 +11,9 @@ namespace Enderlook.Unity.Threading
     [DefaultExecutionOrder(int.MaxValue)]
     internal sealed class Manager : MonoBehaviour
     {
+#if UNITY_EDITOR
         private static bool isExiting;
+#endif
 
         public static Manager Shared { get; private set; }
 
@@ -19,6 +21,7 @@ namespace Enderlook.Unity.Threading
         public static event Action OnFixedUpdate;
         public static event Action OnLateUpdate;
         public static event Action OnEndOfFrame;
+
         private static event Action onInitialize;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -107,18 +110,17 @@ namespace Enderlook.Unity.Threading
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
         private void FixedUpdate() => OnFixedUpdate?.Invoke();
 
-        public static void OnInitialized(Action manager)
+        public static void OnInitialized(Action callback)
         {
-            if (manager is null)
-                ThrowArgumenNullException(manager);
+            if (callback is null)
+                ThrowArgumenNullException();
 
             if (Shared != null)
-                manager();
+                callback();
             else
-                onInitialize += manager;
+                onInitialize += callback;
         }
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void ThrowArgumenNullException(Action manager) => throw new ArgumentNullException(nameof(manager));
+        private static void ThrowArgumenNullException() => throw new ArgumentNullException("manager");
     }
 }
