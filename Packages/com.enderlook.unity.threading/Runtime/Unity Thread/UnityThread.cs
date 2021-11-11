@@ -147,12 +147,12 @@ namespace Enderlook.Unity.Threading
             public abstract void Execute();
         }
 
-        private sealed class StrongBox<T>
+        private sealed class StrongBox<T> : Executor
         {
             private Action<T> action;
             private T value;
 
-            public void Execute()
+            public override void Execute()
             {
                 Action<T> a = action;
                 T v = value;
@@ -171,12 +171,12 @@ namespace Enderlook.Unity.Threading
             }
         }
 
-        private sealed class BoxWithReturn<T>
+        private sealed class BoxWithReturn<T> : Executor
         {
             private Func<T> action;
             public T value;
 
-            public void Execute() => value = action();
+            public override void Execute() => value = action();
 
             public void Return()
             {
