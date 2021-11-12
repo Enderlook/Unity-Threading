@@ -47,9 +47,11 @@ namespace Enderlook.Unity.Coroutines
 
             private PackList<T> suspendedEntry = PackList<T>.Create();
 
-            private readonly ConcurrentQueue<T> suspendedBackgroundShort;
-            private readonly ConcurrentQueue<T> suspendedBackgroundLong;
-            private readonly ConcurrentQueue<Task> backgroundTasks;
+            // TODO: On WEBGL, suspendedBackgroundShort, suspendedBackgroundLong and backgroundTasks
+            // are never used. Maybe we should remove those methods on WebGL.
+            private readonly ConcurrentQueue<T> suspendedBackgroundShort = new ConcurrentQueue<T>();
+            private readonly ConcurrentQueue<T> suspendedBackgroundLong = new ConcurrentQueue<T>();
+            private readonly ConcurrentQueue<Task> backgroundTasks = new ConcurrentQueue<Task>();
 
             private RawList<T> tmpT = RawList<T>.Create();
             private RawQueue<T> tmpTQueue = RawQueue<T>.Create();
@@ -61,15 +63,7 @@ namespace Enderlook.Unity.Coroutines
             private RawList<(ValueCoroutine, T)> tmpValueCoroutine = RawList<(ValueCoroutine, T)>.Create();
             private RawList<(Coroutine, T)> tmpUnityCoroutine = RawList<(Coroutine, T)>.Create();
 
-            public TypedManager(CoroutineManager manager)
-            {
-                this.manager = manager;
-#if !UNITY_WEBGL
-                suspendedBackgroundShort = new ConcurrentQueue<T>();
-                suspendedBackgroundLong = new ConcurrentQueue<T>();
-                backgroundTasks = new ConcurrentQueue<Task>();
-#endif
-            }
+            public TypedManager(CoroutineManager manager) => this.manager = manager;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Start(T coroutine)
