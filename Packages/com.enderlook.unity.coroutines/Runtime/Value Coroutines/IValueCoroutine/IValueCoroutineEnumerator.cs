@@ -13,10 +13,12 @@ namespace Enderlook.Unity.Coroutines
         /// </summary>
         ValueCoroutineState State { get; }
 
+#if !UNITY_WEBGL
         /// <summary>
         /// Determines the state of the coroutine.
         /// </summary>
         ValueCoroutineState ConcurrentState { get; }
+#endif
 
         /// <summary>
         /// Advances the coroutine by one.<br/>
@@ -27,6 +29,7 @@ namespace Enderlook.Unity.Coroutines
         /// If <see cref="State"/> is <see cref="ValueCoroutineState.Finalized"/> this must return <see cref="Yield.Finalized"/>.</remarks>
         ValueYieldInstruction Next();
 
+#if !UNITY_WEBGL
         /// <summary>
         /// Advances the coroutine by one.
         /// </summary>
@@ -35,5 +38,6 @@ namespace Enderlook.Unity.Coroutines
         /// <remarks>While <see cref="State"/> is <see cref="ValueCoroutineState.Suspended"/> this must return <see cref="Yield.Suspended"/>.<br/>
         /// If <see cref="State"/> is <see cref="ValueCoroutineState.Finalized"/> this must return <see cref="Yield.Finalized"/>.</remarks>
         ValueYieldInstruction ConcurrentNext(ThreadMode mode);
+#endif
     }
 }

@@ -10,7 +10,9 @@ namespace Enderlook.Unity.Coroutines
 
         public ValueCoroutineState State { get; private set; }
 
+#if !UNITY_WEBGL
         public ValueCoroutineState ConcurrentState => State;
+#endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ValueCoroutineEnumerator(T enumerator)
@@ -35,7 +37,9 @@ namespace Enderlook.Unity.Coroutines
             return Yield.Finalized;
         }
 
+#if !UNITY_WEBGL
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ValueYieldInstruction ConcurrentNext(ThreadMode mode) => Next();
+#endif
     }
 }

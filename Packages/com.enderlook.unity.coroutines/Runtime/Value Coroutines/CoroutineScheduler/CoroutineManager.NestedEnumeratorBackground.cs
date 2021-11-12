@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿#if !UNITY_WEBGL
+using System.Runtime.CompilerServices;
 
 using UnityEngine;
 
@@ -107,3 +108,4 @@ namespace Enderlook.Unity.Coroutines
         }
     }
 }
+#endif

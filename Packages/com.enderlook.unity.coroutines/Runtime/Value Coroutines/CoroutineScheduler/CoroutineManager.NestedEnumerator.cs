@@ -30,10 +30,12 @@ namespace Enderlook.Unity.Coroutines
                 get => ValueCoroutineStateHelper.Merge(parent.State, child.State);
             }
 
+#if !UNITY_WEBGL
             public ValueCoroutineState ConcurrentState {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get => ValueCoroutineStateHelper.Merge(parent.ConcurrentState, child.State);
             }
+#endif
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Dispose()
@@ -63,6 +65,7 @@ namespace Enderlook.Unity.Coroutines
                 }
             }
 
+#if !UNITY_WEBGL
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ValueYieldInstruction ConcurrentNext(ThreadMode mode)
             {
@@ -82,6 +85,7 @@ namespace Enderlook.Unity.Coroutines
                         goto case ValueCoroutineState.Continue;
                 }
             }
+#endif
         }
     }
 }

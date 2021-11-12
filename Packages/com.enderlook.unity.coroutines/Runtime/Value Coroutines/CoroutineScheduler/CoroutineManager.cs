@@ -137,12 +137,18 @@ namespace Enderlook.Unity.Coroutines
             if (!found)
                 manager = CreateManager<T>();
             TypedManager<T> manager_ = (TypedManager<T>)manager;
+#if UNITY_WEBGL
+            Debug.Assert(UnityThread.IsMainThread, "WebGL doesn't support multithreading. If it does, remove this optimization then.");
+            manager_.Start(coroutine);
+#else
             if (UnityThread.IsMainThread)
                 manager_.Start(coroutine);
             else
                 manager_.ConcurrentStart(coroutine, ThreadMode.Unknown);
+#endif
         }
 
+#if !UNITY_WEBGL
         private void StartEnumeratorInner<T>(T coroutine, ThreadMode mode) where T : IValueCoroutineEnumerator
         {
             Type enumerator_ = typeof(T);
@@ -153,6 +159,7 @@ namespace Enderlook.Unity.Coroutines
                 manager = CreateManager<T>();
             ((TypedManager<T>)manager).ConcurrentStart(coroutine, mode);
         }
+#endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void StartNestedEnumerator<T>(T coroutine) where T : IValueCoroutineEnumerator
@@ -166,6 +173,7 @@ namespace Enderlook.Unity.Coroutines
                 StartEnumeratorInner((IValueCoroutineEnumerator)coroutine);
         }
 
+#if !UNITY_WEBGL
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ConcurrentStartNestedEnumerator<T>(T coroutine, ThreadMode mode) where T : IValueCoroutineEnumerator
         {
@@ -177,6 +185,7 @@ namespace Enderlook.Unity.Coroutines
             else
                 StartEnumeratorInner((IValueCoroutineEnumerator)coroutine, mode);
         }
+#endif
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private TypedManager<T> CreateManager<T>() where T : IValueCoroutineEnumerator

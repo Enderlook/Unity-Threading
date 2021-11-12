@@ -14,14 +14,22 @@ namespace Enderlook.Unity.Threading
         // Instead if this is a field, mutations would be on the reference.
         public RawList<T> List;
 
+#if !UNITY_WEBGL
         public ConcurrentBag<T> Concurrent { get; private set; }
+#endif
 
+#if UNITY_WEBGL
+        public int Count => List.Count;
+#else
         public int Count => List.Count + Concurrent.Count;
+#endif
 
         public static PackList<T> Create() => new PackList<T>()
         {
             List = RawList<T>.Create(),
+#if !UNITY_WEBGL
             Concurrent = new ConcurrentBag<T>(),
+#endif
         };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -43,20 +51,18 @@ namespace Enderlook.Unity.Threading
             List.Add(element);
         }
 
+#if !UNITY_WEBGL
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ConcurrentAdd(T element)
         {
 #if DEBUG
-#if UNITY_WEBGL
-            Debug.LogWarning("This platform doesn't support multithreading. This doesn't mean that the function will fail (it works), but it would be more perfomant to call the non-concurrent version instead.");
-#else
             if (UnityThread.IsMainThread)
                 Debug.LogWarning("This function was executed in the main thread. This is not an error, thought it's more perfomant to call the non-concurrent version instead.");
 #endif
-            #endif
             Concurrent.Add(element);
         }
-    }
+#endif
+}
 
     internal static class PackList
     {
@@ -67,9 +73,11 @@ namespace Enderlook.Unity.Threading
                 list[i].Dispose();
             pack.List.Clear();
 
+#if !UNITY_WEBGL
             ConcurrentBag<T> bag = pack.Concurrent;
             while (bag.TryTake(out T result))
                 result.Dispose();
+#endif
         }
 
         public static void Dispose<T, U>(this ref PackList<(U, T)> pack) where T : IDisposable
@@ -79,9 +87,11 @@ namespace Enderlook.Unity.Threading
                 list[i].Item2.Dispose();
             pack.List.Clear();
 
+#if !UNITY_WEBGL
             ConcurrentBag<(U, T)> bag = pack.Concurrent;
             while (bag.TryTake(out (U, T) result))
                 result.Item2.Dispose();
+#endif
         }
     }
 }

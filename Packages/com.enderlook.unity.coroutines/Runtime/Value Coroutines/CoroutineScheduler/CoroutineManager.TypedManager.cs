@@ -19,11 +19,13 @@ namespace Enderlook.Unity.Coroutines
     {
         private partial class TypedManager<T> : ManagerBase where T : IValueCoroutineEnumerator
         {
+#if !UNITY_WEBGL
             private static readonly Action<(TypedManager<T> manager, T routine)> shortBackground =
                 e => e.manager.NextBackground(e.routine, new BackgroundShortNextCallback(), ThreadMode.Short);
 
             private static readonly Action<(TypedManager<T> manager, T routine)> longBackground =
                 e => e.manager.NextBackground(e.routine, new BackgroundShortNextCallback(), ThreadMode.Long);
+#endif
 
             private readonly CoroutineManager manager;
 
@@ -74,6 +76,7 @@ namespace Enderlook.Unity.Coroutines
                     Next(coroutine, new EntryNextCallback());
             }
 
+#if !UNITY_WEBGL
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void ConcurrentStart(T coroutine, ThreadMode mode)
             {
@@ -82,6 +85,7 @@ namespace Enderlook.Unity.Coroutines
                 else
                     NextBackground(coroutine, new EntryNextCallback(), mode);
             }
+#endif
 
             private void OnEntry()
             {
@@ -90,9 +94,11 @@ namespace Enderlook.Unity.Coroutines
                 for (int i = 0; i < local.Count; i++)
                     Next(local[i], new EntryNextCallback());
 
+#if !UNITY_WEBGL
                 ConcurrentBag<T> bag = onUpdate.Concurrent;
                 while (bag.TryTake(out T routine))
                     Next(routine, new EntryNextCallback());
+#endif
 
                 local.Clear();
                 tmpT = local;
@@ -107,9 +113,11 @@ namespace Enderlook.Unity.Coroutines
                 for (int i = 0; i < local.Count; i++)
                     Next(local[i], new UpdateNextCallback());
 
+#if !UNITY_WEBGL
                 ConcurrentBag<T> bag = onUpdate.Concurrent;
                 while (bag.TryTake(out T routine))
                     Next(routine, new UpdateNextCallback());
+#endif
 
                 local.Clear();
                 tmpT = local;
@@ -124,9 +132,11 @@ namespace Enderlook.Unity.Coroutines
                 for (int i = 0; i < local.Count; i++)
                     Next(local[i], new LateUpdateNextCallback());
 
+#if !UNITY_WEBGL
                 ConcurrentBag<T> bag = onLateUpdate.Concurrent;
                 while (bag.TryTake(out T routine))
                     Next(routine, new LateUpdateNextCallback());
+#endif
 
                 local.Clear();
                 tmpT = local;
@@ -139,9 +149,11 @@ namespace Enderlook.Unity.Coroutines
                 for (int i = 0; i < local.Count; i++)
                     Next(local[i], new FixedUpdateNextCallback());
 
+#if !UNITY_WEBGL
                 ConcurrentBag<T> bag = onFixedUpdate.Concurrent;
                 while (bag.TryTake(out T routine))
                     Next(routine, new FixedUpdateNextCallback());
+#endif
 
                 local.Clear();
                 tmpT = local;
@@ -154,9 +166,11 @@ namespace Enderlook.Unity.Coroutines
                 for (int i = 0; i < local.Count; i++)
                     Next(local[i], new EndOfFrameNextCallback());
 
+#if !UNITY_WEBGL
                 ConcurrentBag<T> bag = onEndOfFrame.Concurrent;
                 while (bag.TryTake(out T routine))
                     Next(routine, new EndOfFrameNextCallback());
+#endif
 
                 local.Clear();
                 tmpT = local;
@@ -205,6 +219,7 @@ namespace Enderlook.Unity.Coroutines
                         onWaitSeconds.Add(tmp);
                 }
 
+#if !UNITY_WEBGL
                 ConcurrentBag<(float condition, T routine)> bag = onWaitSeconds.Concurrent;
                 while (bag.TryTake(out (float condition, T routine) tmp))
                 {
@@ -213,6 +228,7 @@ namespace Enderlook.Unity.Coroutines
                     else
                         onWaitSeconds.Add(tmp);
                 }
+#endif
 
                 local.Clear();
                 tmpFloat = local;
@@ -231,6 +247,7 @@ namespace Enderlook.Unity.Coroutines
                         onWaitRealtimeSeconds.Add(tmp);
                 }
 
+#if !UNITY_WEBGL
                 ConcurrentBag<(float condition, T routine)> bag = onWaitRealtimeSeconds.Concurrent;
                 while (bag.TryTake(out (float condition, T routine) tmp))
                 {
@@ -239,6 +256,7 @@ namespace Enderlook.Unity.Coroutines
                     else
                         onWaitSeconds.Add(tmp);
                 }
+#endif
 
                 local.Clear();
                 tmpFloat = local;
@@ -257,6 +275,7 @@ namespace Enderlook.Unity.Coroutines
                         Next(tmp.routine, new CustomNextCallback(tmp.condition));
                 }
 
+#if !UNITY_WEBGL
                 ConcurrentBag<(CustomYieldInstruction condition, T routine)> bag = onCustom.Concurrent;
                 while (bag.TryTake(out (CustomYieldInstruction condition, T routine) tmp))
                 {
@@ -265,6 +284,7 @@ namespace Enderlook.Unity.Coroutines
                     else
                         Next(tmp.routine, new CustomNextCallback(tmp.condition));
                 }
+#endif
 
                 local.Clear();
                 tmpCustom = local;
@@ -291,6 +311,7 @@ namespace Enderlook.Unity.Coroutines
                     }
                 }
 
+#if !UNITY_WEBGL
                 ConcurrentBag<(Func<bool> condition, T routine)> bag = onWhile.Concurrent;
                 while (bag.TryTake(out (Func<bool> condition, T routine) tmp))
                 {
@@ -307,6 +328,7 @@ namespace Enderlook.Unity.Coroutines
                             break;
                     }
                 }
+#endif
 
                 local.Clear();
                 tmpFuncBool = local;
@@ -333,6 +355,7 @@ namespace Enderlook.Unity.Coroutines
                     }
                 }
 
+#if !UNITY_WEBGL
                 ConcurrentBag<(Func<bool> condition, T routine)> bag = onUntil.Concurrent;
                 while (bag.TryTake(out (Func<bool> condition, T routine) tmp))
                 {
@@ -349,6 +372,7 @@ namespace Enderlook.Unity.Coroutines
                             break;
                     }
                 }
+#endif
 
                 local.Clear();
                 tmpFuncBool = local;
@@ -372,6 +396,7 @@ namespace Enderlook.Unity.Coroutines
                         onTask.Add(tmp);
                 }
 
+#if !UNITY_WEBGL
                 ConcurrentBag<(ValueTask condition, T routine)> bag = onTask.Concurrent;
                 while (bag.TryTake(out (ValueTask condition, T routine) tmp))
                 {
@@ -385,6 +410,7 @@ namespace Enderlook.Unity.Coroutines
                     else
                         onTask.Add(tmp);
                 }
+#endif
 
                 local.Clear();
                 tmpTask = local;
@@ -406,6 +432,7 @@ namespace Enderlook.Unity.Coroutines
                         onJobHandle.Add(tmp);
                 }
 
+#if !UNITY_WEBGL
                 ConcurrentBag<(JobHandle condition, T routine)> bag = onJobHandle.Concurrent;
                 while (bag.TryTake(out (JobHandle condition, T routine) tmp))
                 {
@@ -417,6 +444,7 @@ namespace Enderlook.Unity.Coroutines
                     else
                         onJobHandle.Add(tmp);
                 }
+#endif
 
                 local.Clear();
                 tmpJobHandle = local;
@@ -435,6 +463,7 @@ namespace Enderlook.Unity.Coroutines
                         onValueCoroutine.Add(tmp);
                 }
 
+#if !UNITY_WEBGL
                 ConcurrentBag<(ValueCoroutine condition, T routine)> bag = onValueCoroutine.Concurrent;
                 while (bag.TryTake(out (ValueCoroutine condition, T routine) tmp))
                 {
@@ -443,6 +472,7 @@ namespace Enderlook.Unity.Coroutines
                     else
                         onValueCoroutine.Add(tmp);
                 }
+#endif
 
                 local.Clear();
                 tmpValueCoroutine = local;
@@ -482,6 +512,7 @@ namespace Enderlook.Unity.Coroutines
                 local.Clear();
                 tmpUnityCoroutine = local;
 
+#if !UNITY_WEBGL
                 ConcurrentBag<(Coroutine, T)> bag = onUnityCoroutine.Concurrent;
                 while (bag.TryTake(out (Coroutine coroutine, T condition) tmp))
                 {
@@ -499,8 +530,10 @@ namespace Enderlook.Unity.Coroutines
                             break;
                     }
                 }
+#endif
             }
 
+#if !UNITY_WEBGL
             public override void OnBackground()
             {
                 ConcurrentQueue<Task> tasks = backgroundTasks;
@@ -552,6 +585,7 @@ namespace Enderlook.Unity.Coroutines
                     }
                 }
             }
+#endif
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Next<U>(T routine, U callback) where U : INextCallback<T>
@@ -701,6 +735,7 @@ namespace Enderlook.Unity.Coroutines
                 }
             }
 
+#if !UNITY_WEBGL
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void NextBackground<U>(T routine, U callback, ThreadMode mode) where U : INextCallback<T>
             {
@@ -872,6 +907,7 @@ namespace Enderlook.Unity.Coroutines
                         break;
                 }
             }
+#endif
 
             public override void Dispose(ref RawQueue<ValueTask> tasks)
             {
@@ -907,12 +943,14 @@ namespace Enderlook.Unity.Coroutines
                 onUnityCoroutine.Clear();
                 tmpUnityCoroutine = onUnityCoroutine;
 
+#if !UNITY_WEBGL
                 ConcurrentBag<(Coroutine, T)> onUnityCoroutineBag = this.onUnityCoroutine.Concurrent;
                 while (onUnityCoroutineBag.TryTake(out (Coroutine, T) tmp))
                 {
                     manager.StopUnityCoroutine(tmp.Item1);
                     tmp.Item2.Dispose();
                 }
+#endif
 
                 RawList<(ValueTask, T)> onTask = this.onTask.Swap(tmpTask);
                 for (int i = 0; i < onTask.Count; i++)

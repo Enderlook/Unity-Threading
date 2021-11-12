@@ -110,9 +110,11 @@ namespace Enderlook.Unity.Coroutines
             if (state != ValueCoroutineState.Continue)
                 return;
 
+#if !UNITY_WEBGL
             RawList<ManagerBase> managers = GetManagersList();
             for (int i = 0; i < managers.Count; i++)
                 managers[i].OnBackground();
+#endif
         }
 
         private RawList<ManagerBase> GetManagersList()

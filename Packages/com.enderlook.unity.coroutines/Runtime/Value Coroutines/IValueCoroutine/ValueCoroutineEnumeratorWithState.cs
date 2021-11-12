@@ -16,10 +16,12 @@ namespace Enderlook.Unity.Coroutines
             get => ValueCoroutineStateHelper.Merge(token.State, state);
         }
 
+#if !UNITY_WEBGL
         public ValueCoroutineState ConcurrentState {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => ValueCoroutineStateHelper.Merge(token.ConcurrentState, state);
         }
+#endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ValueCoroutineEnumeratorWithState(T enumerator, U token)
@@ -54,6 +56,7 @@ namespace Enderlook.Unity.Coroutines
             return Yield.Finalized;
         }
 
+#if !UNITY_WEBGL
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ValueYieldInstruction ConcurrentNext(ThreadMode mode)
         {
@@ -75,5 +78,6 @@ namespace Enderlook.Unity.Coroutines
             this.state = ValueCoroutineState.Finalized;
             return Yield.Finalized;
         }
+#endif
     }
 }

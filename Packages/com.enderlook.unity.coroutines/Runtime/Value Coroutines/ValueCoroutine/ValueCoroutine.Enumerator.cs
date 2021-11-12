@@ -22,10 +22,12 @@ namespace Enderlook.Unity.Coroutines
                 get => coroutine.State;
             }
 
+#if !UNITY_WEBGL
             public ValueCoroutineState ConcurrentState {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get => coroutine.ConcurrentState;
             }
+#endif
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Dispose() => coroutine.Dispose();
@@ -39,6 +41,7 @@ namespace Enderlook.Unity.Coroutines
                 return instruction;
             }
 
+#if !UNITY_WEBGL
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ValueYieldInstruction ConcurrentNext(ThreadMode mode)
             {
@@ -47,6 +50,7 @@ namespace Enderlook.Unity.Coroutines
                     handler.Complete();
                 return instruction;
             }
+#endif
         }
     }
 }
