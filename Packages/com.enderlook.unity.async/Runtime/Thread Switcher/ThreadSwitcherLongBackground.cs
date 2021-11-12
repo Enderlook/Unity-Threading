@@ -29,8 +29,8 @@ namespace Enderlook.Unity.Threading
 #if UNITY_WEBGL
 #if DEBUG
                 Debug.LogWarning("Threading is not supported on this platform. A fallback to main thread has been used. Be warned that this may produce deadlocks very easily.");
-                return true;
 #endif
+                return true;
 #else
                 return !UnityThread.IsMainThread;
 #endif
