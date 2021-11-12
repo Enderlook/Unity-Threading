@@ -11,7 +11,7 @@ namespace Enderlook.Unity.Coroutines
     /// <summary>
     /// A wrapper arround <see cref="CoroutineScheduler"/> to automatically execute its events.
     /// </summary>
-    [AddComponentMenu("Enderlook/Automatic Coroutines Manager")] // Not show in menu
+    [AddComponentMenu("Enderlook/Automatic Coroutines Manager")]
     [DefaultExecutionOrder(int.MaxValue)]
     public sealed class AutomaticCoroutineScheduler : MonoBehaviour
     {
