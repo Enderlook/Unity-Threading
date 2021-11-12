@@ -13,7 +13,9 @@ namespace Enderlook.Unity.Threading
         // https://stackoverflow.com/a/58470597/7655838 from https://stackoverflow.com/questions/58469468/what-does-unitymainthreaddispatcher-do
 
         private static readonly IThreadSwitcher hasSwitchedGlobal = new ThreadSwitcherUnity() { hasSwitched = true };
+#if !UNITY_WEBGL
         private static readonly IThreadSwitcher hasNotSwitchedGlobal = new ThreadSwitcherUnity();
+#endif
 
         private bool hasSwitched;
 

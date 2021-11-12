@@ -16,7 +16,9 @@ namespace Enderlook.Unity.Threading
         // Alternatively we may do something like https://github.com/svermeulen/Unity3dAsyncAwaitUtil/blob/master/UnityProject/Assets/Plugins/AsyncAwaitUtil/Source/WaitForBackgroundThread.cs
 
         private static readonly IThreadSwitcher hasSwitchedGlobal = new ThreadSwitcherLongBackground() { hasSwitched = true };
+#if !UNITY_WEBGL
         private static readonly IThreadSwitcher hasNotSwitchedGlobal = new ThreadSwitcherLongBackground();
+#endif
 
         private bool hasSwitched;
 
