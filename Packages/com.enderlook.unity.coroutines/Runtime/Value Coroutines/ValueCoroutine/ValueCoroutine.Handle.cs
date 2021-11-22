@@ -1,4 +1,5 @@
-﻿using Enderlook.Unity.Threading;
+﻿using Enderlook.Pools;
+using Enderlook.Unity.Threading;
 
 using System;
 using System.Threading;
@@ -37,7 +38,7 @@ namespace Enderlook.Unity.Coroutines
                 }
 
                 Generation++;
-                ConcurrentPool.Return(this);
+                ObjectPool<Handle>.Shared.Return(this);
             }
 
             public bool IsCompleted(uint generation)

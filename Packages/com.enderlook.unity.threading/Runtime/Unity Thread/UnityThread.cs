@@ -3,6 +3,8 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
+using UnityEngine;
+
 namespace Enderlook.Unity.Threading
 {
     /// <summary>
@@ -10,7 +12,6 @@ namespace Enderlook.Unity.Threading
     /// </summary>
     public static class UnityThread
     {
-        private static readonly SendOrPostCallback callback2 = e => ((Executor)e).Execute();
         private static readonly SendOrPostCallback callback = e =>
         {
             Debug.Assert(e is Action);
@@ -75,7 +76,7 @@ namespace Enderlook.Unity.Threading
         public static void RunLater<T>(Action<T> action, T state)
         {
             if (typeof(T).IsValueType)
-                UnitySynchronizationContextUtility.UnitySynchronizationContext.Post(callback2, StrongBox<T>.Get(action, state));
+                UnitySynchronizationContextUtility.UnitySynchronizationContext.Post(ActionHelper<T>.ExecuteAndReturn, Tuple2<Action<T>, T>.Rent(action, state));
             else
                 UnitySynchronizationContextUtility.UnitySynchronizationContext.Post(Unsafe.As<SendOrPostCallback>(action), state);
         }
@@ -107,7 +108,7 @@ namespace Enderlook.Unity.Threading
         public static void RunNow<T>(Action<T> action, T state)
         {
             if (typeof(T).IsValueType)
-                UnitySynchronizationContextUtility.UnitySynchronizationContext.Send(callback2, StrongBox<T>.Get(action, state));
+                UnitySynchronizationContextUtility.UnitySynchronizationContext.Send(ActionHelper<T>.ExecuteAndReturn, Tuple2<Action<T>, T>.Rent(action, state));
             else
                 UnitySynchronizationContextUtility.UnitySynchronizationContext.Send(Unsafe.As<SendOrPostCallback>(action), state);
         }
@@ -117,14 +118,14 @@ namespace Enderlook.Unity.Threading
         /// The action will be immediately and this thread will wait until completition.
         /// </summary>
         /// <typeparam name="T">Type of the returned value.</typeparam>
-        /// <param name="action">Action to execute on the main thread.</param>
-        /// <returns>Return value of <paramref name="action"/>.</returns>
-        public static T RunNow<T>(Func<T> action)
+        /// <param name="function">Action to execute on the main thread.</param>
+        /// <returns>Return value of <paramref name="function"/>.</returns>
+        public static T RunNow<T>(Func<T> function)
         {
-            BoxWithReturn<T> box = BoxWithReturn<T>.Get(action);
-            UnitySynchronizationContextUtility.UnitySynchronizationContext.Send(callback2, box);
-            T value = box.value;
-            box.Return();
+            Tuple2<Func<T>, T> tuple = Tuple2<Func<T>, T>.Rent(function);
+            UnitySynchronizationContextUtility.UnitySynchronizationContext.Send(FuncHelper<T>.Execute, tuple);
+            T value = tuple.Item2;
+            tuple.Return();
             return value;
         }
 
@@ -134,92 +135,49 @@ namespace Enderlook.Unity.Threading
         /// </summary>
         /// <typeparam name="T">Type of the state.</typeparam>
         /// <typeparam name="U">Type of the returned value.</typeparam>
-        /// <param name="action">Action to execute on the main thread.</param>
+        /// <param name="function">Action to execute on the main thread.</param>
         /// <param name="state">State of the action.</param>
-        /// <returns>Return value of <paramref name="action"/>.</returns>
-        public static U RunNow<T, U>(Func<T, U> action, T state)
+        /// <returns>Return value of <paramref name="function"/>.</returns>
+        public static U RunNow<T, U>(Func<T, U> function, T state)
         {
-            BoxWithReturn<T, U> box = BoxWithReturn<T, U>.Get(action, state);
-            UnitySynchronizationContextUtility.UnitySynchronizationContext.Send(callback2, box);
-            U value = box.value;
-            box.Return();
+            Tuple3<Func<T, U>, T, U> tuple = Tuple3<Func<T, U>, T, U>.Rent(function, state);
+            UnitySynchronizationContextUtility.UnitySynchronizationContext.Send(FuncHelper<T, U>.Execute, tuple);
+            U value = tuple.Item3;
+            tuple.Return();
             return value;
         }
 
-        private abstract class Executor
+        private static class ActionHelper<T>
         {
-            public abstract void Execute();
+            public static readonly SendOrPostCallback ExecuteAndReturn = e =>
+            {
+                Debug.Assert(e is Tuple2<Action<T>, T>);
+                Tuple2<Action<T>, T> tuple = Unsafe.As<Tuple2<Action<T>, T>>(e);
+                Action<T> action = tuple.Item1;
+                T state = tuple.Item2;
+                tuple.Return();
+                action(state);
+            };
         }
 
-        private sealed class StrongBox<T> : Executor
+        private static class FuncHelper<T>
         {
-            private Action<T> action;
-            private T value;
-
-            public override void Execute()
+            public static readonly SendOrPostCallback Execute = e =>
             {
-                Action<T> a = action;
-                T v = value;
-                action = null;
-                value = default; // TODO: In .Net Standard 2.1 use RuntimeHelpers.IsReferenceOrContainsReferences<T>
-                ConcurrentPool.Return(this);
-                action(value);
-            }
-
-            public static StrongBox<T> Get(Action<T> action, T value)
-            {
-                StrongBox<T> box = ConcurrentPool.Rent<StrongBox<T>>();
-                box.action = action;
-                box.value = value;
-                return box;
-            }
+                Debug.Assert(e is Tuple2<Func<T>, T>);
+                Tuple2<Func<T>, T> tuple = Unsafe.As<Tuple2<Func<T>, T>>(e);
+                tuple.Item2 = tuple.Item1();
+            };
         }
 
-        private sealed class BoxWithReturn<T> : Executor
+        private static class FuncHelper<T, U>
         {
-            private Func<T> action;
-            public T value;
-
-            public override void Execute() => value = action();
-
-            public void Return()
+            public static readonly SendOrPostCallback Execute = e =>
             {
-                action = null;
-                value = default; // TODO: In .Net Standard 2.1 use RuntimeHelpers.IsReferenceOrContainsReferences<T>
-                ConcurrentPool.Return(this);
-            }
-
-            public static BoxWithReturn<T> Get(Func<T> action)
-            {
-                BoxWithReturn<T> box = ConcurrentPool.Rent<BoxWithReturn<T>>();
-                box.action = action;
-                return box;
-            }
-        }
-
-        private sealed class BoxWithReturn<T, U>
-        {
-            private Func<T, U> action;
-            private T parameter;
-            public U value;
-
-            public void Execute() => value = action(parameter);
-
-            public void Return()
-            {
-                action = null;
-                parameter = default; // TODO: In .Net Standard 2.1 use RuntimeHelpers.IsReferenceOrContainsReferences<T>
-                value = default; // TODO: In .Net Standard 2.1 use RuntimeHelpers.IsReferenceOrContainsReferences<T>
-                ConcurrentPool.Return(this);
-            }
-
-            public static BoxWithReturn<T, U> Get(Func<T, U> action, T parameter)
-            {
-                BoxWithReturn<T, U> box = ConcurrentPool.Rent<BoxWithReturn<T, U>>();
-                box.action = action;
-                box.parameter = parameter;
-                return box;
-            }
+                Debug.Assert(e is Tuple3<Func<T, U>, T, U>);
+                Tuple3<Func<T, U>, T, U> tuple = Unsafe.As<Tuple3<Func<T, U>, T, U>>(e);
+                tuple.Item3 = tuple.Item1(tuple.Item2);
+            };
         }
     }
 }

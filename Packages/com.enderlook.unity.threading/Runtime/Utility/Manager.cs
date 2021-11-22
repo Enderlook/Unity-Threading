@@ -33,8 +33,6 @@ namespace Enderlook.Unity.Threading
 #endif
             if (Shared == null)
             {
-                UnityThread.RunNow(() => RuntimeHelpers.RunClassConstructor(typeof(ConcurrentPool).TypeHandle));
-
                 GameObject gameObject = new GameObject("Enderlook.Unity.Scheduling.Manager");
 #if UNITY_EDITOR
                 gameObject.hideFlags = HideFlags.HideAndDontSave;

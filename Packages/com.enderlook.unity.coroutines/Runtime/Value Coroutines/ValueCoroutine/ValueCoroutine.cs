@@ -1,4 +1,5 @@
-﻿using Enderlook.Unity.Threading;
+﻿using Enderlook.Pools;
+using Enderlook.Unity.Threading;
 
 using System;
 using System.Runtime.CompilerServices;
@@ -30,7 +31,7 @@ namespace Enderlook.Unity.Coroutines
         internal static ValueCoroutine StartEnumerator<T>(CoroutineManager manager, T routine)
             where T : IValueCoroutineEnumerator
         {
-            Handle handler = ConcurrentPool.Rent<Handle>();
+            Handle handler = ObjectPool<Handle>.Shared.Rent();
             manager.StartEnumerator(new Coroutine<T>(handler, routine));
             return new ValueCoroutine(handler);
         }

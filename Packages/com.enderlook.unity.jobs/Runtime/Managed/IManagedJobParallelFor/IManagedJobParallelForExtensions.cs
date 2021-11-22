@@ -1,4 +1,4 @@
-﻿using Enderlook.Unity.Threading;
+﻿using Enderlook.Pools;
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -33,13 +33,13 @@ namespace Enderlook.Unity.Jobs
             where T : struct, IManagedJobParallelFor
         {
 #if UNITY_WEBGL
-            StrongBox<T> box = ConcurrentPool.Rent<StrongBox<T>>();
+            StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
             box.Value = job;
             long key = GlobalDictionary<StrongBox<T>>.Store(box);
             JobHandle jobHandle = new JobWithKey<T>(key).Schedule(arrayLength, innerLoopBatchCount, dependsOn);
             return new JobFreeKey<T>(key).Schedule(jobHandle);
 #else
-            StrongBox<T> box = ConcurrentPool.Rent<StrongBox<T>>();
+            StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
             box.Value = job;
             GCHandle handle = GCHandle.Alloc(box, GCHandleType.Pinned);
             JobHandle jobHandle = new JobWithHandle<T>(handle).Schedule(arrayLength, innerLoopBatchCount, dependsOn);
@@ -75,18 +75,18 @@ namespace Enderlook.Unity.Jobs
             where T : struct, IManagedJobParallelFor
         {
 #if UNITY_WEBGL
-            StrongBox<T> box = ConcurrentPool.Rent<StrongBox<T>>();
+            StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
             box.Value = job;
             long key = GlobalDictionary<StrongBox<T>>.Store(box);
             new JobWithKey<T>(key).Run(arrayLength);
             GlobalDictionary<StrongBox<T>>.Remove(key);
-            ConcurrentPool.Return(box);
+            ObjectPool<StrongBox<T>>.Shared.Return(box);
 #else
-            StrongBox<T> box = ConcurrentPool.Rent<StrongBox<T>>();
+            StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
             box.Value = job;
             GCHandle handle = GCHandle.Alloc(box, GCHandleType.Pinned);
             new JobWithHandle<T>(handle).Run(arrayLength);
-            ConcurrentPool.Return(box);
+            ObjectPool<StrongBox<T>>.Shared.Return(box);
 #endif
         }
 
@@ -139,7 +139,7 @@ namespace Enderlook.Unity.Jobs
                 object target = handle.Target;
                 Debug.Assert(target is StrongBox<T>);
                 StrongBox<T> box = Unsafe.As<StrongBox<T>>(target);
-                ConcurrentPool.Return(box);
+                ObjectPool<StrongBox<T>>.Shared.Return(box);
                 handle.Free();
             }
         }
@@ -185,7 +185,7 @@ namespace Enderlook.Unity.Jobs
             public void Execute()
             {
                 StrongBox<T> box = GlobalDictionary<StrongBox<T>>.Drain(key);
-                ConcurrentPool.Return(box);
+                ObjectPool<StrongBox<T>>.Shared.Return(box);
             }
         }
     }

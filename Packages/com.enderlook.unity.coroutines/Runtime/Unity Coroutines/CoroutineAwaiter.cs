@@ -1,4 +1,5 @@
-﻿using Enderlook.Unity.Threading;
+﻿using Enderlook.Pools;
+using Enderlook.Unity.Threading;
 
 using System;
 using System.Collections;
@@ -31,7 +32,7 @@ namespace Enderlook.Unity.Coroutines
         /// <param name="coroutine">Job handle to await for.</param>
         public CoroutineAwaiter(Coroutine coroutine)
         {
-            Handle handle = ConcurrentPool.Rent<Handle>();
+            Handle handle = ObjectPool<Handle>.Shared.Rent();
             this.handle = handle;
             generation = handle.generation;
             Manager.Shared.StartCoroutine(Work());
@@ -41,7 +42,7 @@ namespace Enderlook.Unity.Coroutines
                 handle.isCompleted = true;
                 handle.onCompleted?.Invoke();
                 handle.generation++;
-                ConcurrentPool.Return(handle);
+                ObjectPool<Handle>.Shared.Return(handle);
             }
         }
 

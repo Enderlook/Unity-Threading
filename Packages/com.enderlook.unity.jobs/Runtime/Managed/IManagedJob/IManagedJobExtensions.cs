@@ -1,4 +1,4 @@
-﻿using Enderlook.Unity.Threading;
+﻿using Enderlook.Pools;
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -29,11 +29,11 @@ namespace Enderlook.Unity.Jobs
             where T : struct, IManagedJob
         {
 #if UNITY_WEBGL
-            StrongBox<T> box = ConcurrentPool.Rent<StrongBox<T>>();
+            StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
             box.Value = job;
             return new JobWithKey<T>(GlobalDictionary<StrongBox<T>>.Store(box)).Schedule(dependsOn);
 #else
-            StrongBox<T> box = ConcurrentPool.Rent<StrongBox<T>>();
+            StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
             box.Value = job;
             return new JobWithHandle<T>(GCHandle.Alloc(box, GCHandleType.Pinned)).Schedule(dependsOn);
 #endif
@@ -63,11 +63,11 @@ namespace Enderlook.Unity.Jobs
             where T : struct, IManagedJob
         {
 #if UNITY_WEBGL
-            StrongBox<T> box = ConcurrentPool.Rent<StrongBox<T>>();
+            StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
             box.Value = job;
             new JobWithKey<T>(GlobalDictionary<StrongBox<T>>.Store(box)).Run();
 #else
-            StrongBox<T> box = ConcurrentPool.Rent<StrongBox<T>>();
+            StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
             box.Value = job;
             new JobWithHandle<T>(GCHandle.Alloc(box, GCHandleType.Pinned)).Run();
 #endif
@@ -100,7 +100,7 @@ namespace Enderlook.Unity.Jobs
                 StrongBox<T> box = Unsafe.As<StrongBox<T>>(target);
                 handle.Free();
                 T job = box.Value;
-                ConcurrentPool.Return(box);
+                ObjectPool<StrongBox<T>>.Shared.Return(box);
                 job.Execute();
             }
         }
@@ -124,7 +124,7 @@ namespace Enderlook.Unity.Jobs
             {
                 StrongBox<T> box = GlobalDictionary<StrongBox<T>>.Drain(key);
                 T job = box.Value;
-                ConcurrentPool.Return(box);
+                ObjectPool<StrongBox<T>>.Shared.Return(box);
                 job.Execute();
             }
         }
