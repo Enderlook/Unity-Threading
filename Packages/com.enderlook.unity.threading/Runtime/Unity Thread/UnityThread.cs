@@ -10,8 +10,12 @@ namespace Enderlook.Unity.Threading
     /// </summary>
     public static class UnityThread
     {
-        private static readonly SendOrPostCallback callback = e => ((Action)e)();
         private static readonly SendOrPostCallback callback2 = e => ((Executor)e).Execute();
+        private static readonly SendOrPostCallback callback = e =>
+        {
+            Debug.Assert(e is Action);
+            Unsafe.As<Action>(e)();
+        };
 
         /// <summary>
         /// Synchronization context used by Unity.

@@ -120,7 +120,9 @@ namespace Enderlook.Unity.Jobs
 
             public void Execute(int index)
             {
-                StrongBox<T> box = (StrongBox<T>)handle.Target;
+                object target = handle.Target;
+                Debug.Assert(target is StrongBox<T>);
+                StrongBox<T> box = Unsafe.As<StrongBox<T>>(target);
                 T job = box.Value;
                 job.Execute(index);
             }
@@ -134,7 +136,9 @@ namespace Enderlook.Unity.Jobs
 
             public void Execute()
             {
-                StrongBox<T> box = (StrongBox<T>)handle.Target;
+                object target = handle.Target;
+                Debug.Assert(target is StrongBox<T>);
+                StrongBox<T> box = Unsafe.As<StrongBox<T>>(target);
                 ConcurrentPool.Return(box);
                 handle.Free();
             }

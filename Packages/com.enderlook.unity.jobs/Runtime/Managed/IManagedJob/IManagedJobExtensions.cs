@@ -95,7 +95,9 @@ namespace Enderlook.Unity.Jobs
 
             public void Execute()
             {
-                StrongBox<T> box = (StrongBox<T>)handle.Target;
+                object target = handle.Target;
+                Debug.Assert(target is StrongBox<T>);
+                StrongBox<T> box = Unsafe.As<StrongBox<T>>(target);
                 handle.Free();
                 T job = box.Value;
                 ConcurrentPool.Return(box);
