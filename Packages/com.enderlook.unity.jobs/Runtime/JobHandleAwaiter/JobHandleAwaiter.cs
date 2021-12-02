@@ -21,7 +21,7 @@ namespace Enderlook.Unity.Jobs
         /// <param name="jobHandle">Job handle to await for.</param>
         public JobHandleAwaiter(JobHandle jobHandle)
         {
-            jobHandle.WatchCompletition();
+            jobHandle.WatchCompletion();
             this.jobHandle = jobHandle;
         }
 

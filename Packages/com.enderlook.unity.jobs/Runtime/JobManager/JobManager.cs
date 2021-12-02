@@ -34,12 +34,12 @@ namespace Enderlook.Unity.Jobs
             => JobTasksManager.Add(jobHandle, onJobComplete, canCompleteImmediately);
 
         /// <summary>
-        /// Automatically watches the completition of this job handle.<br/>
+        /// Automatically watches the completion of this job handle.<br/>
         /// Useful for fire and forget.
         /// </summary>
-        /// <param name="jobHandle">Job handle to watch completition.</param>
+        /// <param name="jobHandle">Job handle to watch completion.</param>
         /// <returns><paramref name="jobHandle"/>.</returns>
-        public static JobHandle WatchCompletition(this JobHandle jobHandle)
+        public static JobHandle WatchCompletion(this JobHandle jobHandle)
         {
             JobHandleCompleter.Add(jobHandle);
             return jobHandle;

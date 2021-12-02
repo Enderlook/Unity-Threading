@@ -83,7 +83,7 @@ namespace Enderlook.Unity.Threading
 
         /// <summary>
         /// Executes the specified action on the Unity thread.<br/>
-        /// The action will be immediately and this thread will wait until completition.
+        /// The action will be immediately and this thread will wait until completion.
         /// </summary>
         /// <param name="action">Action to execute on the main thread.</param>
         public static void RunNow(Action action)
@@ -91,7 +91,7 @@ namespace Enderlook.Unity.Threading
 
         /// <summary>
         /// Executes the specified action on the Unity thread.<br/>
-        /// The action will be immediately and this thread will wait until completition.
+        /// The action will be immediately and this thread will wait until completion.
         /// </summary>
         /// <param name="action">Action to execute on the main thread.</param>
         /// <param name="state">State of the action.</param>
@@ -100,7 +100,7 @@ namespace Enderlook.Unity.Threading
 
         /// <summary>
         /// Executes the specified action on the Unity thread.<br/>
-        /// The action will be immediately and this thread will wait until completition.
+        /// The action will be immediately and this thread will wait until completion.
         /// </summary>
         /// <typeparam name="T">Type of the state.</typeparam>
         /// <param name="action">Action to execute on the main thread.</param>
@@ -115,7 +115,7 @@ namespace Enderlook.Unity.Threading
 
         /// <summary>
         /// Executes the specified action on the Unity thread.<br/>
-        /// The action will be immediately and this thread will wait until completition.
+        /// The action will be immediately and this thread will wait until completion.
         /// </summary>
         /// <typeparam name="T">Type of the returned value.</typeparam>
         /// <param name="function">Action to execute on the main thread.</param>
@@ -131,7 +131,7 @@ namespace Enderlook.Unity.Threading
 
         /// <summary>
         /// Executes the specified action on the Unity thread.<br/>
-        /// The action will be immediately and this thread will wait until completition.
+        /// The action will be immediately and this thread will wait until completion.
         /// </summary>
         /// <typeparam name="T">Type of the state.</typeparam>
         /// <typeparam name="U">Type of the returned value.</typeparam>
