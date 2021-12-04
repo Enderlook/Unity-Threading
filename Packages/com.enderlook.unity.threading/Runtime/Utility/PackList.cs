@@ -62,7 +62,7 @@ namespace Enderlook.Unity.Threading
             Concurrent.Add(element);
         }
 #endif
-}
+    }
 
     internal static class PackList
     {
