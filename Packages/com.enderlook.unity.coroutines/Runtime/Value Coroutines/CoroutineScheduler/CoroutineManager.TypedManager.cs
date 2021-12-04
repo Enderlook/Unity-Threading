@@ -49,11 +49,11 @@ namespace Enderlook.Unity.Coroutines
 
             private PackList<T> suspendedEntry = PackList<T>.Create();
 
-            // TODO: On WEBGL, suspendedBackgroundShort, suspendedBackgroundLong and backgroundTasks
-            // are never used. Maybe we should remove those methods on WebGL.
+#if !UNITY_WEBGL
             private readonly ConcurrentQueue<T> suspendedBackgroundShort = new ConcurrentQueue<T>();
             private readonly ConcurrentQueue<T> suspendedBackgroundLong = new ConcurrentQueue<T>();
             private readonly ConcurrentQueue<Task> backgroundTasks = new ConcurrentQueue<Task>();
+#endif
 
             private RawList<T> tmpT = RawList<T>.Create();
             private RawQueue<T> tmpTQueue = RawQueue<T>.Create();
@@ -180,7 +180,9 @@ namespace Enderlook.Unity.Coroutines
 
             public override bool OnPoll(int until, ref int i, int to)
             {
+#if !UNITY_WEBGL
                 onUnityPoll.DrainConcurrent();
+#endif
                 RawQueue<T> local = onUnityPoll.Swap(tmpTQueue);
 
                 bool completed = true;
@@ -911,6 +913,7 @@ namespace Enderlook.Unity.Coroutines
 
             public override void Dispose(ref RawQueue<ValueTask> tasks)
             {
+#if !UNITY_WEBGL
                 ConcurrentQueue<T> suspendedBackgroundShort = this.suspendedBackgroundShort;
                 while (suspendedBackgroundShort.TryDequeue(out T routine))
                     routine.Dispose();
@@ -918,6 +921,7 @@ namespace Enderlook.Unity.Coroutines
                 ConcurrentQueue<T> suspendedBackgroundLong = this.suspendedBackgroundLong;
                 while (suspendedBackgroundLong.TryDequeue(out T routine))
                     routine.Dispose();
+#endif
 
                 onUpdate.Dispose();
                 onFixedUpdate.Dispose();
@@ -960,9 +964,11 @@ namespace Enderlook.Unity.Coroutines
                     tasks.Enqueue(tmp.Item1);
                 }
 
+#if !UNITY_WEBGL
                 ConcurrentQueue<Task> backgroundTasks = this.backgroundTasks;
                 while (backgroundTasks.TryDequeue(out Task task))
                     tasks.Enqueue(new ValueTask(task));
+#endif
             }
         }
     }

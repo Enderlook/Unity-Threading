@@ -14,14 +14,22 @@ namespace Enderlook.Unity.Threading
         // Instead if this is a field, mutations would be on the reference.
         public RawQueue<T> Queue;
 
+#if !UNITY_WEBGL
         public ConcurrentQueue<T> Concurrent { get; private set; }
+#endif
 
+#if UNITY_WEBGL
+        public int Count => Queue.Count;
+#else
         public int Count => Queue.Count + Concurrent.Count;
+#endif
 
         public static PackQueue<T> Create() => new PackQueue<T>()
         {
             Queue = RawQueue<T>.Create(),
+#if !UNITY_WEBGL
             Concurrent = new ConcurrentQueue<T>(),
+#endif
         };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -33,6 +41,7 @@ namespace Enderlook.Unity.Threading
             return old;
         }
 
+#if !UNITY_WEBGL
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void DrainConcurrent()
         {
@@ -42,6 +51,7 @@ namespace Enderlook.Unity.Threading
                 local.Enqueue(routine);
             Queue = local;
         }
+#endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Enqueue(T element)
@@ -53,19 +63,17 @@ namespace Enderlook.Unity.Threading
             Queue.Enqueue(element);
         }
 
+#if !UNITY_WEBGL
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ConcurrentEnqueue(T element)
         {
 #if DEBUG
-#if UNITY_WEBGL
-            Debug.LogWarning("This platform doesn't support multithreading. This doesn't mean that the function will fail (it works), but it would be more perfomant to call the non-concurrent version instead.");
-#else
             if (UnityThread.IsMainThread)
                 Debug.LogWarning("This function was executed in the main thread. This is not an error, thought it's more perfomant to call the non-concurrent version instead.");
 #endif
-#endif
             Concurrent.Enqueue(element);
         }
+#endif
     }
 
     internal static class PackQueue
@@ -77,9 +85,11 @@ namespace Enderlook.Unity.Threading
                 result.Dispose();
             pack.Queue = queue;
 
+#if !UNITY_WEBGL
             ConcurrentQueue<T> concurrentQueue = pack.Concurrent;
             while (concurrentQueue.TryDequeue(out T result))
                 result.Dispose();
+#endif
         }
     }
 }
