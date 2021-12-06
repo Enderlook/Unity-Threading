@@ -16,10 +16,6 @@ namespace Enderlook.Unity.Coroutines
     /// </summary>
     public static class Wait
     {
-        internal const int POOL_CAPACITY = 100;
-
-        private static event Action clear;
-
         // https://github.com/svermeulen/Unity3dAsyncAwaitUtil/blob/master/UnityProject/Assets/Plugins/AsyncAwaitUtil/Source/Awaiters.cs
 
         /// <inheritdoc cref="WaitForEndOfFrame"/>
@@ -31,25 +27,9 @@ namespace Enderlook.Unity.Coroutines
         /// <inheritdoc cref="WaitForUpdate"/>
         public static readonly WaitForUpdate ForUpdate = new WaitForUpdate();
 
-        /// <summary>
-        /// Clear all pooled objects in <see cref="Wait"/>.
-        /// </summary>
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        public static void Clear()
-        {
-            clear?.Invoke();
-            waitForSeconds.Clear();
-            WaitWhilePooled.Clear();
-            WaitUntilPooled.Clear();
-            WaitForValueTaskComplete.Clear();
-            WaitForTaskComplete.Clear();
-            WaitForSecondsRealtimePooled.Clear();
-            WaitForJobComplete.Clear();
-        }
-
-        internal static void SubscribeClear(Action clear) => Wait.clear += clear;
-
         private static readonly Dictionary<float, WaitForSeconds> waitForSeconds = new Dictionary<float, WaitForSeconds>();
+        private static bool requestClear;
+        private static float timeToNextClear;
 
         /// <inheritdoc cref="WaitForSeconds"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -58,6 +38,30 @@ namespace Enderlook.Unity.Coroutines
             if (!waitForSeconds.TryGetValue(seconds, out WaitForSeconds wait))
                 return ForSecondsSlowPath(seconds);
             return wait;
+        }
+
+        static Wait()
+        {
+            Application.lowMemory += () => waitForSeconds.Clear();
+            Manager.OnUpdate += () => {
+                float realtimeSinceStartup = Time.realtimeSinceStartup;
+                if (requestClear && realtimeSinceStartup > timeToNextClear)
+                {
+                    requestClear = false;
+                    timeToNextClear = realtimeSinceStartup + 30;
+                    waitForSeconds.Clear();
+                }
+            };
+            GCCallback _ = new GCCallback();
+        }
+
+        private sealed class GCCallback
+        {
+            ~GCCallback()
+            {
+                requestClear = true;
+                GC.ReRegisterForFinalize(this);
+            }
         }
 
         private static WaitForSeconds ForSecondsSlowPath(float seconds)
@@ -110,9 +114,6 @@ namespace Enderlook.Unity.Coroutines
             => WaitForSecondsRealtimePooled.Create(seconds);
 
 #if UNITY_EDITOR
-        [UnityEditor.InitializeOnLoadMethod]
-        private static void Initialize() => UnityEditor.EditorApplication.playModeStateChanged += (_) => Clear();
-
         /// <summary>
         /// Unity Editor Only.
         /// </summary>
@@ -133,8 +134,8 @@ namespace Enderlook.Unity.Coroutines
         /// <summary>
         /// Unity Editor Only.
         /// </summary>
-        internal static void AddWaitForTaskComplete(string name, Func<int> count, Action clear)
-            => waitForTaskComplete.Add(new EditorPoolContainer(name, count, clear));
+        internal static void AddWaitForTaskComplete(string name, Func<int> count)
+            => waitForTaskComplete.Add(new EditorPoolContainer(name, count));
 #endif
     }
 }

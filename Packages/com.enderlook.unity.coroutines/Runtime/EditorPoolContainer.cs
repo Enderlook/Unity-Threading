@@ -10,24 +10,21 @@ namespace Enderlook.Unity.Threading
     {
         private readonly string Name;
         private readonly Func<int> count;
-        private readonly Action clear;
         private int currentCount;
         private string countString;
 
-        public EditorPoolContainer(string name, Func<int> count, Action clear)
+        public EditorPoolContainer(string name, Func<int> count)
         {
             Name = name;
             this.count = count;
-            this.clear = clear;
             int c = count();
             currentCount = c;
             countString = c.ToString();
         }
 
-        public void Get(out string name, out Action clear, out string count)
+        public void Get(out string name, out string count)
         {
             name = Name;
-            clear = this.clear;
             int c = this.count();
             if (currentCount != c)
             {

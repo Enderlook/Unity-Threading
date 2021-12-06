@@ -1,4 +1,5 @@
 ﻿using Enderlook.Collections.LowLevel;
+using Enderlook.Pools;
 
 using System;
 using System.Runtime.CompilerServices;
@@ -10,16 +11,12 @@ using UnityEngine;
 namespace Enderlook.Unity.Coroutines
 {
     /// <summary>
-    /// Suspend the coroutine execution until the suplied task is completed.
+    /// Suspend the coroutine execution until the supplied task is completed.
     /// </summary>
     /// <typeparam name="T">Return type of task.</typeparam>
     public sealed class WaitForTaskComplete<T> : CustomYieldInstruction
     {
-        private static RawStack<WaitForTaskComplete<T>> pool = RawStack<WaitForTaskComplete<T>>.Create(Wait.POOL_CAPACITY);
-
         private Task<T> task;
-
-        private WaitForTaskComplete(Task<T> task) => this.task = task;
 
         public override bool keepWaiting {
             get {
@@ -27,8 +24,7 @@ namespace Enderlook.Unity.Coroutines
                 {
                     Task<T> task = this.task;
                     this.task = default;
-                    if (pool.Count < Wait.POOL_CAPACITY)
-                        pool.Push(this);
+                    ObjectPool<WaitForTaskComplete<T>>.Shared.Return(this);
                     if (task.IsFaulted)
                         ExceptionDispatchInfo.Capture(task.Exception).Throw();
                     return false;
@@ -37,31 +33,24 @@ namespace Enderlook.Unity.Coroutines
             }
         }
 
-        internal static void Clear() => pool.Clear();
-
+#if UNITY_EDITOR
         static WaitForTaskComplete()
         {
-            Action clear = Clear;
-            Wait.SubscribeClear(clear);
-#if UNITY_EDITOR
-            Wait.AddWaitForTaskComplete($"Wait.For({typeof(WaitForTaskComplete<T>).Name})", () => pool.Count, clear);
-#endif
+            Wait.AddWaitForTaskComplete($"Wait.For({typeof(WaitForTaskComplete<T>).Name})", () => ObjectPool<WaitForTaskComplete<T>>.Shared.ApproximateCount());
         }
+#endif
 
         /// <summary>
-        /// Suspend the coroutine execution until the suplied task is completed.<br/>
+        /// Suspend the coroutine execution until the supplied task is completed.<br/>
         /// Object is drawn from a pool.
         /// </summary>
         /// <param name="task">Task to wait.</param>
         /// <returns>A waiter.</returns>
         internal static WaitForTaskComplete<T> Create(Task<T> task)
         {
-            if (pool.TryPop(out WaitForTaskComplete<T> result))
-            {
-                result.task = task;
-                return result;
-            }
-            return new WaitForTaskComplete<T>(task);
+            WaitForTaskComplete<T> waiter = ObjectPool<WaitForTaskComplete<T>>.Shared.Rent();
+            waiter.task = task;
+            return waiter;
         }
 
         /// <inheritdoc cref="Create(Task{T})"/>

@@ -1,4 +1,5 @@
 ﻿using Enderlook.Collections.LowLevel;
+using Enderlook.Pools;
 
 using System;
 
@@ -11,8 +12,6 @@ namespace Enderlook.Unity.Coroutines
     /// </summary>
     public sealed class WaitWhilePooled : CustomYieldInstruction
     {
-        private static RawStack<WaitWhilePooled> pool = RawStack<WaitWhilePooled>.Create(Wait.POOL_CAPACITY);
-
         private Func<bool> predicate;
 
         /// <inheritdoc cref="CustomYieldInstruction.keepWaiting"/>
@@ -21,23 +20,18 @@ namespace Enderlook.Unity.Coroutines
                 if (!predicate())
                 {
                     predicate = null;
-                    if (pool.Count < Wait.POOL_CAPACITY)
-                        pool.Push(this);
+                    ObjectPool<WaitWhilePooled>.Shared.Return(this);
                     return false;
                 }
                 return true;
             }
         }
 
-        private WaitWhilePooled(Func<bool> predicate) => this.predicate = predicate;
-
-        internal static void Clear() => pool.Clear();
-
 #if UNITY_EDITOR
         /// <summary>
         /// Unity Editor Only.
         /// </summary>
-        internal static int Count => pool.Count;
+        internal static int Count => ObjectPool<WaitWhilePooled>.Shared.ApproximateCount();
 #endif
 
         /// <summary>
@@ -48,12 +42,9 @@ namespace Enderlook.Unity.Coroutines
         /// <returns>A waiter.</returns>
         internal static WaitWhilePooled Create(Func<bool> predicate)
         {
-            if (pool.TryPop(out WaitWhilePooled result))
-            {
-                result.predicate = predicate;
-                return result;
-            }
-            return new WaitWhilePooled(predicate);
+            WaitWhilePooled waiter = ObjectPool<WaitWhilePooled>.Shared.Rent();
+            waiter.predicate = predicate;
+            return waiter;
         }
     }
 }

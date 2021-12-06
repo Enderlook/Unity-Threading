@@ -1,8 +1,6 @@
 ﻿using Enderlook.Unity.Threading;
 using Enderlook.Unity.Toolset.Utils;
 
-using System;
-
 using UnityEditor;
 
 using UnityEngine;
@@ -15,11 +13,9 @@ namespace Enderlook.Unity.Coroutines
         private static readonly GUIContent WAIT_HEADER_CONTENT = new GUIContent("Coroutines.Wait Pooled Objects", "Show amount of stored pooled objects.");
         private static readonly GUIContent WAIT_HEADER_CONTENT_METHOD_TITLE = new GUIContent("Method", "Name of the method which has the pooled content.");
         private static readonly GUIContent WAIT_HEADER_CONTENT_COUNT_TITLE = new GUIContent("Count", "Amount of pooled objects that are not being used.");
-        private static readonly GUIContent WAIT_HEADER_CONTENT_CLEAR_TITLE = new GUIContent("Clear", "Clear the unused object of the pool.");
 
         private GUILayoutOption[] waitLayoutOptionsMethod;
         private GUILayoutOption[] waitLayoutOptionsCountAndSize;
-        private GUILayoutOption[] waitLayoutOptionsClear;
         private GUILayoutOption[] waitLayoutOptionsScroll;
 
         private (int, string) waitForSeconds = (0, "0");
@@ -57,10 +53,8 @@ namespace Enderlook.Unity.Coroutines
             {
                 const int min = 100;
                 const int ratio1 = 5;
-                const int ratio2 = 6;
-                waitLayoutOptionsMethod = new GUILayoutOption[] { GUILayout.MinWidth(min - (min / ratio1) - (min / ratio2)), GUILayout.MaxWidth(position.width - (position.width / ratio1) - (position.width / ratio2)) };
+                waitLayoutOptionsMethod = new GUILayoutOption[] { GUILayout.MinWidth(min - (min / ratio1)), GUILayout.MaxWidth(position.width - (position.width / ratio1)) };
                 waitLayoutOptionsCountAndSize = new GUILayoutOption[] { GUILayout.MinWidth(min / ratio1), GUILayout.MaxWidth(position.width / ratio1) };
-                waitLayoutOptionsClear = new GUILayoutOption[] { GUILayout.MinWidth(min / ratio2), GUILayout.MaxWidth(position.width / ratio2) };
                 waitLayoutOptionsScroll = new GUILayoutOption[] { GUILayout.MaxHeight(EditorGUIUtility.singleLineHeight * 9f) };
             }
         }
@@ -73,12 +67,7 @@ namespace Enderlook.Unity.Coroutines
                 EditorGUILayout.BeginHorizontal();
                 {
                     EditorGUILayout.LabelField(WAIT_HEADER_CONTENT_METHOD_TITLE, EditorStyles.boldLabel, waitLayoutOptionsMethod);
-                    EditorGUILayout.BeginHorizontal();
-                    {
-                        EditorGUILayout.LabelField(WAIT_HEADER_CONTENT_COUNT_TITLE, EditorStyles.boldLabel, waitLayoutOptionsCountAndSize);
-                        EditorGUILayout.LabelField(WAIT_HEADER_CONTENT_CLEAR_TITLE, EditorStyles.boldLabel, waitLayoutOptionsClear);
-                    }
-                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.LabelField(WAIT_HEADER_CONTENT_COUNT_TITLE, EditorStyles.boldLabel, waitLayoutOptionsCountAndSize);
                 }
                 EditorGUILayout.EndHorizontal();
 
@@ -86,51 +75,37 @@ namespace Enderlook.Unity.Coroutines
 
                 waitScrollPosition = EditorGUILayout.BeginScrollView(waitScrollPosition, waitLayoutOptionsScroll);
                 {
-                    if (Draw("Wait.ForSeconds(float)", Wait.ForSecondsCount, ref waitForSeconds))
-                        Wait.ForSecondsClear();
-                    if (Draw("Wait.ForSecondsRealtime(float)", WaitForSecondsRealtimePooled.Count, ref waitForSecondsRealtime))
-                        WaitForSecondsRealtimePooled.Clear();
-                    if (Draw("Wait.Until(Func<bool>)", WaitUntilPooled.Count, ref waitUntilPooled))
-                        WaitUntilPooled.Clear();
-                    if (Draw("Wait.While(Func<bool>)", WaitWhilePooled.Count, ref waitWhilePooled))
-                        WaitWhilePooled.Clear();
-                    if (Draw("Wait.For(JobHandle)", WaitForJobComplete.Count, ref waitForJobComplete))
-                        WaitForJobComplete.Clear();
-                    if (Draw("Wait.For(Task)", WaitForTaskComplete.Count, ref waitForTaskComplete))
-                        WaitForTaskComplete.Clear();
-                    if (Draw("Wait.For(ValueTask)", WaitForValueTaskComplete.Count, ref waitForValueTaskComplete))
-                        WaitForValueTaskComplete.Clear();
+                    Draw("Wait.ForSeconds(float)", Wait.ForSecondsCount, ref waitForSeconds);
+                    Draw("Wait.ForSecondsRealtime(float)", WaitForSecondsRealtimePooled.Count, ref waitForSecondsRealtime);
+                    Draw("Wait.Until(Func<bool>)", WaitUntilPooled.Count, ref waitUntilPooled);
+                    Draw("Wait.While(Func<bool>)", WaitWhilePooled.Count, ref waitWhilePooled);
+                    Draw("Wait.For(JobHandle)", WaitForJobComplete.Count, ref waitForJobComplete);
+                    Draw("Wait.For(Task)", WaitForTaskComplete.Count, ref waitForTaskComplete);
+                    Draw("Wait.For(ValueTask)", WaitForValueTaskComplete.Count, ref waitForValueTaskComplete);
 
                     foreach (EditorPoolContainer container in Wait.ForTaskAndValueTaskComplete)
                     {
-                        container.Get(out string name, out Action clear, out string count);
+                        container.Get(out string name, out string count);
                         if (count == "0")
                             continue;
                         EditorGUILayout.BeginHorizontal();
                         {
                             EditorGUILayout.LabelField(name, waitLayoutOptionsMethod);
                             EditorGUILayout.LabelField(count, waitLayoutOptionsCountAndSize);
-                            if (GUILayout.Button("Clear", waitLayoutOptionsClear))
-                                clear();
                         }
                         EditorGUILayout.EndHorizontal();
                     }
 
-                    bool Draw(string title, int count, ref (int, string) tmp)
+                    void Draw(string title, int count, ref (int, string) tmp)
                     {
-                        bool value;
                         EditorGUILayout.BeginHorizontal();
                         {
                             EditorGUILayout.LabelField(title, waitLayoutOptionsMethod);
                             if (tmp.Item1 != count)
-                            {
                                 tmp.Item2 = count.ToString();
-                            }
                             EditorGUILayout.LabelField(tmp.Item2, waitLayoutOptionsCountAndSize);
-                            value = GUILayout.Button("Clear", waitLayoutOptionsClear);
                         }
                         EditorGUILayout.EndHorizontal();
-                        return value;
                     }
                 }
                 EditorGUILayout.EndScrollView();
