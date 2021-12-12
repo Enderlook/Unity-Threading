@@ -1,4 +1,5 @@
 ﻿using Enderlook.Collections.LowLevel;
+using Enderlook.Unity.Threading;
 
 using Unity.Jobs;
 
@@ -19,7 +20,7 @@ namespace Enderlook.Unity.Jobs
 
             public static void Add(JobHandle jobHandle)
             {
-                if (jobHandle.IsCompleted)
+                if (UnityThread.IsMainThread && jobHandle.IsCompleted)
                     jobHandle.Complete();
                 else
                     jobHandles.Add(jobHandle);

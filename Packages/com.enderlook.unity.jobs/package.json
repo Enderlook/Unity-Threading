@@ -1,6 +1,6 @@
 {
   "name": "com.enderlook.unity.jobs",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "displayName": "Enderlook Unity Jobs",
   "description": "Provides utility methods for working with Unity Jobs.",
   "unity": "2019.2",
