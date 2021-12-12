@@ -16,11 +16,21 @@ namespace Enderlook.Unity.Threading
         // Alternatively we may do something like https://github.com/svermeulen/Unity3dAsyncAwaitUtil/blob/master/UnityProject/Assets/Plugins/AsyncAwaitUtil/Source/WaitForBackgroundThread.cs
 
         private static readonly IThreadSwitcher hasSwitchedGlobal = new ThreadSwitcherLongBackground() { hasSwitched = true };
-#if !UNITY_WEBGL
+#if !UNITY_WEBGL || UNITY_EDITOR
         private static readonly IThreadSwitcher hasNotSwitchedGlobal = new ThreadSwitcherLongBackground();
 #endif
 
         private bool hasSwitched;
+
+#if UNITY_EDITOR
+        private bool useEditorPreference;
+#endif
+
+        internal ThreadSwitcherLongBackground(bool useEditorPreference)
+        {
+            this.useEditorPreference = useEditorPreference;
+            hasSwitched = default;
+        }
 
         /// <inheritdoc cref="IThreadSwitcher.GetAwaiter"/>
         public ThreadSwitcherLongBackground GetAwaiter() => this;
@@ -29,6 +39,10 @@ namespace Enderlook.Unity.Threading
         public bool IsCompleted {
             get {
 #if UNITY_WEBGL
+#if UNITY_EDITOR
+                if (useEditorPreference)
+                    return !UnityThread.IsMainThread;
+#endif
 #if DEBUG
                 Debug.LogWarning("Threading is not supported on this platform. A fallback to main thread has been used. Be warned that this may produce deadlocks very easily.");
 #endif
@@ -49,23 +63,32 @@ namespace Enderlook.Unity.Threading
                 Switch.ThrowArgumentNullException_Continuation();
 
 #if UNITY_WEBGL
+            if (useEditorPreference)
+                goto other;
             Debug.Assert(!hasSwitched);
 #if DEBUG
             Debug.LogWarning("Threading is not supported on this platform. A fallback to main thread has been used. Be warned that this may produce deadlocks very easily.");
 #endif
             continuation();
-            #else
+            return;
+#endif
+
+            other:
             hasSwitched = true;
             // We always spawn a new thread regardless if we are already in a background thread
             // because maybe that thread is from a pool and so it's not suitable for long running tasks.
             Task.Factory.StartNew(continuation, TaskCreationOptions.LongRunning);
-#endif
         }
 
         /// <inheritdoc cref="IThreadSwitcher.GetAwaiter"/>
         IThreadSwitcher IThreadSwitcher.GetAwaiter()
         {
 #if UNITY_WEBGL
+#if UNITY_EDITOR
+
+            if (useEditorPreference && hasSwitched)
+                return hasSwitchedGlobal;
+#endif
             return hasSwitchedGlobal;
 #else
             return hasSwitched ? hasSwitchedGlobal : hasNotSwitchedGlobal;

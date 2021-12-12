@@ -16,11 +16,21 @@ namespace Enderlook.Unity.Threading
         // Alternatively we may do something like https://github.com/svermeulen/Unity3dAsyncAwaitUtil/blob/master/UnityProject/Assets/Plugins/AsyncAwaitUtil/Source/WaitForBackgroundThread.cs
 
         private static readonly IThreadSwitcher hasSwitchedGlobal = new ThreadSwitcherBackground() { hasSwitched = true };
-#if !UNITY_WEBGL
+#if !UNITY_WEBGL || UNITY_EDITOR
         private static readonly IThreadSwitcher hasNotSwitchedGlobal = new ThreadSwitcherBackground();
 #endif
 
         private bool hasSwitched;
+
+#if UNITY_EDITOR
+        private bool useEditorPreference;
+#endif
+
+        internal ThreadSwitcherBackground(bool useEditorPreference)
+        {
+            this.useEditorPreference = useEditorPreference;
+            hasSwitched = default;
+        }
 
         /// <inheritdoc cref="IThreadSwitcher.GetAwaiter"/>
         public ThreadSwitcherBackground GetAwaiter() => this;
@@ -29,6 +39,10 @@ namespace Enderlook.Unity.Threading
         public bool IsCompleted {
             get {
 #if UNITY_WEBGL
+#if UNITY_EDITOR
+                if (useEditorPreference)
+                    return !UnityThread.IsMainThread;
+#endif
 #if DEBUG
                 Debug.LogWarning("Threading is not supported on this platform. A fallback to main thread has been used. Be warned that this may produce deadlocks very easily.");
 #endif
@@ -49,12 +63,19 @@ namespace Enderlook.Unity.Threading
                 Switch.ThrowArgumentNullException_Continuation();
 
 #if UNITY_WEBGL
+#if UNITY_EDITOR
+            if (useEditorPreference)
+                goto other;
+#endif
             Debug.Assert(!hasSwitched);
 #if DEBUG
             Debug.LogWarning("Threading is not supported on this platform. A fallback to main thread has been used. Be warned that this may produce deadlocks very easily.");
 #endif
             continuation();
-#else
+            return;
+#endif
+
+            other:
             hasSwitched = UnityThread.IsMainThread;
             if (hasSwitched)
                 Task.Factory.StartNew(continuation);
@@ -65,13 +86,17 @@ namespace Enderlook.Unity.Threading
 #endif
                 continuation();
             }
-#endif
         }
 
         /// <inheritdoc cref="IThreadSwitcher.GetAwaiter"/>
         IThreadSwitcher IThreadSwitcher.GetAwaiter()
         {
 #if UNITY_WEBGL
+#if UNITY_EDITOR
+
+            if (useEditorPreference && hasSwitched)
+                return hasSwitchedGlobal;
+#endif
             return hasSwitchedGlobal;
 #else
             return hasSwitched ? hasSwitchedGlobal : hasNotSwitchedGlobal;

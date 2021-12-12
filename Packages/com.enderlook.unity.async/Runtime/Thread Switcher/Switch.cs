@@ -21,6 +21,22 @@ namespace Enderlook.Unity.Threading
         /// <returns>Object which switched to the thread.</returns>
         public static ThreadSwitcherLongBackground ToLongBackground => new ThreadSwitcherLongBackground();
 
+#if UNITY_EDITOR
+        /// <summary>
+        /// Switches to a background pool thread using the editor preferences instead of the standalone platform.<br/>
+        /// This API only exists inside the Unity Editor.
+        /// </summary>
+        /// <returns>Object which switched to the thread.</returns>
+        public static ThreadSwitcherBackground ToBackgroundEditor => new ThreadSwitcherBackground(true);
+
+        /// <summary>
+        /// Switches to a background long duration thread using the editor preferences instead of the standalone platform.<br/>
+        /// This API only exists inside the Unity Editor.
+        /// </summary>
+        /// <returns>Object which switched to the thread.</returns>
+        public static ThreadSwitcherLongBackground ToLongBackgroundEditor => new ThreadSwitcherLongBackground(true);
+#endif
+
         /// <summary>
         /// Switch to the Unity thread.
         /// </summary>
