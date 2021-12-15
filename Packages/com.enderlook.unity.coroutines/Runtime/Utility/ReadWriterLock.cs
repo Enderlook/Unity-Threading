@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 
-namespace Enderlook.Unity.Threading
+namespace Enderlook.Unity.Coroutines
 {
     internal struct ReadWriterLock
     {

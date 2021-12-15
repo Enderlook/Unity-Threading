@@ -1,4 +1,5 @@
 ﻿using Enderlook.Collections.LowLevel;
+using Enderlook.Unity.Threading;
 
 using System;
 using System.Collections.Concurrent;
@@ -6,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 using UnityEngine;
 
-namespace Enderlook.Unity.Threading
+namespace Enderlook.Unity.Coroutines
 {
     internal struct PackQueue<T>
     {
