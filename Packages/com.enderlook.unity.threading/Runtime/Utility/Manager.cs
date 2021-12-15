@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Enderlook.Collections.LowLevel;
+
+using System;
 using System.Collections;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -17,12 +19,48 @@ namespace Enderlook.Unity.Threading
 
         public static Manager Shared { get; private set; }
 
-        public static event Action OnUpdate;
-        public static event Action OnFixedUpdate;
-        public static event Action OnLateUpdate;
-        public static event Action OnEndOfFrame;
+        private static Pack onUpdate = Pack.Create();
+        public static event Action OnUpdate {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            add => onUpdate.Add(value);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            remove => onUpdate.Remove(value);
+        }
+
+        private static Pack onFixedUpdate = Pack.Create();
+        public static event Action OnFixedUpdate {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            add => onFixedUpdate.Add(value);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            remove => onFixedUpdate.Remove(value);
+        }
+
+        private static Pack onLateUpdate = Pack.Create();
+        public static event Action OnLateUpdate {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            add => onLateUpdate.Add(value);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            remove => onLateUpdate.Remove(value);
+        }
+
+        private static Pack onEndOfFrame = Pack.Create();
+        public static event Action OnEndOfFrame {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            add => onEndOfFrame.Add(value);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            remove => onEndOfFrame.Remove(value);
+        }
 
         private static event Action onInitialize;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void Lock(ref int @lock)
+        {
+            while (Interlocked.Exchange(ref @lock, 1) == 1) ;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void Unlock(ref int @lock) => @lock = 0;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Initialize1()
@@ -72,7 +110,7 @@ namespace Enderlook.Unity.Threading
                     while (true)
                     {
                         yield return endOfFrame;
-                        OnEndOfFrame?.Invoke();
+                        onEndOfFrame.Execute();
                     }
                 }
             }
@@ -102,13 +140,13 @@ namespace Enderlook.Unity.Threading
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
-        private void Update() => OnUpdate?.Invoke();
+        private void Update() => onUpdate.Execute();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
-        private void LateUpdate() => OnLateUpdate?.Invoke();
+        private void LateUpdate() => onLateUpdate.Execute();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
-        private void FixedUpdate() => OnFixedUpdate?.Invoke();
+        private void FixedUpdate() => onFixedUpdate.Execute();
 
         public static void OnInitialized(Action callback)
         {
@@ -122,5 +160,84 @@ namespace Enderlook.Unity.Threading
         }
 
         private static void ThrowArgumenNullException() => throw new ArgumentNullException("manager");
+
+        private struct Pack
+        {
+            private RawList<Action> list;
+            private int toAddLock;
+            private RawList<Action> toAdd;
+            private int toRemoveLock;
+            private RawList<Action> toRemove;
+
+            private Pack(RawList<Action> list, RawList<Action> toAdd, RawList<Action> toRemove)
+            {
+                this.list = list;
+                this.toAdd = toAdd;
+                this.toRemove = toRemove;
+                toAddLock = 0;
+                toRemoveLock = 0;
+            }
+
+            public static Pack Create()
+                => new Pack(RawList<Action>.Create(), RawList<Action>.Create(), RawList<Action>.Create());
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Execute()
+            {
+                Lock(ref toAddLock);
+                {
+                    for (int i = 0; i < toAdd.Count; i++)
+                        list.Add(toAdd[i]);
+                    toAdd.Clear();
+                }
+                Unlock(ref toAddLock);
+
+                Lock(ref toRemoveLock);
+                {
+                    for (int i = 0; i < toRemove.Count; i++)
+                        list.Remove(toRemove[i]);
+                    toRemove.Clear();
+                }
+                Unlock(ref toRemoveLock);
+
+                for (int i = 0; i < list.Count; i++)
+                    list[i]();
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Add(Action value)
+            {
+                if (value is null)
+                    return;
+
+                Lock(ref toAddLock);
+                {
+                    toAdd.Add(value);
+                }
+                Unlock(ref toAddLock);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Remove(Action value)
+            {
+                if (value is null)
+                    return;
+
+                Lock(ref toRemoveLock);
+                {
+                    toRemove.Add(value);
+                }
+                Unlock(ref toRemoveLock);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void Lock(ref int @lock)
+            {
+                while (Interlocked.Exchange(ref @lock, 1) == 1) ;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void Unlock(ref int @lock) => @lock = 0;
+        }
     }
 }
