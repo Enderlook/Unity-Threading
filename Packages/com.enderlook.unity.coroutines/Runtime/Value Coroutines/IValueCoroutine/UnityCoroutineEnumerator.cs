@@ -81,7 +81,7 @@ namespace Enderlook.Unity.Coroutines
                         return Yield.From(v);
                     default:
 #if DEBUG
-                        Debug.LogError($"Unexpected yielded type for value coroutine that implements {nameof(IEnumerator)}. This will result in undefined behaviour.");
+                        Debug.LogError($"Unexpected yielded type for value coroutine that implements {nameof(IEnumerator)}. This will result in undefined behaviour. This message will not shown on release.");
 #endif
                         return Yield.ToUpdate;
                 }

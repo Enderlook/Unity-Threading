@@ -649,7 +649,7 @@ namespace Enderlook.Unity.Coroutines
                     case ValueYieldInstruction.Type.ToBackground:
 #if UNITY_WEBGL
 #if DEBUG
-                        Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded but this platform doesn't support multithreading. A fallback to {nameof(Yield)}.{nameof(Yield.Poll)} was used. Be warned that this may produce deadlocks very easily.");
+                        Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded but this platform doesn't support multithreading. A fallback to {nameof(Yield)}.{nameof(Yield.Poll)} was used. Be warned that this may produce deadlocks very easily. This message will not shown on release.");
 #endif
                         onUnityPoll.Enqueue(routine);
 #else
@@ -659,7 +659,7 @@ namespace Enderlook.Unity.Coroutines
                     case ValueYieldInstruction.Type.ToLongBackground:
 #if UNITY_WEBGL
 #if DEBUG
-                        Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded but this platform doesn't support multithreading. A fallback to {nameof(Yield)}.{nameof(Yield.Poll)} was used. Be warned that this may produce deadlocks very easily.");
+                        Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded but this platform doesn't support multithreading. A fallback to {nameof(Yield)}.{nameof(Yield.Poll)} was used. Be warned that this may produce deadlocks very easily. This message will not shown on release.");
 #endif
                         onUnityPoll.Enqueue(routine);
 #else
@@ -804,7 +804,7 @@ namespace Enderlook.Unity.Coroutines
                                 break;
                             case ValueYieldInstruction.Type.ToUnity:
 #if DEBUG
-                                Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToUnity)} was yielded and it allocates memory. Alternatively you could use other methods such as {nameof(Yield)}.{nameof(Yield.ToUpdate)} which doesn't allocate and has a similar effect.");
+                                Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToUnity)} was yielded and it allocates memory. Alternatively you could use other methods such as {nameof(Yield)}.{nameof(Yield.ToUpdate)} which doesn't allocate and has a similar effect. This message will not shown on release.");
 #endif
                                 // TODO: Allocations can be reduced.
                                 UnityThread.RunLater(() => Next(routine, callback));
@@ -816,7 +816,7 @@ namespace Enderlook.Unity.Coroutines
                                 if (mode == ThreadMode.Short)
                                 {
 #if DEBUG
-                                    Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded from a background thread. This will be ignored.");
+                                    Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded from a background thread. This will be ignored. This message will not shown on release.");
 #endif
                                     goto start;
                                 }
@@ -830,7 +830,7 @@ namespace Enderlook.Unity.Coroutines
                                 if (mode == ThreadMode.Long)
                                 {
 #if DEBUG
-                                    Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded from a long background thread. This will be ignored.");
+                                    Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToBackground)} was yielded from a long background thread. This will be ignored. This message will not shown on release.");
 #endif
                                     goto start;
                                 }

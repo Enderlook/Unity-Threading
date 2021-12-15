@@ -46,7 +46,7 @@ namespace Enderlook.Unity.Threading
         {
 #if DEBUG
             if (!UnityThread.IsMainThread)
-                Debug.LogError("This function can only be executed in the Unity thread. This has produced undefined behaviour.");
+                Debug.LogError("This function can only be executed in the Unity thread. This has produced undefined behaviour. This message will not shown on release.");
 #endif
             List.Add(element);
         }
@@ -57,7 +57,7 @@ namespace Enderlook.Unity.Threading
         {
 #if DEBUG
             if (UnityThread.IsMainThread)
-                Debug.LogWarning("This function was executed in the main thread. This is not an error, thought it's more perfomant to call the non-concurrent version instead.");
+                Debug.LogWarning("This function was executed in the main thread. This is not an error, thought it's more perfomant to call the non-concurrent version instead. This message will not shown on release.");
 #endif
             Concurrent.Add(element);
         }

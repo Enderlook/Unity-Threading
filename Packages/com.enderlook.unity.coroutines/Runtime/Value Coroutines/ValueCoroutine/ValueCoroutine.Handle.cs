@@ -67,7 +67,7 @@ namespace Enderlook.Unity.Coroutines
 
                 if (isCompleted)
                 {
-                    Interlocked.Exchange(ref isAdding, 0);
+                    isAdding = 0;
                     Run();
                     return;
                 }
@@ -78,7 +78,7 @@ namespace Enderlook.Unity.Coroutines
                 }
                 finally
                 {
-                    Interlocked.Exchange(ref isAdding, 0);
+                    isAdding = 0;
                 }
 
                 void Run()

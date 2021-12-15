@@ -104,7 +104,7 @@ namespace Enderlook.Unity.Coroutines
         {
 #if DEBUG
             if (UnityThread.IsMainThread)
-                Debug.LogWarning("You are executing this function in the main thread. It's not an error... thought it doesn't make much sense.");
+                Debug.LogWarning("You are executing this function in the main thread. It's not an error... thought it doesn't make much sense. This message will not shown on release.");
 #endif
 
             if (state != ValueCoroutineState.Continue)
