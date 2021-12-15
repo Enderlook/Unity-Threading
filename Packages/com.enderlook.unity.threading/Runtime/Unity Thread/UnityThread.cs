@@ -50,6 +50,41 @@ namespace Enderlook.Unity.Threading
         public static bool IsUnitySynchronizationContext => SynchronizationContext.Current == UnitySynchronizationContext;
 
         /// <summary>
+        /// Subscribe delegates to execute in the Unity thread on each frame.
+        /// </summary>
+        public static event Action OnUpdate {
+            add => Manager.OnUpdate += value;
+            remove => Manager.OnUpdate -= value;
+        }
+
+        /// <summary>
+        /// Subscribe delegates to execute in the Unity thread on each physics update.
+        /// </summary>
+        public static event Action OnFixedUpdate
+        {
+            add => Manager.OnFixedUpdate += value;
+            remove => Manager.OnFixedUpdate -= value;
+        }
+
+        /// <summary>
+        /// Subscribe delegates to execute in the Unity thread on each frame after update calls are executed.
+        /// </summary>
+        public static event Action OnLateUpdate
+        {
+            add => Manager.OnLateUpdate += value;
+            remove => Manager.OnLateUpdate -= value;
+        }
+
+        /// <summary>
+        /// Subscribe delegates to execute in the Unity thread on each end of frame.
+        /// </summary>
+        public static event Action OnEndOfFrame
+        {
+            add => Manager.OnEndOfFrame += value;
+            remove => Manager.OnEndOfFrame -= value;
+        }
+
+        /// <summary>
         /// Executes the specified action on the Unity thread.<br/>
         /// The action will not be executed instantaneously, but later.
         /// </summary>
