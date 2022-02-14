@@ -24,13 +24,13 @@ namespace Enderlook.Unity.Threading
 
 #if UNITY_EDITOR
         private bool useEditorPreference;
-#endif
 
         internal ThreadSwitcherLongBackground(bool useEditorPreference)
         {
             this.useEditorPreference = useEditorPreference;
             hasSwitched = default;
         }
+#endif
 
         /// <inheritdoc cref="IThreadSwitcher.GetAwaiter"/>
         public ThreadSwitcherLongBackground GetAwaiter() => this;
