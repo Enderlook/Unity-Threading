@@ -2,6 +2,7 @@
 using Enderlook.Unity.Threading;
 
 using System;
+using System.Threading.Tasks;
 
 using Unity.Jobs;
 
@@ -22,6 +23,11 @@ namespace Enderlook.Unity.Jobs
             foreach (Action action in updaters)
                 action();
         }
+
+        /// <summary>
+        /// A task factory that uses Unity Jobs threads to schedule tasks.
+        /// </summary>
+        public static readonly TaskFactory Factory = new TaskFactory(new UnityJobTaskScheduler());
 
         /// <summary>
         /// Enqueues an action to be execute when the job handle <paramref name="jobHandle"/> completes.<br/>
