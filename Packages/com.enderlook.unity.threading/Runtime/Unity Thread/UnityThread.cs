@@ -21,22 +21,26 @@ namespace Enderlook.Unity.Threading
         /// <summary>
         /// Synchronization context used by Unity.
         /// </summary>
-        public static readonly SynchronizationContext UnitySynchronizationContext = UnitySynchronizationContextUtility.UnitySynchronizationContext;
+        public static SynchronizationContext UnitySynchronizationContext => unitySynchronizationContext;
+        private static readonly SynchronizationContext unitySynchronizationContext = UnitySynchronizationContextUtility.UnitySynchronizationContext;
 
         /// <summary>
         /// Thread Id used by Unity main thread.
         /// </summary>
-        public static readonly int UnityThreadId = UnitySynchronizationContextUtility.UnityThreadId;
+        public static int UnityThreadId => unityThreadId;
+        private static readonly int unityThreadId = UnitySynchronizationContextUtility.UnityThreadId;
 
         /// <summary>
         /// Task Scheduler used by Unity.
         /// </summary>
-        public static readonly TaskScheduler UnityTaskScheduler = UnitySynchronizationContextUtility.UnityTaskScheduler;
+        private static readonly TaskScheduler unityTaskScheduler = UnitySynchronizationContextUtility.UnityTaskScheduler;
+        public static TaskScheduler UnityTaskScheduler => unityTaskScheduler;
 
         /// <summary>
         /// A <see cref="TaskFactory"/> where all tasks are run on the main (Unity) thread by using <see cref="UnityTaskScheduler"/>.
         /// </summary>
-        public static readonly TaskFactory Factory = new TaskFactory(UnityTaskScheduler);
+        public static TaskFactory Factory => factory;
+        private static readonly TaskFactory factory = new TaskFactory(UnitySynchronizationContextUtility.UnityTaskScheduler);
 
         /// <summary>
         /// Check if we are currently running in main (Unity) thread.
@@ -47,7 +51,7 @@ namespace Enderlook.Unity.Threading
         /// <summary>
         /// Determines if we are in the Unity synchronization context.
         /// </summary>
-        public static bool IsUnitySynchronizationContext => SynchronizationContext.Current == UnitySynchronizationContext;
+        public static bool IsUnitySynchronizationContext => SynchronizationContext.Current == unitySynchronizationContext;
 
         /// <summary>
         /// Subscribe delegates to execute in the Unity thread on each frame.
@@ -90,7 +94,7 @@ namespace Enderlook.Unity.Threading
         /// </summary>
         /// <param name="action">Action to execute on the main thread.</param>
         public static void RunLater(Action action)
-            => UnitySynchronizationContextUtility.UnitySynchronizationContext.Post(callback, action);
+            => unitySynchronizationContext.Post(callback, action);
 
         /// <summary>
         /// Executes the specified action on the Unity thread.<br/>
@@ -99,7 +103,7 @@ namespace Enderlook.Unity.Threading
         /// <param name="action">Action to execute on the main thread.</param>
         /// <param name="state">State of the action.</param>
         public static void RunLater(SendOrPostCallback action, object state)
-            => UnitySynchronizationContextUtility.UnitySynchronizationContext.Post(action, state);
+            => unitySynchronizationContext.Post(action, state);
 
         /// <summary>
         /// Executes the specified action on the Unity thread.<br/>
@@ -111,9 +115,9 @@ namespace Enderlook.Unity.Threading
         public static void RunLater<T>(Action<T> action, T state)
         {
             if (typeof(T).IsValueType)
-                UnitySynchronizationContextUtility.UnitySynchronizationContext.Post(ActionHelper<T>.ExecuteAndReturn, Tuple2<Action<T>, T>.Rent(action, state));
+                unitySynchronizationContext.Post(ActionHelper<T>.ExecuteAndReturn, Tuple2<Action<T>, T>.Rent(action, state));
             else
-                UnitySynchronizationContextUtility.UnitySynchronizationContext.Post(Unsafe.As<SendOrPostCallback>(action), state);
+                unitySynchronizationContext.Post(Unsafe.As<SendOrPostCallback>(action), state);
         }
 
         /// <summary>
@@ -122,7 +126,7 @@ namespace Enderlook.Unity.Threading
         /// </summary>
         /// <param name="action">Action to execute on the main thread.</param>
         public static void RunNow(Action action)
-            => UnitySynchronizationContextUtility.UnitySynchronizationContext.Send(callback, action);
+            => unitySynchronizationContext.Send(callback, action);
 
         /// <summary>
         /// Executes the specified action on the Unity thread.<br/>
@@ -131,7 +135,7 @@ namespace Enderlook.Unity.Threading
         /// <param name="action">Action to execute on the main thread.</param>
         /// <param name="state">State of the action.</param>
         public static void RunNow(SendOrPostCallback action, object state)
-            => UnitySynchronizationContextUtility.UnitySynchronizationContext.Send(action, state);
+            => unitySynchronizationContext.Send(action, state);
 
         /// <summary>
         /// Executes the specified action on the Unity thread.<br/>
@@ -143,9 +147,9 @@ namespace Enderlook.Unity.Threading
         public static void RunNow<T>(Action<T> action, T state)
         {
             if (typeof(T).IsValueType)
-                UnitySynchronizationContextUtility.UnitySynchronizationContext.Send(ActionHelper<T>.ExecuteAndReturn, Tuple2<Action<T>, T>.Rent(action, state));
+                unitySynchronizationContext.Send(ActionHelper<T>.ExecuteAndReturn, Tuple2<Action<T>, T>.Rent(action, state));
             else
-                UnitySynchronizationContextUtility.UnitySynchronizationContext.Send(Unsafe.As<SendOrPostCallback>(action), state);
+                unitySynchronizationContext.Send(Unsafe.As<SendOrPostCallback>(action), state);
         }
 
         /// <summary>
@@ -158,8 +162,11 @@ namespace Enderlook.Unity.Threading
         public static T RunNow<T>(Func<T> function)
         {
             Tuple2<Func<T>, T> tuple = Tuple2<Func<T>, T>.Rent(function);
-            UnitySynchronizationContextUtility.UnitySynchronizationContext.Send(FuncHelper<T>.Execute, tuple);
+            unitySynchronizationContext.Send(FuncHelper<T>.Execute, tuple);
             T value = tuple.Item2;
+            tuple.Item1 = null;
+            // TODO: In .Net Standard 2.1 we can use RuntimeHelper.IsReferenceOrContainsReferences<T>().
+            tuple.Item2 = default;
             tuple.Return();
             return value;
         }
@@ -176,8 +183,12 @@ namespace Enderlook.Unity.Threading
         public static U RunNow<T, U>(Func<T, U> function, T state)
         {
             Tuple3<Func<T, U>, T, U> tuple = Tuple3<Func<T, U>, T, U>.Rent(function, state);
-            UnitySynchronizationContextUtility.UnitySynchronizationContext.Send(FuncHelper<T, U>.Execute, tuple);
+            unitySynchronizationContext.Send(FuncHelper<T, U>.Execute, tuple);
             U value = tuple.Item3;
+            tuple.Item1 = null;
+            // TODO: In .Net Standard 2.1 we can use RuntimeHelper.IsReferenceOrContainsReferences<T>().
+            tuple.Item2 = default;
+            tuple.Item3 = default;
             tuple.Return();
             return value;
         }
