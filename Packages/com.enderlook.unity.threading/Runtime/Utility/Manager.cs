@@ -186,21 +186,53 @@ namespace Enderlook.Unity.Threading
             {
                 Lock(ref toAddLock);
                 {
-                    for (int i = 0; i < toAdd.Count; i++)
-                        list.Add(toAdd[i]);
+                    this.list.AddRange(toAdd.AsSpan());
                     toAdd.Clear();
                 }
                 Unlock(ref toAddLock);
 
+                Span<Action> list = this.list.AsSpan();
+
                 Lock(ref toRemoveLock);
                 {
-                    for (int i = 0; i < toRemove.Count; i++)
-                        list.Remove(toRemove[i]);
-                    toRemove.Clear();
+                    Span<Action> toRemove = this.toRemove.AsSpan();
+                    int toRemoveCount = toRemove.Length;
+                    if (toRemoveCount > 0)
+                    {
+                        int j = 0;
+                        for (int i = 0; i < list.Length; i++)
+                        {
+                            Action element = list[i];
+                            for (int k = 0; k < toRemoveCount; k++)
+                            {
+                                if (element == toRemove[k])
+                                {
+                                    if (toRemoveCount > 1)
+                                    {
+                                        toRemove[k] = toRemove[--toRemoveCount];
+                                        goto continue_;
+                                    }
+                                    else
+                                    {
+                                        list.Slice(i).CopyTo(list.Slice(j));
+                                        goto double_break;
+                                    }
+                                }
+                            }
+                            list[j++] = element;
+                        continue_:;
+                        }
+
+                    double_break:
+                        RawList<Action> list_ = RawList<Action>.From(this.list.UnderlyingArray, j);
+                        this.list = list_;
+                        list = list_.AsSpan();
+                        this.toRemove.Clear();
+                    }
                 }
                 Unlock(ref toRemoveLock);
 
-                for (int i = 0; i < list.Count; i++)
+                for (int i = 0; i < list.Length; i++)
                     list[i]();
             }
 
