@@ -11,7 +11,7 @@
   ],
   "dependencies": {
     "com.enderlook.collections.low_level": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.enderlook.collections.low_level#com.enderlook.collections.low_level/v0.6.0",
-    "com.enderlook.pools": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.enderlook.pools#com.enderlook.pools/v0.1.1",
+    "com.enderlook.pools": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.enderlook.pools#com.enderlook.pools/v0.2.1",
     "com.system.runtime.compiler_services.unsafe": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.runtime.compiler_services.unsafe#com.runtime.compiler_services.unsafe/v4.5.3"
   },
   "author": {

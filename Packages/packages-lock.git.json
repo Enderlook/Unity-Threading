@@ -44,11 +44,6 @@
             "name": "com.enderlook.reflection",
             "hash": "aaf9dec47eba17607bcebd13d7c18383d68f682d",
             "url": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.enderlook.reflection#com.enderlook.reflection/v0.1.0"
-        },
-        {
-            "name": "com.enderlook.pools",
-            "hash": "c447099c7afc19255685e73aa0cfbd5b3c0ac427",
-            "url": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.enderlook.pools#com.enderlook.pools/v0.1.0"
         }
     ]
 }
