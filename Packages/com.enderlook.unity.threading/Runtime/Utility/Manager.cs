@@ -13,9 +13,7 @@ namespace Enderlook.Unity.Threading
     [DefaultExecutionOrder(int.MaxValue)]
     internal sealed class Manager : MonoBehaviour
     {
-#if UNITY_EDITOR
         private static bool isExiting;
-#endif
 
         public static Manager Shared { get; private set; }
 
@@ -117,12 +115,13 @@ namespace Enderlook.Unity.Threading
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
+        private void OnApplicationQuit() => isExiting = true;
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
         private void OnDestroy()
         {
-#if UNITY_EDITOR
             if (isExiting)
                 return;
-#endif
             Shared = null;
             Debug.LogError($"{nameof(Manager)} should not be destroyed. This has triggered undefined behaviour.", this);
         }
@@ -130,10 +129,9 @@ namespace Enderlook.Unity.Threading
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
         private void OnDisable()
         {
-#if UNITY_EDITOR
             if (isExiting)
                 return;
-#endif
+
             gameObject.SetActive(true);
             enabled = true;
             Debug.LogError($"{nameof(Manager)} should not be disabled. This has triggered undefined behaviour.", this);
