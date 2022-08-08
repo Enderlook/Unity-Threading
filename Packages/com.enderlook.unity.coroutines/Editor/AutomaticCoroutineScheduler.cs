@@ -5,13 +5,19 @@ namespace Enderlook.Unity.Coroutines
     [CustomEditor(typeof(AutomaticCoroutineScheduler))]
     internal sealed class AutomaticCoroutineSchedulerEditor : Editor
     {
+        private SerializedProperty milisecondsExecutedPerFrameOnPoll;
+        private SerializedProperty minimumPercentOfExecutionsPerFrameOnPoll;
+
+        private void OnEnable()
+        {
+            SerializedProperty manager = serializedObject.FindProperty("manager");
+            milisecondsExecutedPerFrameOnPoll = manager.FindPropertyRelative("milisecondsExecutedPerFrameOnPoll");
+            minimumPercentOfExecutionsPerFrameOnPoll = manager.FindPropertyRelative("minimumPercentOfExecutionsPerFrameOnPoll");
+        }
+
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
-
-            SerializedProperty core = serializedObject.FindProperty("manager").FindPropertyRelative("core");
-            SerializedProperty milisecondsExecutedPerFrameOnPoll = core.FindPropertyRelative("milisecondsExecutedPerFrameOnPoll");
-            SerializedProperty minimumPercentOfExecutionsPerFrameOnPoll = core.FindPropertyRelative("minimumPercentOfExecutionsPerFrameOnPoll");
 
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(milisecondsExecutedPerFrameOnPoll);
