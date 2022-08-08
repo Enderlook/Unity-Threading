@@ -19,7 +19,7 @@ namespace Enderlook.Unity.Coroutines
 
         private ValueCoroutineState state;
         private MonoBehaviour monoBehaviour;
-        private Dictionary<Type, ManagerBase> managersDictionary = new Dictionary<Type, ManagerBase>();
+        private readonly Dictionary<Type, ManagerBase> managersDictionary = new Dictionary<Type, ManagerBase>();
         private RawList<ManagerBase> managersList = RawList<ManagerBase>.Create();
         private ReadWriterLock managerLock;
         private PollEnumerator pollEnumerator;
