@@ -41,7 +41,7 @@ namespace Enderlook.Unity.Coroutines
             private PackList<(Func<bool>, T)> onUntil = PackList<(Func<bool>, T)>.Create();
             private PackList<(ValueTask, T)> onTask = PackList<(ValueTask, T)>.Create();
             private PackList<(JobHandle, T)> onJobHandle = PackList<(JobHandle, T)>.Create();
-            // Waiter with timer can be reduced in time complexity by using priority queues.
+            // TODO: Waiter with timer can be reduced in time complexity by using priority queues.
             private PackList<(float, T)> onWaitSeconds = PackList<(float, T)>.Create();
             private PackList<(float, T)> onWaitRealtimeSeconds = PackList<(float, T)>.Create();
             private PackList<(ValueCoroutine, T)> onValueCoroutine = PackList<(ValueCoroutine, T)>.Create();
