@@ -35,7 +35,7 @@ namespace Enderlook.Unity.Coroutines
 
             Rect position = window.position;
             position.width = (EditorGUIUtility.fieldWidth + EditorGUIUtility.labelWidth) * 2;
-            position.height = EditorGUIUtility.singleLineHeight * 19.5f;
+            position.height = EditorGUIUtility.singleLineHeight * 11.5f;
             window.position = position;
         }
 
@@ -55,7 +55,7 @@ namespace Enderlook.Unity.Coroutines
                 const int ratio1 = 5;
                 waitLayoutOptionsMethod = new GUILayoutOption[] { GUILayout.MinWidth(min - (min / ratio1)), GUILayout.MaxWidth(position.width - (position.width / ratio1)) };
                 waitLayoutOptionsCountAndSize = new GUILayoutOption[] { GUILayout.MinWidth(min / ratio1), GUILayout.MaxWidth(position.width / ratio1) };
-                waitLayoutOptionsScroll = new GUILayoutOption[] { GUILayout.MaxHeight(EditorGUIUtility.singleLineHeight * 9f) };
+                waitLayoutOptionsScroll = new GUILayoutOption[] { GUILayout.MaxHeight(EditorGUIUtility.singleLineHeight * 8f) };
             }
         }
 

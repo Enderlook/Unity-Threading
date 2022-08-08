@@ -10,9 +10,9 @@ namespace Enderlook.Unity.Jobs
     {
         private static readonly GUIContent TITLE_CONTENT = new GUIContent("Jobs Viewer", "Show jobs information.");
 
-        private static readonly GUIContent JOB_MANAGER_HEADER_CONTENT = new GUIContent("Threading.JobManager Stored Workload", "Show amount of work related to Unity jobs must be done.");
+        private static readonly GUIContent JOB_MANAGER_HEADER_CONTENT = new GUIContent("Threading.JobManager Workload", "Show amount of work related to Unity jobs must be done.");
         private static readonly GUIContent JOB_MANAGER_HEADER_CONTENT_METHOD_TITLE = new GUIContent("Method", "Name of the method which the related workload.");
-        private static readonly GUIContent JOB_MANAGER_HEADER_CONTENT_COUNT_TITLE = new GUIContent("Count", "Amount of workload related to that method must be done.");
+        private static readonly GUIContent JOB_MANAGER_HEADER_CONTENT_COUNT_TITLE = new GUIContent("Waiting", "Amount of workload related to that method that is being watched to complete.");
 
         private GUILayoutOption[] jobManagerLayoutOptionsMethod;
         private GUILayoutOption[] jobManagerLayoutOptionsCount;
