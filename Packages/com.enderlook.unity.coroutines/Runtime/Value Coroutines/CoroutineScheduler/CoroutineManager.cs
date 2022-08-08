@@ -191,8 +191,8 @@ namespace Enderlook.Unity.Coroutines
         private TypedManager<T> CreateManager<T>() where T : IValueCoroutineEnumerator
         {
             managerLock.WriteBegin();
-            ManagerBase manager = new TypedManager<T>(this);
-            managersDictionary.Add(typeof(T), manager);
+            if (!managersDictionary.TryGetValue(typeof(T), out ManagerBase manager))
+                managersDictionary.Add(typeof(T), manager = new TypedManager<T>(this));
             managersList.Add(manager);
             managerLock.WriteEnd();
             return (TypedManager<T>)manager;
