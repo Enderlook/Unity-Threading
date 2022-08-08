@@ -99,7 +99,7 @@ namespace Enderlook.Unity.Coroutines
             if (state == ValueCoroutineState.Finalized)
                 ThrowObjectDisposedException();
             if (state == ValueCoroutineState.Suspended)
-                throw new InvalidOperationException("The manager is already suspended.");
+                ThrowIsAlreadySuspended();
             state = ValueCoroutineState.Suspended;
         }
 
@@ -111,7 +111,7 @@ namespace Enderlook.Unity.Coroutines
             if (state == ValueCoroutineState.Finalized)
                 ThrowObjectDisposedException();
             if (state == ValueCoroutineState.Continue)
-                throw new InvalidOperationException("The manager is not suspended");
+                ThrowIsNotSuspended();
             state = ValueCoroutineState.Suspended;
         }
 
@@ -232,20 +232,19 @@ namespace Enderlook.Unity.Coroutines
         private Coroutine StartUnityCoroutine(IEnumerator coroutine)
             => monoBehaviour.StartCoroutine(coroutine);
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
         private static void ThrowOutOfRangePercentExecutions() => throw new ArgumentOutOfRangeException("percentOfExecutions", "Must be from 0 to 1.");
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
         private static void ThrowOutOfRangeMilisecondsExecuted() => throw new ArgumentOutOfRangeException("milisecondsExecuted", "Can't be negative.");
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
         private static void ThrowMonoBehaviourNullException() => throw new ArgumentNullException("monoBehaviour");
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
         private static void ThrowObjectDisposedException() => throw new ObjectDisposedException("Manager");
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
         private static void ThrowNonUnityThread() => throw new InvalidOperationException("This function can only be executed in the Unity thread.");
+
+        private static void ThrowIsAlreadySuspended() => throw new InvalidOperationException("The manager is already suspended.");
+
+        private static void ThrowIsNotSuspended() => throw new InvalidOperationException("The manager is not suspended");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void CheckThread()
