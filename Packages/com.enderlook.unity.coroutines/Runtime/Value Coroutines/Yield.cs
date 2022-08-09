@@ -81,7 +81,7 @@ namespace Enderlook.Unity.Coroutines
 
         /// <summary>
         /// Suspend coroutine execution if the frame is delayed.<br/>
-        /// Code is runned in the main thread.
+        /// Code is run in the main thread.
         /// </summary>
         public static ValueYieldInstruction Poll {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
