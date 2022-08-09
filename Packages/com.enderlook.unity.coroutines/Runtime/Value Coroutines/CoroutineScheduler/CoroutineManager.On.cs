@@ -93,7 +93,7 @@ namespace Enderlook.Unity.Coroutines
                 managerLock.ReadEnd();
             }
 
-            /* TODO: `total` can be lower than the real value (even it can be negative) 
+            /* TODO: `total` can be lower than the real value (even it can be negative)
             * since users can queue to remove multiple times the same task (or tasks that doesn't exists)
             * but currently `EventsQueue` is just substracting the removal queue from `total`. */
 
