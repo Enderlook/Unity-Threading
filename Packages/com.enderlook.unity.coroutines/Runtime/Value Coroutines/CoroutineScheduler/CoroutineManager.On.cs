@@ -100,7 +100,23 @@ namespace Enderlook.Unity.Coroutines
             int to = Mathf.CeilToInt(total * minimumPercentOfExecutionsPerFrameOnPoll);
             int index = 0;
             int until = DateTime.Now.Millisecond + milisecondsExecutedPerFrameOnPoll;
-            while (pollEnumerator.MoveNext(until, ref index, to)) ;
+
+            while (true)
+            {
+                managerLock.ReadBegin();
+                RawList<ManagerBase> managersList = this.managersList;
+                managerLock.ReadEnd();
+                int old = poolIndex;
+                if (old < managersList.Count)
+                {
+                    poolIndex = old + 1;
+                    if (!managersList[old].OnPoll(until, ref index, to))
+                        break;
+                }
+                else
+                    index = 0;
+                break;
+            }
 
             /* TODO: Since users can remove tasks from poll, `i` may actually never reach total
             * That won't be a deadlock but it will burn a lot of CPU until the timeout is reached. */
@@ -133,34 +149,6 @@ namespace Enderlook.Unity.Coroutines
             RawList<ManagerBase> managers = managersList;
             managerLock.ReadEnd();
             return managers;
-        }
-
-        private struct PollEnumerator
-        {
-            private readonly CoroutineManager managers;
-            private int index;
-
-            public PollEnumerator(CoroutineManager managers)
-            {
-                this.managers = managers;
-                index = 0;
-            }
-
-            public bool MoveNext(int until, ref int i, int to)
-            {
-                managers.managerLock.ReadBegin();
-                RawList<ManagerBase> managersList = managers.managersList;
-                managers.managerLock.ReadEnd();
-                if (index < managersList.Count)
-                {
-                    int old = index;
-                    index++;
-                    return managersList[old].OnPoll(until, ref i, to);
-                }
-                else
-                    index = 0;
-                return false;
-            }
         }
     }
 }

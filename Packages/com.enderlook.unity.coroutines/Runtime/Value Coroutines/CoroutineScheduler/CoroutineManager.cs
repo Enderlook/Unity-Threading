@@ -22,7 +22,7 @@ namespace Enderlook.Unity.Coroutines
         private readonly Dictionary<Type, ManagerBase> managersDictionary = new Dictionary<Type, ManagerBase>();
         private RawList<ManagerBase> managersList = RawList<ManagerBase>.Create();
         private ReadWriterLock managerLock;
-        private PollEnumerator pollEnumerator;
+        private int poolIndex;
 
         /// <summary>
         /// Amount of miliseconds spent in executing poll coroutines per call to <see cref="OnPoll"/>.
@@ -76,7 +76,6 @@ namespace Enderlook.Unity.Coroutines
             if (monoBehaviour == null)
                 ThrowMonoBehaviourNullException();
 
-            pollEnumerator = new PollEnumerator(this);
             state = ValueCoroutineState.Continue;
             this.monoBehaviour = monoBehaviour;
         }
