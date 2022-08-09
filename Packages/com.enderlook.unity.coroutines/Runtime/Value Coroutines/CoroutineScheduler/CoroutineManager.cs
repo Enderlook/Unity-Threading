@@ -137,7 +137,7 @@ namespace Enderlook.Unity.Coroutines
                 ThrowObjectDisposedException();
             if (state == ValueCoroutineState.Continue)
                 ThrowIsNotSuspended();
-            state = ValueCoroutineState.Suspended;
+            state = ValueCoroutineState.Continue;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
