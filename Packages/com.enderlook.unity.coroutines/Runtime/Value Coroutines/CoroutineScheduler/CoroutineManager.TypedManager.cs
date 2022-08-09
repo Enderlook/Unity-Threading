@@ -21,10 +21,30 @@ namespace Enderlook.Unity.Coroutines
         {
 #if !UNITY_WEBGL
             private static readonly Action<(TypedManager<T> manager, T routine)> shortBackground =
-                e => e.manager.NextBackground(e.routine, new BackgroundShortNextCallback(), ThreadMode.Short);
+                e =>
+                {
+                    try
+                    {
+                        e.manager.NextBackground(e.routine, new BackgroundShortNextCallback(), ThreadMode.Short);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogException(ex);
+                    }
+                };
 
             private static readonly Action<(TypedManager<T> manager, T routine)> longBackground =
-                e => e.manager.NextBackground(e.routine, new BackgroundShortNextCallback(), ThreadMode.Long);
+                e =>
+                {
+                    try
+                    {
+                        e.manager.NextBackground(e.routine, new BackgroundShortNextCallback(), ThreadMode.Long);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogException(ex);
+                    }
+                };
 #endif
 
             private readonly CoroutineManager manager;
@@ -52,7 +72,6 @@ namespace Enderlook.Unity.Coroutines
 #if !UNITY_WEBGL
             private readonly ConcurrentQueue<T> suspendedBackgroundShort = new ConcurrentQueue<T>();
             private readonly ConcurrentQueue<T> suspendedBackgroundLong = new ConcurrentQueue<T>();
-            private readonly ConcurrentQueue<Task> backgroundTasks = new ConcurrentQueue<Task>();
 #endif
 
             private RawList<T> tmpT = RawList<T>.Create();
@@ -536,56 +555,17 @@ namespace Enderlook.Unity.Coroutines
             }
 
 #if !UNITY_WEBGL
-            public override void OnBackground()
+            public override void BackgroundResume()
             {
-                ConcurrentQueue<Task> tasks = backgroundTasks;
-                int count = tasks.Count;
-                while (count-- > 0 && tasks.TryDequeue(out Task task))
-                {
-                    if (task.IsCompleted)
-                    {
-                        if (task.IsFaulted)
-                            Debug.LogException(task.Exception);
-                    }
-                    else
-                        tasks.Enqueue(task);
-                }
-
                 ConcurrentQueue<T> local = suspendedBackgroundShort;
-                count = local.Count;
-                while (count-- > 0 && local.TryDequeue(out T routine))
-                {
-                    switch (manager.state)
-                    {
-                        case ValueCoroutineState.Continue:
-                            Task.Factory.StartNew(shortBackground, (this, routine));
-                            break;
-                        case ValueCoroutineState.Finalized:
-                            routine.Dispose();
-                            break;
-                        case ValueCoroutineState.Suspended:
-                            local.Enqueue(routine);
-                            break;
-                    }
-                }
+                int count = local.Count;
+                while (manager.state == ValueCoroutineState.Continue && count-- > 0 && local.TryDequeue(out T routine))
+                    Task.Factory.StartNew(shortBackground, (this, routine));
 
                 local = suspendedBackgroundLong;
                 count = local.Count;
-                while (count-- > 0 && local.TryDequeue(out T routine))
-                {
-                    switch (manager.state)
-                    {
-                        case ValueCoroutineState.Continue:
-                            Task.Factory.StartNew(longBackground, (this, routine));
-                            break;
-                        case ValueCoroutineState.Finalized:
-                            routine.Dispose();
-                            break;
-                        case ValueCoroutineState.Suspended:
-                            local.Enqueue(routine);
-                            break;
-                    }
-                }
+                while (manager.state == ValueCoroutineState.Continue && count-- > 0 && local.TryDequeue(out T routine))
+                    Task.Factory.StartNew(longBackground, (this, routine), TaskCreationOptions.LongRunning);
             }
 #endif
 
@@ -653,7 +633,7 @@ namespace Enderlook.Unity.Coroutines
 #endif
                         onUnityPoll.Enqueue(routine);
 #else
-                        backgroundTasks.Enqueue(Task.Factory.StartNew(shortBackground, (this, routine)));
+                        Task.Factory.StartNew(shortBackground, (this, routine));
 #endif
                         break;
                     case ValueYieldInstruction.Type.ToLongBackground:
@@ -663,7 +643,7 @@ namespace Enderlook.Unity.Coroutines
 #endif
                         onUnityPoll.Enqueue(routine);
 #else
-                        backgroundTasks.Enqueue(Task.Factory.StartNew(longBackground, (this, routine), TaskCreationOptions.LongRunning));
+                        Task.Factory.StartNew(longBackground, (this, routine), TaskCreationOptions.LongRunning);
 #endif
                         break;
                     case ValueYieldInstruction.Type.YieldInstruction:
@@ -821,7 +801,7 @@ namespace Enderlook.Unity.Coroutines
                                     goto start;
                                 }
                                 else
-                                    backgroundTasks.Enqueue(Task.Factory.StartNew(shortBackground, (this, routine)));
+                                    Task.Factory.StartNew(shortBackground, (this, routine));
                                 break;
                             case ValueYieldInstruction.Type.ToLongBackground:
 #if DEBUG && UNITY_WEBGL
@@ -835,7 +815,7 @@ namespace Enderlook.Unity.Coroutines
                                     goto start;
                                 }
                                 else
-                                    backgroundTasks.Enqueue(Task.Factory.StartNew(longBackground, (this, routine), TaskCreationOptions.LongRunning));
+                                    Task.Factory.StartNew(longBackground, (this, routine), TaskCreationOptions.LongRunning);
                                 break;
                             case ValueYieldInstruction.Type.YieldInstruction:
                             {
@@ -913,16 +893,6 @@ namespace Enderlook.Unity.Coroutines
 
             public override void Dispose(ref RawQueue<ValueTask> tasks)
             {
-#if !UNITY_WEBGL
-                ConcurrentQueue<T> suspendedBackgroundShort = this.suspendedBackgroundShort;
-                while (suspendedBackgroundShort.TryDequeue(out T routine))
-                    routine.Dispose();
-
-                ConcurrentQueue<T> suspendedBackgroundLong = this.suspendedBackgroundLong;
-                while (suspendedBackgroundLong.TryDequeue(out T routine))
-                    routine.Dispose();
-#endif
-
                 onUpdate.Dispose();
                 onFixedUpdate.Dispose();
                 onLateUpdate.Dispose();
@@ -965,9 +935,13 @@ namespace Enderlook.Unity.Coroutines
                 }
 
 #if !UNITY_WEBGL
-                ConcurrentQueue<Task> backgroundTasks = this.backgroundTasks;
-                while (backgroundTasks.TryDequeue(out Task task))
-                    tasks.Enqueue(new ValueTask(task));
+                ConcurrentQueue<T> suspendedBackgroundShort = this.suspendedBackgroundShort;
+                while (suspendedBackgroundShort.TryDequeue(out T routine))
+                    routine.Dispose();
+
+                ConcurrentQueue<T> suspendedBackgroundLong = this.suspendedBackgroundLong;
+                while (suspendedBackgroundLong.TryDequeue(out T routine))
+                    routine.Dispose();
 #endif
             }
         }

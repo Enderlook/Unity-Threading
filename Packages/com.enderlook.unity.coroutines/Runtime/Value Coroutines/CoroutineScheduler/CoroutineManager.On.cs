@@ -122,32 +122,6 @@ namespace Enderlook.Unity.Coroutines
             * That won't be a deadlock but it will burn a lot of CPU until the timeout is reached. */
         }
 
-        /// <summary>
-        /// Executes the background event of all coroutines.<br/>
-        /// It's not required to call this method on platforms which doesn't support multithreading.
-        /// </summary>
-        public void OnBackground()
-        {
-#if UNITY_WEBGL
-#if DEBUG
-            Debug.LogWarning("This platform doesn't support multithreading. It's not an error... thought it doesn't make much sense. This message will not shown on release.");
-#endif
-            return;
-#else
-#if DEBUG
-            if (UnityThread.IsMainThread)
-                Debug.LogWarning("You are executing this function in the main thread. It's not an error... thought it doesn't make much sense. This message will not shown on release.");
-#endif
-
-            if (state != ValueCoroutineState.Continue)
-                return;
-
-            RawList<ManagerBase> managers = GetManagersList();
-            for (int i = 0; i < managers.Count; i++)
-                managers[i].OnBackground();
-#endif
-        }
-
         private RawList<ManagerBase> GetManagersList()
         {
             managerLock.ReadBegin();

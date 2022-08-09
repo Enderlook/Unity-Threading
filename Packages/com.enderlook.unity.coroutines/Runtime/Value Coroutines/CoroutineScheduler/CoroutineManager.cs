@@ -5,7 +5,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
 
 using UnityEngine;
@@ -17,9 +16,18 @@ namespace Enderlook.Unity.Coroutines
     {
         internal static CoroutineManager Shared;
 
+        private static readonly Action<Task> logExceptionIfFaulted = e =>
+        {
+            if (e.IsFaulted)
+                Debug.LogException(e.Exception);
+        };
+
         private ValueCoroutineState state;
         private MonoBehaviour monoBehaviour;
-        private readonly Dictionary<Type, ManagerBase> managersDictionary = new Dictionary<Type, ManagerBase>();
+        private Dictionary<Type, ManagerBase> managersDictionary = new Dictionary<Type, ManagerBase>();
+
+        // Note: Don't use a RawPooledList here because resizing would clear the previous array,
+        // which may be still being used by methods that cached it.
         private RawList<ManagerBase> managersList = RawList<ManagerBase>.Create();
         private ReadWriterLock managerLock;
         private int poolIndex;
@@ -100,13 +108,6 @@ namespace Enderlook.Unity.Coroutines
                 Manager.OnFixedUpdate += shared.OnFixedUpdate;
                 Manager.OnEndOfFrame += shared.OnEndOfFrame;
                 Manager.OnLateUpdate += shared.OnEndOfFrame;
-
-#if !UNITY_WEBGL
-                new Thread(() => {
-                    while (shared != null)
-                        shared.OnBackground();
-                }).Start();
-#endif
             });
         }
 
@@ -116,13 +117,15 @@ namespace Enderlook.Unity.Coroutines
         /// Suspend the execution of the coroutines of this manager.
         /// </summary>
         /// <exception cref="ObjectDisposedException">Thrown when manager is disposed.</exception>
-        /// <exception cref="InvalidOperationException">Thrown when <see cref="IsSuspended"/> is <see langword="true"/>.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when <see cref="IsSuspended"/> is <see langword="true"/> or is run outside the Unity thread.</exception>
         public void Suspend()
         {
             if (state == ValueCoroutineState.Finalized)
                 ThrowObjectDisposedException();
             if (state == ValueCoroutineState.Suspended)
                 ThrowIsAlreadySuspended();
+            if (!UnityThread.IsMainThread)
+                ThrowNonUnityThread();
             state = ValueCoroutineState.Suspended;
         }
 
@@ -130,14 +133,20 @@ namespace Enderlook.Unity.Coroutines
         /// Suspend the execution of the coroutines of this manager.
         /// </summary>
         /// <exception cref="ObjectDisposedException">Thrown when manager is disposed.</exception>
-        /// <exception cref="InvalidOperationException">Thrown when <see cref="IsSuspended"/> is <see langword="false"/>.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when <see cref="IsSuspended"/> is <see langword="false"/> or is run outside the Unity thread.</exception>
         public void Reanude()
         {
             if (state == ValueCoroutineState.Finalized)
                 ThrowObjectDisposedException();
             if (state == ValueCoroutineState.Continue)
                 ThrowIsNotSuspended();
+            if (!UnityThread.IsMainThread)
+                ThrowNonUnityThread();
             state = ValueCoroutineState.Continue;
+
+            RawList<ManagerBase> managers = GetManagersList();
+            for (int i = 0; i < managers.Count; i++)
+                managers[i].BackgroundResume();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -228,12 +237,18 @@ namespace Enderlook.Unity.Coroutines
         {
             if (state == ValueCoroutineState.Finalized)
                 return;
+            state = ValueCoroutineState.Finalized;
+
+            GC.SuppressFinalize(this);
 
             RawQueue<ValueTask> tasks = RawQueue<ValueTask>.Create();
             managerLock.WriteBegin();
-            state = ValueCoroutineState.Finalized;
-            foreach (KeyValuePair<Type, ManagerBase> kvp in managersDictionary) // Don't use .Values to prevent an allocation.
-                kvp.Value.Dispose(ref tasks);
+            Dictionary<Type, ManagerBase> managersDictionary = this.managersDictionary;
+            if (!(managersDictionary is null)) // TODO: This prevent error in Unity, but which one? May it have to do with serialization (value is assigned after the finalizer is executed)?
+            {
+                foreach (KeyValuePair<Type, ManagerBase> kvp in managersDictionary) // Don't use .Values to prevent an allocation.
+                    kvp.Value.Dispose(ref tasks);
+            }
             monoBehaviour = null;
             managerLock.WriteEnd();
 
@@ -245,7 +260,7 @@ namespace Enderlook.Unity.Coroutines
                         Debug.LogException(task.AsTask().Exception);
                 }
                 else
-                    tasks.Enqueue(task);
+                    task.AsTask().ContinueWith(logExceptionIfFaulted);
             }
         }
 

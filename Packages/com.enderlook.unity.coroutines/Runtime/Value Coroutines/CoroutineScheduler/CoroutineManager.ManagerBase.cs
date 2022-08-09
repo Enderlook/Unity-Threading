@@ -21,7 +21,7 @@ namespace Enderlook.Unity.Coroutines
             public abstract bool OnPoll(int until, ref int i, int to);
 
 #if !UNITY_WEBGL
-            public abstract void OnBackground();
+            public abstract void BackgroundResume();
 #endif
 
             public abstract void Dispose(ref RawQueue<ValueTask> tasks);
