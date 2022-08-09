@@ -21,7 +21,7 @@ namespace Enderlook.Unity.Coroutines
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
         private void Awake()
         {
-            manager = new CoroutineManager(this);
+            manager.SetMonoBehaviour(this);
             StartCoroutine(Work());
             IEnumerator Work()
             {

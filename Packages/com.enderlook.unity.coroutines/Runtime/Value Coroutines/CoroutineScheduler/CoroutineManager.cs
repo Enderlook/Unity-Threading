@@ -78,6 +78,13 @@ namespace Enderlook.Unity.Coroutines
 
             pollEnumerator = new PollEnumerator(this);
             state = ValueCoroutineState.Continue;
+            this.monoBehaviour = monoBehaviour;
+        }
+
+        internal void SetMonoBehaviour(MonoBehaviour monoBehaviour)
+        {
+            Debug.Assert(monoBehaviour != null && this.monoBehaviour is null);
+            this.monoBehaviour = monoBehaviour;
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
