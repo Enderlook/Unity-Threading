@@ -9,7 +9,7 @@ using UnityEngine;
 namespace Enderlook.Unity.Coroutines
 {
     /// <summary>
-    /// A wrapper arround <see cref="CoroutineScheduler"/> to automatically execute its events.
+    /// A wrapper arround <see cref="CoroutineManager"/> to automatically execute its events.
     /// </summary>
     [AddComponentMenu("Enderlook/Automatic Coroutines Manager")]
     [DefaultExecutionOrder(int.MaxValue)]

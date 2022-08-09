@@ -12,28 +12,28 @@ namespace Enderlook.Unity.Coroutines
     [EditorBrowsable(EditorBrowsableState.Never)]
     public static class CoroutineExtensions
     {
-        /// <inheritdoc cref="CoroutineScheduler.Start{T}(T, GameObject)"/>
+        /// <inheritdoc cref="CoroutineManager.Start{T}(T, GameObject)"/>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void StartValueCoroutine<T>(this GameObject source, T routine)
             where T : IEnumerator<ValueYieldInstruction>
            => CoroutineManager.Shared.Start(routine, source);
 
-        /// <inheritdoc cref="CoroutineScheduler.StartWithValueHandle{T}(T, GameObject)"/>
+        /// <inheritdoc cref="CoroutineManager.StartWithValueHandle{T}(T, GameObject)"/>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ValueCoroutine StartValueCoroutineWithValueHandle<T>(this GameObject source, T routine)
             where T : IEnumerator<ValueYieldInstruction>
            => CoroutineManager.Shared.StartWithHandle(routine, source);
 
-        /// <inheritdoc cref="CoroutineScheduler.Start{T}(T, MonoBehaviour, bool)"/>
+        /// <inheritdoc cref="CoroutineManager.Start{T}(T, MonoBehaviour, bool)"/>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void StartValueCoroutine<T>(this MonoBehaviour source, T routine, bool suspendWhenSourceIsDisabled = false)
             where T : IEnumerator<ValueYieldInstruction>
            => CoroutineManager.Shared.Start(routine, source, suspendWhenSourceIsDisabled);
 
-        /// <inheritdoc cref="CoroutineScheduler.StartWithValueHandle{T}(T, MonoBehaviour, bool)"/>
+        /// <inheritdoc cref="CoroutineManager.Start{T}(T, MonoBehaviour, bool)"/>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ValueCoroutine StartValueCoroutineWithValueHandle<T>(this MonoBehaviour source, T routine, bool suspendWhenSourceIsDisabled = false)
