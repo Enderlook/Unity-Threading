@@ -245,12 +245,5 @@ namespace Enderlook.Unity.Coroutines
         private static void ThrowIsAlreadySuspended() => throw new InvalidOperationException("The manager is already suspended.");
 
         private static void ThrowIsNotSuspended() => throw new InvalidOperationException("The manager is not suspended");
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CheckThread()
-        {
-            if (!UnityThread.IsMainThread)
-                ThrowNonUnityThread();
-        }
     }
 }

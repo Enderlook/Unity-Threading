@@ -14,7 +14,9 @@ namespace Enderlook.Unity.Coroutines
         /// </summary>
         public void OnUpdate()
         {
-            CheckThread();
+            if (!UnityThread.IsMainThread)
+                ThrowNonUnityThread();
+
             if (state != ValueCoroutineState.Continue)
                 return;
 
@@ -28,7 +30,9 @@ namespace Enderlook.Unity.Coroutines
         /// </summary>
         public void OnLateUpdate()
         {
-            CheckThread();
+            if (!UnityThread.IsMainThread)
+                ThrowNonUnityThread();
+
             if (state != ValueCoroutineState.Continue)
                 return;
 
@@ -42,7 +46,9 @@ namespace Enderlook.Unity.Coroutines
         /// </summary>
         public void OnFixedUpdate()
         {
-            CheckThread();
+            if (!UnityThread.IsMainThread)
+                ThrowNonUnityThread();
+
             if (state != ValueCoroutineState.Continue)
                 return;
 
@@ -56,7 +62,9 @@ namespace Enderlook.Unity.Coroutines
         /// </summary>
         public void OnEndOfFrame()
         {
-            CheckThread();
+            if (!UnityThread.IsMainThread)
+                ThrowNonUnityThread();
+
             if (state != ValueCoroutineState.Continue)
                 return;
 
@@ -70,7 +78,9 @@ namespace Enderlook.Unity.Coroutines
         /// </summary>
         public void OnPoll()
         {
-            CheckThread();
+            if (!UnityThread.IsMainThread)
+                ThrowNonUnityThread();
+
             if (state != ValueCoroutineState.Continue)
                 return;
 
