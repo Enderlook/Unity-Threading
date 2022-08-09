@@ -94,6 +94,8 @@ namespace Enderlook.Unity.Coroutines
         /// <summary>
         /// Suspend the execution of the coroutines of this manager.
         /// </summary>
+        /// <exception cref="ObjectDisposedException">Thrown when manager is disposed.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when <see cref="IsSuspended"/> is <see langword="true"/>.</exception>
         public void Suspend()
         {
             if (state == ValueCoroutineState.Finalized)
@@ -106,6 +108,8 @@ namespace Enderlook.Unity.Coroutines
         /// <summary>
         /// Suspend the execution of the coroutines of this manager.
         /// </summary>
+        /// <exception cref="ObjectDisposedException">Thrown when manager is disposed.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when <see cref="IsSuspended"/> is <see langword="false"/>.</exception>
         public void Reanude()
         {
             if (state == ValueCoroutineState.Finalized)
