@@ -13,10 +13,10 @@ namespace Enderlook.Unity.Coroutines
             {
                 case ValueCoroutineState.Finalized | ValueCoroutineState.Continue:
                 case ValueCoroutineState.Finalized | ValueCoroutineState.Suspended:
-                case ValueCoroutineState.Finalized | ValueCoroutineState.Finalized:
+                //case ValueCoroutineState.Finalized | ValueCoroutineState.Finalized:
                     return ValueCoroutineState.Finalized;
                 case ValueCoroutineState.Suspended | ValueCoroutineState.Continue:
-                case ValueCoroutineState.Suspended | ValueCoroutineState.Suspended:
+                //case ValueCoroutineState.Suspended | ValueCoroutineState.Suspended:
                     return ValueCoroutineState.Suspended;
                 case ValueCoroutineState.Continue | ValueCoroutineState.Continue:
                     return ValueCoroutineState.Continue;

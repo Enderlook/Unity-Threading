@@ -8,16 +8,16 @@
         /// <summary>
         /// The coroutine can continue.
         /// </summary>
-        Continue = 1 << 0,
+        Continue = 0,
 
         /// <summary>
         /// The coroutine has been finalized or cancelled.
         /// </summary>
-        Finalized = 1 << 1,
+        Finalized = 1,
 
         /// <summary>
         /// The coroutine has is suspended.
         /// </summary>
-        Suspended = 1 << 2,
+        Suspended = 2,
     }
 }
