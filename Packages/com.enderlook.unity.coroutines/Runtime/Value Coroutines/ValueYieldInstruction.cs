@@ -17,7 +17,7 @@ namespace Enderlook.Unity.Coroutines
     /// </summary>
     public struct ValueYieldInstruction
     {
-        private static FieldInfo waitForSecondsTimer = typeof(WaitForSeconds).GetField("m_Seconds", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldInfo waitForSecondsTimer = typeof(WaitForSeconds).GetField("m_Seconds", BindingFlags.NonPublic | BindingFlags.Instance);
 
         internal Type Mode;
         private object obj;
