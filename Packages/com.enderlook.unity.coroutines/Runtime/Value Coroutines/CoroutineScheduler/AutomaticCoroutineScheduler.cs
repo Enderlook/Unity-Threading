@@ -72,61 +72,61 @@ namespace Enderlook.Unity.Coroutines
 
         /// <inheritdoc cref="CoroutineManager.Start{T}(T)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Start<T>(T coroutine)
+        public void StartValueCoroutine<T>(T coroutine)
             where T : IEnumerator<ValueYieldInstruction>
             => manager.Start(coroutine);
 
         /// <inheritdoc cref="CoroutineManager.Start{T}(T)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueCoroutine StartWithHandle<T>(T coroutine)
+        public ValueCoroutine StartValueCoroutineWithHandle<T>(T coroutine)
             where T : IEnumerator<ValueYieldInstruction>
             => manager.StartWithHandle(coroutine);
 
         /// <inheritdoc cref="CoroutineManager.Start{T}(T, CancellationToken)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Start<T>(T coroutine, CancellationToken token)
+        public void StartValueCoroutine<T>(T coroutine, CancellationToken token)
             where T : IEnumerator<ValueYieldInstruction>
             => manager.Start(coroutine, token);
 
         /// <inheritdoc cref="CoroutineManager.Start{T}(T, CancellationToken)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueCoroutine StartWithHandle<T>(T coroutine, CancellationToken token)
+        public ValueCoroutine StartValueCoroutineWithHandle<T>(T coroutine, CancellationToken token)
             where T : IEnumerator<ValueYieldInstruction>
             => manager.StartWithHandle(coroutine, token);
 
         /// <inheritdoc cref="CoroutineManager.Start{T}(T, Object)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Start<T>(T coroutine, Object source)
+        public void StartValueCoroutine<T>(T coroutine, Object source)
             where T : IEnumerator<ValueYieldInstruction>
             => manager.Start(coroutine, source);
 
         /// <inheritdoc cref="CoroutineManager.Start{T}(T, Object)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueCoroutine StartWithHandle<T>(T coroutine, Object source)
+        public ValueCoroutine StartValueCoroutineWithHandle<T>(T coroutine, Object source)
             where T : IEnumerator<ValueYieldInstruction>
             => manager.StartWithHandle(coroutine, source);
 
         /// <inheritdoc cref="CoroutineManager.Start{T}(T, GameObject)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Start<T>(T coroutine, GameObject source)
+        public void StartValueCoroutine<T>(T coroutine, GameObject source)
             where T : IEnumerator<ValueYieldInstruction>
             => manager.Start(coroutine, source);
 
         /// <inheritdoc cref="CoroutineManager.Start{T}(T, GameObject)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueCoroutine StartWithHandle<T>(T coroutine, GameObject source)
+        public ValueCoroutine StartValueCoroutineWithHandle<T>(T coroutine, GameObject source)
             where T : IEnumerator<ValueYieldInstruction>
             => manager.StartWithHandle(coroutine, source);
 
         /// <inheritdoc cref="CoroutineManager.Start{T}(T, MonoBehaviour, bool)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Start<T>(T coroutine, MonoBehaviour source, bool suspendWhenSourceIsDisabled = false)
+        public void StartValueCoroutine<T>(T coroutine, MonoBehaviour source, bool suspendWhenSourceIsDisabled = false)
             where T : IEnumerator<ValueYieldInstruction>
             => manager.Start(coroutine, source, suspendWhenSourceIsDisabled);
 
         /// <inheritdoc cref="CoroutineManager.Start{T}(T, MonoBehaviour, bool)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueCoroutine StartWithHandle<T>(T coroutine, MonoBehaviour source, bool suspendWhenSourceIsDisabled = false)
+        public ValueCoroutine StartValueCoroutineWithHandle<T>(T coroutine, MonoBehaviour source, bool suspendWhenSourceIsDisabled = false)
             where T : IEnumerator<ValueYieldInstruction>
             => manager.StartWithHandle(coroutine, source, suspendWhenSourceIsDisabled);
     }
