@@ -3,7 +3,7 @@
     /// <summary>
     /// Determines the state of the coroutine.
     /// </summary>
-    public enum ValueCoroutineState : byte
+    internal enum ValueCoroutineState : byte
     {
         /// <summary>
         /// The coroutine can continue.
