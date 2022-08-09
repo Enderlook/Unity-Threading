@@ -57,10 +57,20 @@ namespace Enderlook.Unity.Coroutines
 
         private sealed class GCCallback
         {
+            private readonly StrongBox<bool> isQuitting;
+
+            public GCCallback()
+            {
+                StrongBox<bool> isQuitting = new StrongBox<bool>();
+                Application.quitting += () => isQuitting.Value = true;
+                this.isQuitting = isQuitting;
+            }
+
             ~GCCallback()
             {
                 requestClear = true;
-                GC.ReRegisterForFinalize(this);
+                if (!isQuitting.Value)
+                    GC.ReRegisterForFinalize(this);
             }
         }
 
