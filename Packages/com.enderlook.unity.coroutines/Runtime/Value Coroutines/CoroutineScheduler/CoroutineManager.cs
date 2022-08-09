@@ -207,8 +207,8 @@ namespace Enderlook.Unity.Coroutines
             RawQueue<ValueTask> tasks = RawQueue<ValueTask>.Create();
             managerLock.WriteBegin();
             state = ValueCoroutineState.Finalized;
-            foreach (ManagerBase manager in managersDictionary.Values)
-                manager.Dispose(ref tasks);
+            foreach (KeyValuePair<Type, ManagerBase> kvp in managersDictionary) // Don't use .Values to prevent an allocation.
+                kvp.Value.Dispose(ref tasks);
             monoBehaviour = null;
             managerLock.WriteEnd();
 
