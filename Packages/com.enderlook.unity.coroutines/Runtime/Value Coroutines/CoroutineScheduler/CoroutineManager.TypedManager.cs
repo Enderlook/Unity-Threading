@@ -642,8 +642,8 @@ namespace Enderlook.Unity.Coroutines
                         onUnityCoroutine.Add((instruction.UnityCoroutine, routine));
                         break;
                     case ValueYieldInstruction.Type.ToUnity:
-#if UNITY_EDITOR
-                        Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToUnity)} was yielded from main thread. This will be ignored.");
+#if DEBUG
+                        Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToUnity)} was yielded from main thread. This will be ignored. This message will not shown on release.");
 #endif
                         goto start;
                     case ValueYieldInstruction.Type.ToBackground:
