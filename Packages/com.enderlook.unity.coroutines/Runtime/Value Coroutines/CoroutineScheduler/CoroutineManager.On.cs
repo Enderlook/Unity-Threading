@@ -128,6 +128,12 @@ namespace Enderlook.Unity.Coroutines
         /// </summary>
         public void OnBackground()
         {
+#if UNITY_WEBGL
+#if DEBUG
+            Debug.LogWarning("This platform doesn't support multithreading. It's not an error... thought it doesn't make much sense. This message will not shown on release.");
+#endif
+            return;
+#else
 #if DEBUG
             if (UnityThread.IsMainThread)
                 Debug.LogWarning("You are executing this function in the main thread. It's not an error... thought it doesn't make much sense. This message will not shown on release.");
@@ -136,7 +142,6 @@ namespace Enderlook.Unity.Coroutines
             if (state != ValueCoroutineState.Continue)
                 return;
 
-#if !UNITY_WEBGL
             RawList<ManagerBase> managers = GetManagersList();
             for (int i = 0; i < managers.Count; i++)
                 managers[i].OnBackground();
