@@ -65,7 +65,11 @@ namespace Enderlook.Unity.Coroutines
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
-        private void OnEnable() => manager?.Reanude();
+        private void OnEnable()
+        {
+            if (manager?.IsSuspended ?? false)
+                manager?.Reanude();
+        }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
         private void OnDisable() => manager?.Suspend();
