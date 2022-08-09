@@ -95,17 +95,17 @@ namespace Enderlook.Unity.Coroutines
 
             Manager.OnInitialized(() =>
             {
-                Shared = new CoroutineManager(Manager.Shared);
-                Manager.OnUpdate += Shared.OnUpdate;
-                Manager.OnUpdate += Shared.OnPoll;
-                Manager.OnFixedUpdate += Shared.OnFixedUpdate;
-                Manager.OnEndOfFrame += Shared.OnEndOfFrame;
-                Manager.OnLateUpdate += Shared.OnEndOfFrame;
+                CoroutineManager shared = Shared = new CoroutineManager(Manager.Shared);
+                Manager.OnUpdate += shared.OnUpdate;
+                Manager.OnUpdate += shared.OnPoll;
+                Manager.OnFixedUpdate += shared.OnFixedUpdate;
+                Manager.OnEndOfFrame += shared.OnEndOfFrame;
+                Manager.OnLateUpdate += shared.OnEndOfFrame;
 
 #if !UNITY_WEBGL
                 new Thread(() => {
-                    while (true)
-                        Shared.OnBackground();
+                    while (shared != null)
+                        shared.OnBackground();
                 }).Start();
 #endif
             });
