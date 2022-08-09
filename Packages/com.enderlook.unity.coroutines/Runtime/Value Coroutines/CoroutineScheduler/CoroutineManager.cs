@@ -53,6 +53,21 @@ namespace Enderlook.Unity.Coroutines
         private float minimumPercentOfExecutionsPerFrameOnPoll = .025f;
 
         /// <summary>
+        /// Determines if this manager is suspended.
+        /// </summary>
+        /// <exception cref="ObjectDisposedException">Thrown when manager is disposed.</exception>
+        public bool IsSuspended
+        {
+            get
+            {
+                ValueCoroutineState state = this.state;
+                if (state == ValueCoroutineState.Finalized)
+                    ThrowObjectDisposedException();
+                return state == ValueCoroutineState.Suspended;
+            }
+        }
+
+        /// <summary>
         /// Creates a manager whose events must be called manually.
         /// </summary>
         /// <param name="monoBehaviour"><see cref="MonoBehaviour"/> used to fallback Unity coroutines.</param>
