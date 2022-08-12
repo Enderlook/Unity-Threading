@@ -30,7 +30,7 @@ namespace Enderlook.Unity.Coroutines
 #endif
 
         /// <summary>
-        /// Suspend the coroutine execution until the supplied seconds in realtime has passed.<br/<
+        /// Suspend the coroutine execution until the supplied seconds in realtime has passed.<br/>
         /// The instance is draw from a pool.
         /// </summary>
         /// <param name="seconds">Time in seconds to wait.</param>
