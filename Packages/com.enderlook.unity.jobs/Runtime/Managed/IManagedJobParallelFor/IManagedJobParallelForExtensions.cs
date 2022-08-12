@@ -15,36 +15,37 @@ namespace Enderlook.Unity.Jobs
     public static class IManagedJobParallelForExtensions
     {
         /// <inheritdoc cref="IJobParallelForExtensions.Schedule{T}(T, int, int, JobHandle)"/>
-        public static JobHandle Schedule(this IManagedJobParallelFor job, int arrayLength, int innerLoopBatchCount, JobHandle dependsOn = default)
-        {
-#if UNITY_WEBGL
-            long key = GlobalDictionary<IManagedJobParallelFor>.Store(job);
-            JobHandle jobHandle = new JobWithKey(key).Schedule(arrayLength, innerLoopBatchCount, dependsOn);
-            return new JobFreeKey(key).Schedule(jobHandle);
-#else
-            GCHandle handle = GCHandle.Alloc(job, GCHandleType.Pinned);
-            JobHandle jobHandle = new JobWithHandle(handle).Schedule(arrayLength, innerLoopBatchCount, dependsOn);
-            return new JobFreeHandle(handle).Schedule(jobHandle);
-#endif
-        }
-
-        /// <inheritdoc cref="IJobParallelForExtensions.Schedule{T}(T, int, int, JobHandle)"/>
         public static JobHandle Schedule<T>(this T job, int arrayLength, int innerLoopBatchCount, JobHandle dependsOn = default)
-            where T : struct, IManagedJobParallelFor
+            where T : IManagedJobParallelFor
         {
+            if (typeof(T).IsValueType)
+            {
 #if UNITY_WEBGL
-            StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
-            box.Value = job;
-            long key = GlobalDictionary<StrongBox<T>>.Store(box);
-            JobHandle jobHandle = new JobWithKey<T>(key).Schedule(arrayLength, innerLoopBatchCount, dependsOn);
-            return new JobFreeKey<T>(key).Schedule(jobHandle);
+                StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
+                box.Value = job;
+                long key = GlobalDictionary<StrongBox<T>>.Store(box);
+                JobHandle jobHandle = new JobWithKey<T>(key).Schedule(arrayLength, innerLoopBatchCount, dependsOn);
+                return new JobFreeKey<T>(key).Schedule(jobHandle);
 #else
-            StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
-            box.Value = job;
-            GCHandle handle = GCHandle.Alloc(box, GCHandleType.Pinned);
-            JobHandle jobHandle = new JobWithHandle<T>(handle).Schedule(arrayLength, innerLoopBatchCount, dependsOn);
-            return new JobFreeHandle<T>(handle).Schedule(jobHandle);
+                StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
+                box.Value = job;
+                GCHandle handle = GCHandle.Alloc(box, GCHandleType.Pinned);
+                JobHandle jobHandle = new JobWithHandle<T>(handle).Schedule(arrayLength, innerLoopBatchCount, dependsOn);
+                return new JobFreeHandle<T>(handle).Schedule(jobHandle);
 #endif
+            }
+            else
+            {
+#if UNITY_WEBGL
+                long key = GlobalDictionary<IManagedJobParallelFor>.Store(job);
+                JobHandle jobHandle = new JobWithKey(key).Schedule(arrayLength, innerLoopBatchCount, dependsOn);
+                return new JobFreeKey(key).Schedule(jobHandle);
+#else
+                GCHandle handle = GCHandle.Alloc(job, GCHandleType.Pinned);
+                JobHandle jobHandle = new JobWithHandle(handle).Schedule(arrayLength, innerLoopBatchCount, dependsOn);
+                return new JobFreeHandle(handle).Schedule(jobHandle);
+#endif
+            }
         }
 
         /// <summary>
@@ -57,39 +58,41 @@ namespace Enderlook.Unity.Jobs
             => new ManagedJobParallelFor<T>(job);
 
         /// <inheritdoc cref="IJobParallelForExtensions.Run{T}(T, int)"/>
-        public static void Run(this IManagedJobParallelFor job, int arrayLength)
-        {
-#if UNITY_WEBGL
-            long key = GlobalDictionary<IManagedJobParallelFor>.Store(job);
-            new JobWithKey(key).Run(arrayLength);
-            GlobalDictionary<IManagedJobParallelFor>.Drain(key);
-#else
-            GCHandle handle = GCHandle.Alloc(job, GCHandleType.Pinned);
-            new JobWithHandle(handle).Run(arrayLength);
-            handle.Free();
-#endif
-        }
-
-        /// <inheritdoc cref="IJobParallelForExtensions.Run{T}(T, int)"/>
         public static void Run<T>(this T job, int arrayLength)
-            where T : struct, IManagedJobParallelFor
+            where T : IManagedJobParallelFor
         {
+            if (typeof(T).IsValueType)
+            {
 #if UNITY_WEBGL
-            StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
-            box.Value = job;
-            long key = GlobalDictionary<StrongBox<T>>.Store(box);
-            new JobWithKey<T>(key).Run(arrayLength);
-            GlobalDictionary<StrongBox<T>>.Remove(key);
-            ObjectPool<StrongBox<T>>.Shared.Return(box);
+                StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
+                box.Value = job;
+                long key = GlobalDictionary<StrongBox<T>>.Store(box);
+                new JobWithKey<T>(key).Run(arrayLength);
+                GlobalDictionary<StrongBox<T>>.Remove(key);
+                ObjectPool<StrongBox<T>>.Shared.Return(box);
 #else
-            StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
-            box.Value = job;
-            GCHandle handle = GCHandle.Alloc(box, GCHandleType.Pinned);
-            new JobWithHandle<T>(handle).Run(arrayLength);
-            ObjectPool<StrongBox<T>>.Shared.Return(box);
+                StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
+                box.Value = job;
+                GCHandle handle = GCHandle.Alloc(box, GCHandleType.Pinned);
+                new JobWithHandle<T>(handle).Run(arrayLength);
+                ObjectPool<StrongBox<T>>.Shared.Return(box);
 #endif
+            }
+            else
+            {
+#if UNITY_WEBGL
+                long key = GlobalDictionary<IManagedJobParallelFor>.Store(job);
+                new JobWithKey(key).Run(arrayLength);
+                GlobalDictionary<IManagedJobParallelFor>.Drain(key);
+#else
+                GCHandle handle = GCHandle.Alloc(job, GCHandleType.Pinned);
+                new JobWithHandle(handle).Run(arrayLength);
+                handle.Free();
+#endif
+            }
         }
 
+#if !UNITY_WEBGL
         private readonly struct JobWithHandle : IJobParallelFor
         {
             private readonly GCHandle handle;
@@ -98,7 +101,9 @@ namespace Enderlook.Unity.Jobs
 
             public void Execute(int index)
             {
-                IManagedJobParallelFor job = (IManagedJobParallelFor)handle.Target;
+                object target = handle.Target;
+                Debug.Assert(target is IManagedJobParallelFor);
+                IManagedJobParallelFor job = Unsafe.As<IManagedJobParallelFor>(target);
                 job.Execute(index);
             }
         }
@@ -143,7 +148,7 @@ namespace Enderlook.Unity.Jobs
                 handle.Free();
             }
         }
-
+#else
         private readonly struct JobWithKey : IJobParallelFor
         {
             private readonly long key;
@@ -188,5 +193,6 @@ namespace Enderlook.Unity.Jobs
                 ObjectPool<StrongBox<T>>.Shared.Return(box);
             }
         }
+#endif
     }
 }

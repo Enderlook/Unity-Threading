@@ -15,28 +15,28 @@ namespace Enderlook.Unity.Jobs
     public static partial class IManagedJobExtensions
     {
         /// <inheritdoc cref="IJobExtensions.Schedule{T}(T, JobHandle)"/>
-        public static JobHandle Schedule(this IManagedJob job, JobHandle dependsOn = default)
-        {
-#if UNITY_WEBGL
-            return new JobWithKey(GlobalDictionary<IManagedJob>.Store(job)).Schedule(dependsOn);
-#else
-            return new JobWithHandle(GCHandle.Alloc(job, GCHandleType.Pinned)).Schedule(dependsOn);
-#endif
-        }
-
-        /// <inheritdoc cref="IJobExtensions.Schedule{T}(T, JobHandle)"/>
         public static JobHandle Schedule<T>(this T job, JobHandle dependsOn = default)
-            where T : struct, IManagedJob
+            where T : IManagedJob
         {
+            if (typeof(T).IsValueType)
+            {
+                StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
 #if UNITY_WEBGL
-            StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
-            box.Value = job;
-            return new JobWithKey<T>(GlobalDictionary<StrongBox<T>>.Store(box)).Schedule(dependsOn);
+                box.Value = job;
+                return new JobWithKey<T>(GlobalDictionary<StrongBox<T>>.Store(box)).Schedule(dependsOn);
 #else
-            StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
-            box.Value = job;
-            return new JobWithHandle<T>(GCHandle.Alloc(box, GCHandleType.Pinned)).Schedule(dependsOn);
+                box.Value = job;
+                return new JobWithHandle<T>(GCHandle.Alloc(box, GCHandleType.Pinned)).Schedule(dependsOn);
 #endif
+            }
+            else
+            {
+#if UNITY_WEBGL
+                return new JobWithKey(GlobalDictionary<IManagedJob>.Store(job)).Schedule(dependsOn);
+#else
+                return new JobWithHandle(GCHandle.Alloc(job, GCHandleType.Pinned)).Schedule(dependsOn);
+#endif
+            }
         }
 
         /// <summary>
@@ -48,31 +48,33 @@ namespace Enderlook.Unity.Jobs
         public static ManagedJob<T> AsManaged<T>(this T job) where T : IJob
             => new ManagedJob<T>(job);
 
-        /// <inheritdoc cref="IJobExtensions.Schedule{T}(T, JobHandle)"/>
-        public static void Run(this IManagedJob job)
-        {
-#if UNITY_WEBGL
-            new JobWithKey(GlobalDictionary<IManagedJob>.Store(job)).Run();
-#else
-            new JobWithHandle(GCHandle.Alloc(job, GCHandleType.Pinned)).Run();
-#endif
-        }
-
         /// <inheritdoc cref="IJobExtensions.Run{T}(T, JobHandle)"/>
         public static void Run<T>(this T job)
-            where T : struct, IManagedJob
+            where T : IManagedJob
         {
+            if (typeof(T).IsValueType)
+            {
 #if UNITY_WEBGL
-            StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
-            box.Value = job;
-            new JobWithKey<T>(GlobalDictionary<StrongBox<T>>.Store(box)).Run();
+                StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
+                box.Value = job;
+                new JobWithKey<T>(GlobalDictionary<StrongBox<T>>.Store(box)).Run();
 #else
-            StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
-            box.Value = job;
-            new JobWithHandle<T>(GCHandle.Alloc(box, GCHandleType.Pinned)).Run();
+                StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
+                box.Value = job;
+                new JobWithHandle<T>(GCHandle.Alloc(box, GCHandleType.Pinned)).Run();
 #endif
+            }
+            else
+            {
+#if UNITY_WEBGL
+                new JobWithKey(GlobalDictionary<IManagedJob>.Store(job)).Run();
+#else
+                new JobWithHandle(GCHandle.Alloc(job, GCHandleType.Pinned)).Run();
+#endif
+            }
         }
 
+#if !UNITY_WEBGL
         private readonly struct JobWithHandle : IJob
         {
             private readonly GCHandle handle;
@@ -81,7 +83,9 @@ namespace Enderlook.Unity.Jobs
 
             public void Execute()
             {
-                IManagedJob job = (IManagedJob)handle.Target;
+                object target = handle.Target;
+                Debug.Assert(target is IManagedJob);
+                IManagedJob job = Unsafe.As<IManagedJob>(target);
                 handle.Free();
                 job.Execute();
             }
@@ -104,7 +108,7 @@ namespace Enderlook.Unity.Jobs
                 job.Execute();
             }
         }
-
+#else
         private readonly struct JobWithKey : IJob
         {
             private readonly long key;
@@ -128,5 +132,6 @@ namespace Enderlook.Unity.Jobs
                 job.Execute();
             }
         }
+#endif
     }
 }
