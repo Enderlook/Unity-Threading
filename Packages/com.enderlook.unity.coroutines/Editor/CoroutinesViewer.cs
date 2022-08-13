@@ -14,9 +14,9 @@ namespace Enderlook.Unity.Coroutines
         private static readonly GUIContent WAIT_HEADER_CONTENT_METHOD_TITLE = new GUIContent("Method", "Name of the method which has the pooled content.");
         private static readonly GUIContent WAIT_HEADER_CONTENT_COUNT_TITLE = new GUIContent("Count", "Amount of pooled objects that are not being used.");
 
-        private GUILayoutOption[] waitLayoutOptionsMethod;
-        private GUILayoutOption[] waitLayoutOptionsCountAndSize;
-        private GUILayoutOption[] waitLayoutOptionsScroll;
+        private static GUILayoutOption[] waitLayoutOptionsMethod;
+        private static GUILayoutOption[] waitLayoutOptionsCountAndSize;
+        private static GUILayoutOption[] waitLayoutOptionsScroll;
 
         private (int, string) waitForSeconds = (0, "0");
         private (int, string) waitForSecondsRealtime = (0, "0");
