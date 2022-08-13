@@ -1,7 +1,9 @@
 ﻿using Enderlook.Pools;
 
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 using Unity.Jobs;
 
@@ -23,18 +25,26 @@ namespace Enderlook.Unity.Jobs
                 StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
 #if UNITY_WEBGL
                 box.Value = job;
-                return new JobWithKey<T>(GlobalDictionary<StrongBox<T>>.Store(box)).Schedule(dependsOn);
+                return new JobWithKeyValueType<T>(GlobalDictionary<StrongBox<T>>.Store(box)).Schedule(dependsOn);
 #else
                 box.Value = job;
-                return new JobWithHandle<T>(GCHandle.Alloc(box, GCHandleType.Pinned)).Schedule(dependsOn);
+                return new JobWithHandleValueType<T>(GCHandle.Alloc(box, GCHandleType.Pinned)).Schedule(dependsOn);
 #endif
             }
             else
             {
 #if UNITY_WEBGL
-                return new JobWithKey(GlobalDictionary<IManagedJob>.Store(job)).Schedule(dependsOn);
+                return new JobWithKeyReferenceType
+#if UNITY_EDITOR
+                    <T>
+#endif
+                    (GlobalDictionary<IManagedJob>.Store(job)).Schedule(dependsOn);
 #else
-                return new JobWithHandle(GCHandle.Alloc(job, GCHandleType.Pinned)).Schedule(dependsOn);
+                return new JobWithHandleReferenceType
+#if UNITY_EDITOR
+                    <T>
+#endif
+                    (GCHandle.Alloc(job, GCHandleType.Pinned)).Schedule(dependsOn);
 #endif
             }
         }
@@ -57,7 +67,7 @@ namespace Enderlook.Unity.Jobs
 #if UNITY_WEBGL
                 StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
                 box.Value = job;
-                new JobWithKey<T>(GlobalDictionary<StrongBox<T>>.Store(box)).Run();
+                new JobWithKeyValueType<T>(GlobalDictionary<StrongBox<T>>.Store(box)).Run();
 #else
                 StrongBox<T> box = ObjectPool<StrongBox<T>>.Shared.Rent();
                 box.Value = job;
@@ -67,19 +77,46 @@ namespace Enderlook.Unity.Jobs
             else
             {
 #if UNITY_WEBGL
-                new JobWithKey(GlobalDictionary<IManagedJob>.Store(job)).Run();
+                new JobWithKeyReferenceType
+#if UNITY_EDITOR
+                    <T>
+#endif
+                    (GlobalDictionary<IManagedJob>.Store(job)).Run();
 #else
-                new JobWithHandleReferenceType(GCHandle.Alloc(job, GCHandleType.Pinned)).Run();
+                new JobWithHandleReferenceType
+#if UNITY_EDITOR
+                    <T>
+#endif
+                    (GCHandle.Alloc(job, GCHandleType.Pinned)).Run();
 #endif
             }
         }
 
 #if !UNITY_WEBGL
-        private readonly struct JobWithHandle : IJob
+        private readonly struct JobWithHandleReferenceType
+#if UNITY_EDITOR
+            <T>
+#endif
+            : IJob
+#if UNITY_EDITOR
+             where T : IManagedJob
+#endif
         {
             private readonly GCHandle handle;
 
-            public JobWithHandle(GCHandle handle) => this.handle = handle;
+#if UNITY_EDITOR
+            private static int count;
+
+            static JobWithHandleReferenceType() => ManagedJobEditorHelper.AddPoolContainer(GetTypeForContainer<T>().Name, () => count);
+#endif
+
+            public JobWithHandleReferenceType(GCHandle handle)
+            {
+                this.handle = handle;
+#if UNITY_EDITOR
+                Interlocked.Increment(ref count);
+#endif
+            }
 
             public void Execute()
             {
@@ -87,15 +124,38 @@ namespace Enderlook.Unity.Jobs
                 Debug.Assert(target is IManagedJob);
                 IManagedJob job = Unsafe.As<IManagedJob>(target);
                 handle.Free();
-                job.Execute();
+#if UNITY_EDITOR
+                try
+                {
+#endif
+                    job.Execute();
+#if UNITY_EDITOR
+                }
+                finally
+                {
+                    Interlocked.Decrement(ref count);
+                }
+#endif
             }
         }
 
-        private readonly struct JobWithHandle<T> : IJob where T : IManagedJob
+        private readonly struct JobWithHandleValueType<T> : IJob where T : IManagedJob
         {
             private readonly GCHandle handle;
 
-            public JobWithHandle(GCHandle handle) => this.handle = handle;
+#if UNITY_EDITOR
+            private static int count;
+
+            static JobWithHandleValueType() => ManagedJobEditorHelper.AddPoolContainer(GetTypeForContainer<T>().Name, () => count);
+#endif
+
+            public JobWithHandleValueType(GCHandle handle)
+            {
+                this.handle = handle;
+#if UNITY_EDITOR
+                Interlocked.Increment(ref count);
+#endif
+            }
 
             public void Execute()
             {
@@ -105,32 +165,150 @@ namespace Enderlook.Unity.Jobs
                 handle.Free();
                 T job = box.Value;
                 ObjectPool<StrongBox<T>>.Shared.Return(box);
-                job.Execute();
+#if UNITY_EDITOR
+                try
+                {
+#endif
+                    job.Execute();
+#if UNITY_EDITOR
+                }
+                finally
+                {
+                    Interlocked.Decrement(ref count);
+                }
+#endif
             }
         }
 #else
-        private readonly struct JobWithKey : IJob
+        private readonly struct JobWithKeyReferenceType
+#if UNITY_EDITOR
+            <T>
+#endif
+            : IJob
+#if UNITY_EDITOR
+            where T : IManagedJob
+#endif
         {
             private readonly long key;
 
-            public JobWithKey(long key) => this.key = key;
+#if UNITY_EDITOR
+            private static int count;
 
-            public void Execute() => GlobalDictionary<IManagedJob>.Drain(key).Execute();
+            static JobWithKeyReferenceType() => ManagedJobEditorHelper.AddPoolContainer(GetTypeForContainer<T>().Name, () => count);
+#endif
+
+            public JobWithKeyReferenceType(long key)
+            {
+                this.key = key;
+#if UNITY_EDITOR
+                Interlocked.Increment(ref count);
+#endif
+            }
+
+            public void Execute()
+            {
+                IManagedJob managedJob = GlobalDictionary<IManagedJob>.Drain(key);
+#if UNITY_EDITOR
+                try
+                {
+#endif
+                    managedJob.Execute();
+#if UNITY_EDITOR
+                }
+                finally
+                {
+                    Interlocked.Decrement(ref count);
+                }
+#endif
+            }
         }
 
-        private readonly struct JobWithKey<T> : IJob where T : IManagedJob
+        private readonly struct JobWithKeyValueType<T> : IJob where T : IManagedJob
         {
             private readonly long key;
 
-            public JobWithKey(long key) => this.key = key;
+#if UNITY_EDITOR
+            private static int count;
+
+            static JobWithKeyValueType() => ManagedJobEditorHelper.AddPoolContainer(GetTypeForContainer<T>().Name, () => count);
+#endif
+
+            public JobWithKeyValueType(long key)
+            {
+                this.key = key;
+#if UNITY_EDITOR
+                Interlocked.Increment(ref count);
+#endif
+            }
 
             public void Execute()
             {
                 StrongBox<T> box = GlobalDictionary<StrongBox<T>>.Drain(key);
                 T job = box.Value;
                 ObjectPool<StrongBox<T>>.Shared.Return(box);
-                job.Execute();
+#if UNITY_EDITOR
+                try
+                {
+#endif
+                    job.Execute();
+#if UNITY_EDITOR
+                }
+                finally
+                {
+                    Interlocked.Decrement(ref count);
+                }
+#endif
             }
+        }
+#endif
+
+#if UNITY_EDITOR
+        private static Type GetTypeForContainer<T>()
+        {
+            Type type = typeof(T);
+            if (type.Assembly == typeof(JobAction).Assembly)
+            {
+                if (type == typeof(JobAction))
+                    type = typeof(Action);
+                else if (type.IsGenericType)
+                {
+                    Type definition = type.GetGenericTypeDefinition();
+                    if (definition == typeof(JobAction<>))
+                        type = typeof(JobAction<>).MakeGenericType(type.GenericTypeArguments);
+                    else if (definition == typeof(JobAction<,>))
+                        type = typeof(Action<,>).MakeGenericType(type.GenericTypeArguments);
+                    else if (definition == typeof(JobAction<,,>))
+                        type = typeof(Action<,,>).MakeGenericType(type.GenericTypeArguments);
+                    else if (definition == typeof(JobAction<,,,>))
+                        type = typeof(Action<,,,>).MakeGenericType(type.GenericTypeArguments);
+                    else if (definition == typeof(JobAction<,,,,>))
+                        type = typeof(Action<,,,,>).MakeGenericType(type.GenericTypeArguments);
+                    else if (definition == typeof(JobAction<,,,,,>))
+                        type = typeof(Action<,,,,,>).MakeGenericType(type.GenericTypeArguments);
+                    else if (definition == typeof(JobAction<,,,,,,>))
+                        type = typeof(Action<,,,,,,>).MakeGenericType(type.GenericTypeArguments);
+                    else if (definition == typeof(JobAction<,,,,,,,>))
+                        type = typeof(Action<,,,,,,,>).MakeGenericType(type.GenericTypeArguments);
+                    else if (definition == typeof(JobAction<,,,,,,,,>))
+                        type = typeof(Action<,,,,,,,,>).MakeGenericType(type.GenericTypeArguments);
+                    else if (definition == typeof(JobAction<,,,,,,,,,>))
+                        type = typeof(Action<,,,,,,,,,>).MakeGenericType(type.GenericTypeArguments);
+                    else if (definition == typeof(JobAction<,,,,,,,,,,>))
+                        type = typeof(Action<,,,,,,,,,,>).MakeGenericType(type.GenericTypeArguments);
+                    else if (definition == typeof(JobAction<,,,,,,,,,,,>))
+                        type = typeof(Action<,,,,,,,,,,,>).MakeGenericType(type.GenericTypeArguments);
+                    else if (definition == typeof(JobAction<,,,,,,,,,,,,>))
+                        type = typeof(Action<,,,,,,,,,,,,>).MakeGenericType(type.GenericTypeArguments);
+                    else if (definition == typeof(JobAction<,,,,,,,,,,,,,>))
+                        type = typeof(Action<,,,,,,,,,,,,,>).MakeGenericType(type.GenericTypeArguments);
+                    else if (definition == typeof(JobAction<,,,,,,,,,,,,,,>))
+                        type = typeof(Action<,,,,,,,,,,,,,,>).MakeGenericType(type.GenericTypeArguments);
+                    else if (definition == typeof(JobAction<,,,,,,,,,,,,,,,>))
+                        type = typeof(Action<,,,,,,,,,,,,,,,>).MakeGenericType(type.GenericTypeArguments);
+                }
+            }
+
+            return type;
         }
 #endif
     }
