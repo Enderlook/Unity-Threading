@@ -11,11 +11,6 @@
             "url": "https://github.com/Enderlook/Unity-Net-Packages?path=Packages/com.enderlook.threading#com.enderlook.threading/v0.2.0"
         },
         {
-            "name": "com.enderlook.unity.toolset.utils",
-            "hash": "ad809a0e5f210cdb9f52dd78a99ae160607b65ae",
-            "url": "https://github.com/Enderlook/Unity-Toolset.git?path=Packages/com.enderlook.unity.toolset.utils#com.enderlook.unity.toolset.utils/v0.3.1"
-        },
-        {
             "name": "com.enderlook.collections.low_level",
             "hash": "82d16686f901d2945ded6b9c49bfa5eb5d6e8bc5",
             "url": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.enderlook.collections.low_level#com.enderlook.collections.low_level/v0.6.0"
@@ -36,44 +31,14 @@
             "url": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.system.runtime.compiler_services.unsafe#com.system.runtime.compiler_services.unsafe/v4.5.3"
         },
         {
-            "name": "com.enderlook.unity.utils",
-            "hash": "844af26083e3dd795eb060d96c65af8c4d2e9363",
-            "url": "https://github.com/Enderlook/Unity-Extras.git?path=Packages/com.enderlook.unity.utils#com.enderlook.unity.utils/v0.1.0"
-        },
-        {
-            "name": "com.enderlook.reflection",
-            "hash": "aaf9dec47eba17607bcebd13d7c18383d68f682d",
-            "url": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.enderlook.reflection#com.enderlook.reflection/v0.1.0"
-        },
-        {
-            "name": "com.enderlook.net_compatibility",
-            "hash": "7be4e4fc8ac7bdf16bd89d10c453b180bc466381",
-            "url": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.enderlook.net_compatibility#com.enderlook.net_compatibility/v0.5.0"
-        },
-        {
             "name": "com.system.buffers",
             "hash": "842c2cae1b41589606841297c3cc49d09fc73648",
             "url": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.system.buffers#com.system.buffers/v4.5.1"
         },
         {
-            "name": "com.enderlook.net_compatibility",
-            "hash": "7be4e4fc8ac7bdf16bd89d10c453b180bc466381",
-            "url": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.enderlook.net_compatibility#com.enderlook.net_compatibility/v0.5.0"
-        },
-        {
             "name": "com.enderlook.unity.toolset.utils",
-            "hash": "ad809a0e5f210cdb9f52dd78a99ae160607b65ae",
-            "url": "https://github.com/Enderlook/Unity-Toolset.git?path=Packages/com.enderlook.unity.toolset.utils#com.enderlook.unity.toolset.utils/v0.3.1"
-        },
-        {
-            "name": "com.enderlook.unity.utils",
-            "hash": "844af26083e3dd795eb060d96c65af8c4d2e9363",
-            "url": "https://github.com/Enderlook/Unity-Extras.git?path=Packages/com.enderlook.unity.utils#com.enderlook.unity.utils/v0.1.0"
-        },
-        {
-            "name": "com.enderlook.reflection",
-            "hash": "aaf9dec47eba17607bcebd13d7c18383d68f682d",
-            "url": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.enderlook.reflection#com.enderlook.reflection/v0.1.0"
+            "hash": "480aaf4cbc04d3e13832d9f6f6b35b0e62144743",
+            "url": "https://github.com/Enderlook/Unity-Toolset.git?path=Packages/com.enderlook.unity.toolset.utils#com.enderlook.unity.toolset.utils/v0.6.0"
         }
     ]
 }

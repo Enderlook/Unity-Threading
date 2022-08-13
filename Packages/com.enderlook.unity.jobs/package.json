@@ -12,7 +12,7 @@
   "dependencies": {
     "com.enderlook.collections.low_level": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.enderlook.collections.low_level#com.enderlook.collections.low_level/v0.6.0",
     "com.enderlook.unity.threading": "https://github.com/Enderlook/Unity-Threading.git?/path=Packages/com.enderlook.unity.threading#com.enderlook.unity.threading/v0.7.3",
-    "com.enderlook.unity.toolset.utils": "https://github.com/Enderlook/Unity-Toolset.git?path=Packages/com.enderlook.unity.toolset.utils#com.enderlook.unity.toolset.utils/v0.3.1"
+    "com.enderlook.unity.toolset.utils": "https://github.com/Enderlook/Unity-Toolset.git?path=Packages/com.enderlook.unity.toolset.utils#com.enderlook.unity.toolset.utils/v0.6.0"
   },
   "author": {
     "name": "Enderlook",
