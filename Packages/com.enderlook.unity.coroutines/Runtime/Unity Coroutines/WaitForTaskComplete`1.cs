@@ -33,9 +33,7 @@ namespace Enderlook.Unity.Coroutines
 
 #if UNITY_EDITOR
         static WaitForTaskComplete()
-        {
-            Wait.AddWaitForTaskComplete($"Wait.For({typeof(WaitForTaskComplete<T>).Name})", () => ObjectPool<WaitForTaskComplete<T>>.Shared.ApproximateCount());
-        }
+            => Wait.AddWaitForTaskComplete($"Wait.For({typeof(WaitForTaskComplete<T>).Name})", () => ObjectPool<WaitForTaskComplete<T>>.Shared.ApproximateCount());
 #endif
 
         /// <summary>
