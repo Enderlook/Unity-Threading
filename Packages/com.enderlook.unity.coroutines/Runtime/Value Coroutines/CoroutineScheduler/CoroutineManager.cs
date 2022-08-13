@@ -24,7 +24,7 @@ namespace Enderlook.Unity.Coroutines
 
         private ValueCoroutineState state;
         private MonoBehaviour monoBehaviour;
-        private Dictionary<Type, ManagerBase> managersDictionary = new Dictionary<Type, ManagerBase>();
+        private readonly Dictionary<Type, ManagerBase> managersDictionary = new Dictionary<Type, ManagerBase>();
 
         // Note: Don't use a RawPooledList here because resizing would clear the previous array,
         // which may be still being used by methods that cached it.
