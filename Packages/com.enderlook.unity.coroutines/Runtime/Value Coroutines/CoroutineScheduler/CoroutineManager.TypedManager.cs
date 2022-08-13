@@ -195,36 +195,39 @@ namespace Enderlook.Unity.Coroutines
                 tmpT = local;
             }
 
-            public override int PollCount() => onUnityPoll.Count;
+            public override int PollCount => onUnityPoll.Count;
 
-            public override bool OnPoll(int until, ref int i, int to)
+            public override void OnPoll(int until, bool guaranteMinimumExecution)
             {
 #if !UNITY_WEBGL
                 onUnityPoll.DrainConcurrent();
 #endif
                 RawQueue<T> local = onUnityPoll.Swap(tmpTQueue);
 
-                bool completed = true;
+                bool timedOut = false;
+                int min = guaranteMinimumExecution ? Mathf.CeilToInt(local.Count * manager.MinimumPercentOfExecutionsPerFrameOnPoll) : 0;
                 while (local.TryDequeue(out T routine))
                 {
-                    i++;
                     Next(routine, new PollNextCallback());
-                    if (DateTime.Now.Millisecond >= until && i < to)
+                    if (DateTime.Now.Millisecond >= until && min-- <= 0)
                     {
-                        completed = false;
+                        timedOut = true;
                         break;
                     }
                 }
 
-                RawQueue<T> tmp = onUnityPoll.Queue;
-                // TODO: This may be improved with Array.Copy or similar.
-                while (tmp.TryDequeue(out T routine))
-                    local.Enqueue(routine);
+                if (timedOut)
+                {
+                    RawQueue<T> tmp = onUnityPoll.Queue;
+                    // TODO: This may be improved with Array.Copy or similar.
+                    while (tmp.TryDequeue(out T routine))
+                        local.Enqueue(routine);
 
-                onUnityPoll.Queue = local;
-                tmpTQueue = tmp;
-
-                return completed;
+                    onUnityPoll.Queue = local;
+                    tmpTQueue = tmp;
+                }
+                else
+                    tmpTQueue = local;
             }
 
             private void OnWaitForSeconds()

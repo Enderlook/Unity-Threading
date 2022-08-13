@@ -10,6 +10,22 @@ namespace Enderlook.Unity.Coroutines
     public sealed partial class CoroutineManager
     {
         /// <summary>
+        /// Returns an aproximate number of coroutines that are waiting for poll.<br/>
+        /// Since this method is not synchronized, due multithreading scenarios it may not give exact results.
+        /// </summary>
+        public int PollCount
+        {
+            get
+            {
+                int total = 0;
+                RawList<ManagerBase> managers = GetManagersList();
+                for (int i = 0; i < managers.Count; i++)
+                    total += managers[i].PollCount;
+                return total;
+            }
+        }
+
+        /// <summary>
         /// Executes the update event of all coroutines.
         /// </summary>
         public void OnUpdate()
@@ -84,47 +100,25 @@ namespace Enderlook.Unity.Coroutines
             if (state != ValueCoroutineState.Continue)
                 return;
 
-            int total = 0;
-            {
-                managerLock.ReadBegin();
-                RawList<ManagerBase> managers = managersList;
-                for (int i = 0; i < managers.Count; i++)
-                    total += managers[i].PollCount();
-                managerLock.ReadEnd();
-            }
-
-            /* TODO: `total` can be lower than the real value (even it can be negative)
-            * since users can queue to remove multiple times the same task (or tasks that doesn't exists)
-            * but currently `EventsQueue` is just substracting the removal queue from `total`. */
-
-            int to = Mathf.CeilToInt(total * minimumPercentOfExecutionsPerFrameOnPoll);
-            int index = 0;
             int until = DateTime.Now.Millisecond + milisecondsExecutedPerFrameOnPoll;
-
-            while (true)
-            {
-                managerLock.ReadBegin();
-                RawList<ManagerBase> managersList = this.managersList;
-                managerLock.ReadEnd();
-                int old = poolIndex;
-                if (old < managersList.Count)
-                {
-                    poolIndex = old + 1;
-                    if (!managersList[old].OnPoll(until, ref index, to))
-                        break;
-                }
-                else
-                    index = 0;
-                break;
-            }
-
-            /* TODO: Since users can remove tasks from poll, `i` may actually never reach total
-            * That won't be a deadlock but it will burn a lot of CPU until the timeout is reached. */
+            bool first = true;
+        loop:
+            // GetManagersList() is inside the loop because new managers may be added during the iterations.
+            RawList<ManagerBase> managersList = GetManagersList();
+            for (int i = 0; i < managersList.Count; i++)
+                managersList[i].OnPoll(until, first);
+            first = false;
+            if (DateTime.Now.Millisecond > until)
+                return;
+            for (int i = 0; i < managersList.Count; i++)
+                if (managersList[i].PollCount > 0)
+                    goto loop;
         }
 
         private RawList<ManagerBase> GetManagersList()
         {
             managerLock.ReadBegin();
+            // Underlying arrays are not cleaned nor reaused during resize, nor coroutines implement auto-cleaning, so this is safe.
             RawList<ManagerBase> managers = managersList;
             managerLock.ReadEnd();
             return managers;

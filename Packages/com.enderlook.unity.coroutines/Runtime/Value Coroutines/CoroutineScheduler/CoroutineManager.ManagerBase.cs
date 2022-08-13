@@ -16,9 +16,9 @@ namespace Enderlook.Unity.Coroutines
 
             public abstract void OnEndOfFrame();
 
-            public abstract int PollCount();
+            public abstract int PollCount { get; }
 
-            public abstract bool OnPoll(int until, ref int i, int to);
+            public abstract void OnPoll(int until, bool guaranteMinimumExecution);
 
 #if !UNITY_WEBGL
             public abstract void BackgroundResume();

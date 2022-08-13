@@ -14,6 +14,9 @@ namespace Enderlook.Unity.Coroutines
     [Serializable]
     public sealed partial class CoroutineManager
     {
+        internal const int MILISECONDS_EXECUTED_PER_FRAME_ON_POLL_DEFAULT_VALUE = 5;
+        internal const float MINIMUM_PERCENT_OF_EXECUTIONS_PER_FRAME_ON_POLL_DEFAULT_VALUE = .025f;
+
         internal static CoroutineManager Shared;
 
         private static readonly Action<Task> logExceptionIfFaulted = e =>
@@ -30,7 +33,6 @@ namespace Enderlook.Unity.Coroutines
         // which may be still being used by methods that cached it.
         private RawList<ManagerBase> managersList = RawList<ManagerBase>.Create();
         private ReadWriterLock managerLock;
-        private int poolIndex;
 
         /// <summary>
         /// Amount of miliseconds spent in executing poll coroutines per call to <see cref="OnPoll"/>.
@@ -44,7 +46,7 @@ namespace Enderlook.Unity.Coroutines
             }
         }
         [SerializeField, Min(0), Tooltip("Amount of miliseconds spent in executing poll coroutines.")]
-        private int milisecondsExecutedPerFrameOnPoll = 5;
+        private int milisecondsExecutedPerFrameOnPoll = MILISECONDS_EXECUTED_PER_FRAME_ON_POLL_DEFAULT_VALUE;
 
         /// <summary>
         /// Percentage of total execution that must be executed on per call to <see cref="OnPoll"/> regardless of <see cref="MilisecondsExecutedPerFrameOnPoll"/>.
@@ -57,8 +59,8 @@ namespace Enderlook.Unity.Coroutines
                 minimumPercentOfExecutionsPerFrameOnPoll = value;
             }
         }
-        [SerializeField, Range(0, 1), Tooltip("Percentage of total execution that must be executed on poll coroutines regardless of timeout.")]
-        private float minimumPercentOfExecutionsPerFrameOnPoll = .025f;
+        [SerializeField, Range(0, 1), Tooltip("Percentage of total executions that must be executed on poll coroutines regardless of timeout.")]
+        private float minimumPercentOfExecutionsPerFrameOnPoll = MINIMUM_PERCENT_OF_EXECUTIONS_PER_FRAME_ON_POLL_DEFAULT_VALUE;
 
         /// <summary>
         /// Determines if this manager is suspended.
@@ -108,6 +110,7 @@ namespace Enderlook.Unity.Coroutines
                 Manager.OnFixedUpdate += shared.OnFixedUpdate;
                 Manager.OnEndOfFrame += shared.OnEndOfFrame;
                 Manager.OnLateUpdate += shared.OnEndOfFrame;
+                GlobalCoroutinesManagerUnit.Load();
             });
         }
 
