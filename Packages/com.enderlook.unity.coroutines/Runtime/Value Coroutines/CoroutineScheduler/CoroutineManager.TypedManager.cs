@@ -783,11 +783,7 @@ namespace Enderlook.Unity.Coroutines
                                 onUnityCoroutine.Add((instruction.UnityCoroutine, routine));
                                 break;
                             case ValueYieldInstruction.Type.ToUnity:
-#if DEBUG
-                                Debug.LogWarning($"{nameof(Yield)}.{nameof(Yield.ToUnity)} was yielded and it allocates memory. Alternatively you could use other methods such as {nameof(Yield)}.{nameof(Yield.ToUpdate)} which doesn't allocate and has a similar effect. This message will not shown on release.");
-#endif
-                                // TODO: Allocations can be reduced.
-                                UnityThread.RunLater(() => Next(routine, callback));
+                                UnityThread.RunLater(Container<U>.Action, (this, routine, callback));
                                 break;
                             case ValueYieldInstruction.Type.ToBackground:
 #if DEBUG && UNITY_WEBGL
@@ -890,6 +886,11 @@ namespace Enderlook.Unity.Coroutines
                 }
             }
 #endif
+
+            private static class Container<U> where U : INextCallback<T>
+            {
+                public static readonly Action<(TypedManager<T> manager, T routine, U callback)> Action = e => e.manager.Next(e.routine, e.callback);
+            }
 
             public override void Dispose(ref RawQueue<ValueTask> tasks)
             {
