@@ -6,9 +6,9 @@ using UnityEngine;
 
 namespace Enderlook.Unity.Jobs
 {
-    internal sealed class JobsViewer : EditorWindow
+    internal sealed class JobsInfo : EditorWindow
     {
-        private static readonly GUIContent TITLE_CONTENT = new GUIContent("Jobs Viewer", "Show jobs information.");
+        private static readonly GUIContent TITLE_CONTENT = new GUIContent("Jobs Information", "Show jobs information.");
 
         private static readonly GUIContent JOB_MANAGER_HEADER_CONTENT = new GUIContent("Threading.JobManager Workload", "Show amount of work related to Unity jobs must be done.");
         private static readonly GUIContent JOB_MANAGER_HEADER_CONTENT_METHOD_TITLE = new GUIContent("Method", "Name of the method which the related workload.");
@@ -22,11 +22,11 @@ namespace Enderlook.Unity.Jobs
         private (int, string) jobHandleOnComplete = (0, "0");
         private Vector2 jobHandleScrollPosition;
 
-        [MenuItem("Enderlook/Threading Viewer")]
+        [MenuItem("Enderlook/Jobs Information")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
         private static void ShowWindow()
         {
-            JobsViewer window = CreateWindow<JobsViewer>();
+            JobsInfo window = CreateWindow<JobsInfo>();
 
             Rect position = window.position;
             position.width = (EditorGUIUtility.fieldWidth + EditorGUIUtility.labelWidth) * 2;
