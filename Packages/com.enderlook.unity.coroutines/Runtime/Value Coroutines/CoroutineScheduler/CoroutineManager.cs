@@ -243,12 +243,9 @@ namespace Enderlook.Unity.Coroutines
 
             RawQueue<ValueTask> tasks = RawQueue<ValueTask>.Create();
             managerLock.WriteBegin();
-            Dictionary<Type, ManagerBase> managersDictionary = this.managersDictionary;
-            if (!(managersDictionary is null)) // TODO: This prevent error in Unity, but which one? May it have to do with serialization (value is assigned after the finalizer is executed)?
-            {
-                foreach (KeyValuePair<Type, ManagerBase> kvp in managersDictionary) // Don't use .Values to prevent an allocation.
-                    kvp.Value.Dispose(ref tasks);
-            }
+            RawList<ManagerBase> managers = managersList;
+            for (int i = 0; i < managers.Count; i++)
+                managers[i].Dispose(ref tasks);
             monoBehaviour = null;
             managerLock.WriteEnd();
 
