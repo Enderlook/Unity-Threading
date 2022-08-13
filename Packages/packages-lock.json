@@ -1,0 +1,490 @@
+{
+  "dependencies": {
+    "com.coffee.git-dependency-resolver": {
+      "version": "https://github.com/mob-sakai/GitDependencyResolverForUnity.git#2.0.0",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "d4fc38c92fb139b4184912f20556ab27a3b519fa"
+    },
+    "com.enderlook.collections.low_level": {
+      "version": "file:.com.enderlook.collections.low_level@0.6.0",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.system.memory": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.system.memory#com.system.memory/v4.5.4"
+      }
+    },
+    "com.enderlook.net_compatibility": {
+      "version": "file:.com.enderlook.net_compatibility@0.5.0",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.system.memory": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.system.memory#com.system.memory/v4.5.4"
+      }
+    },
+    "com.enderlook.pools": {
+      "version": "file:.com.enderlook.pools@0.2.1",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.system.runtime.compiler_services.unsafe": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.system.runtime.compiler_services.unsafe#com.system.runtime.compiler_services.unsafe/v4.5.3"
+      }
+    },
+    "com.enderlook.reflection": {
+      "version": "file:.com.enderlook.reflection@0.1.0",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.enderlook.net_compatibility": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.enderlook.net_compatibility#com.enderlook.net_compatibility/v0.5.0"
+      }
+    },
+    "com.enderlook.threading": {
+      "version": "file:.com.enderlook.threading@0.2.0",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.system.runtime.compiler_services.unsafe": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.system.runtime.compiler_services.unsafe#com.system.runtime.compiler_services.unsafe/v4.5.3"
+      }
+    },
+    "com.enderlook.unity.async": {
+      "version": "file:com.enderlook.unity.async",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.enderlook.unity.threading": "https://github.com/Enderlook/Unity-Threading.git?/path=Packages/com.enderlook.unity.threading#com.enderlook.unity.threading/v0.7.2",
+        "com.system.threading.tasks.extensions": "https://github.com/Enderlook/Unity-Net-Packages?path=Packages/com.system.threading.tasks.extensions#com.system.threading.tasks.extensions/v4.5.4"
+      }
+    },
+    "com.enderlook.unity.coroutines": {
+      "version": "file:com.enderlook.unity.coroutines",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.enderlook.threading": "https://github.com/Enderlook/Unity-Net-Packages?path=Packages/com.enderlook.threading#com.enderlook.threading/v0.2.0",
+        "com.enderlook.unity.threading": "https://github.com/Enderlook/Unity-Threading.git?/path=Packages/com.enderlook.unity.threading#com.enderlook.unity.threading/v0.7.4",
+        "com.enderlook.unity.toolset.utils": "https://github.com/Enderlook/Unity-Toolset.git?path=Packages/com.enderlook.unity.toolset.utils#com.enderlook.unity.toolset.utils/v0.3.1",
+        "com.system.threading.tasks.extensions": "https://github.com/Enderlook/Unity-Net-Packages?path=Packages/com.system.threading.tasks.extensions#com.system.threading.tasks.extensions/v4.5.4"
+      }
+    },
+    "com.enderlook.unity.jobs": {
+      "version": "file:com.enderlook.unity.jobs",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.enderlook.collections.low_level": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.enderlook.collections.low_level#com.enderlook.collections.low_level/v0.6.0",
+        "com.enderlook.unity.threading": "https://github.com/Enderlook/Unity-Threading.git?/path=Packages/com.enderlook.unity.threading#com.enderlook.unity.threading/v0.7.3",
+        "com.enderlook.unity.toolset.utils": "https://github.com/Enderlook/Unity-Toolset.git?path=Packages/com.enderlook.unity.toolset.utils#com.enderlook.unity.toolset.utils/v0.3.1"
+      }
+    },
+    "com.enderlook.unity.threading": {
+      "version": "file:com.enderlook.unity.threading",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.enderlook.collections.low_level": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.enderlook.collections.low_level#com.enderlook.collections.low_level/v0.6.0",
+        "com.enderlook.pools": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.enderlook.pools#com.enderlook.pools/v0.2.1",
+        "com.system.runtime.compiler_services.unsafe": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.runtime.compiler_services.unsafe#com.runtime.compiler_services.unsafe/v4.5.3"
+      }
+    },
+    "com.enderlook.unity.toolset.utils": {
+      "version": "file:.com.enderlook.unity.toolset.utils@0.3.1",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.enderlook.unity.utils": "https://github.com/Enderlook/Unity-Extras.git?path=Packages/com.enderlook.unity.utils#com.enderlook.unity.utils/v0.1.0",
+        "com.enderlook.reflection": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.enderlook.reflection#com.enderlook.reflection/v0.1.0"
+      }
+    },
+    "com.enderlook.unity.utils": {
+      "version": "file:.com.enderlook.unity.utils@0.1.0",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.enderlook.net_compatibility": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.enderlook.net_compatibility#com.enderlook.net_compatibility/v0.5.0"
+      }
+    },
+    "com.system.buffers": {
+      "version": "file:.com.system.buffers@4.5.1",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
+    "com.system.memory": {
+      "version": "file:.com.system.memory@4.5.4",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.system.buffers": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.system.buffers#com.system.buffers/v4.5.1",
+        "com.system.runtime.compiler_services.unsafe": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.system.runtime.compiler_services.unsafe#com.system.runtime.compiler_services.unsafe/v4.5.3"
+      }
+    },
+    "com.system.runtime.compiler_services.unsafe": {
+      "version": "file:.com.system.runtime.compiler_services.unsafe@4.5.3",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
+    "com.system.threading.tasks.extensions": {
+      "version": "file:.com.system.threading.tasks.extensions@4.5.4",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.system.runtime.compiler_services.unsafe": "https://github.com/Enderlook/Unity-Net-Packages.git?path=Packages/com.system.runtime.compiler_services.unsafe#com.system.runtime.compiler_services.unsafe/v4.5.3"
+      }
+    },
+    "com.unity.collab-proxy": {
+      "version": "1.15.4",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "2.0.0",
+        "com.unity.services.core": "1.0.1"
+      },
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.ext.nunit": {
+      "version": "1.0.6",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.ide.rider": {
+      "version": "2.0.7",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.test-framework": "1.1.1"
+      },
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.ide.visualstudio": {
+      "version": "2.0.12",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.test-framework": "1.1.9"
+      },
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.ide.vscode": {
+      "version": "1.2.4",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.nuget.newtonsoft-json": {
+      "version": "2.0.0",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.services.core": {
+      "version": "1.0.1",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.modules.unitywebrequest": "1.0.0"
+      },
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.test-framework": {
+      "version": "1.1.29",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.ext.nunit": "1.0.6",
+        "com.unity.modules.imgui": "1.0.0",
+        "com.unity.modules.jsonserialize": "1.0.0"
+      },
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.textmeshpro": {
+      "version": "3.0.6",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.ugui": "1.0.0"
+      },
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.timeline": {
+      "version": "1.4.8",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.modules.director": "1.0.0",
+        "com.unity.modules.animation": "1.0.0",
+        "com.unity.modules.audio": "1.0.0",
+        "com.unity.modules.particlesystem": "1.0.0"
+      },
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.ugui": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.ui": "1.0.0",
+        "com.unity.modules.imgui": "1.0.0"
+      }
+    },
+    "com.unity.modules.ai": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.androidjni": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.animation": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.assetbundle": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.audio": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.cloth": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.physics": "1.0.0"
+      }
+    },
+    "com.unity.modules.director": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.audio": "1.0.0",
+        "com.unity.modules.animation": "1.0.0"
+      }
+    },
+    "com.unity.modules.imageconversion": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.imgui": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.jsonserialize": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.particlesystem": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.physics": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.physics2d": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.screencapture": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.imageconversion": "1.0.0"
+      }
+    },
+    "com.unity.modules.subsystems": {
+      "version": "1.0.0",
+      "depth": 1,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.jsonserialize": "1.0.0"
+      }
+    },
+    "com.unity.modules.terrain": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.terrainphysics": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.physics": "1.0.0",
+        "com.unity.modules.terrain": "1.0.0"
+      }
+    },
+    "com.unity.modules.tilemap": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.physics2d": "1.0.0"
+      }
+    },
+    "com.unity.modules.ui": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.uielements": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.ui": "1.0.0",
+        "com.unity.modules.imgui": "1.0.0",
+        "com.unity.modules.jsonserialize": "1.0.0",
+        "com.unity.modules.uielementsnative": "1.0.0"
+      }
+    },
+    "com.unity.modules.uielementsnative": {
+      "version": "1.0.0",
+      "depth": 1,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.ui": "1.0.0",
+        "com.unity.modules.imgui": "1.0.0",
+        "com.unity.modules.jsonserialize": "1.0.0"
+      }
+    },
+    "com.unity.modules.umbra": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.unityanalytics": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.unitywebrequest": "1.0.0",
+        "com.unity.modules.jsonserialize": "1.0.0"
+      }
+    },
+    "com.unity.modules.unitywebrequest": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.unitywebrequestassetbundle": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.assetbundle": "1.0.0",
+        "com.unity.modules.unitywebrequest": "1.0.0"
+      }
+    },
+    "com.unity.modules.unitywebrequestaudio": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.unitywebrequest": "1.0.0",
+        "com.unity.modules.audio": "1.0.0"
+      }
+    },
+    "com.unity.modules.unitywebrequesttexture": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.unitywebrequest": "1.0.0",
+        "com.unity.modules.imageconversion": "1.0.0"
+      }
+    },
+    "com.unity.modules.unitywebrequestwww": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.unitywebrequest": "1.0.0",
+        "com.unity.modules.unitywebrequestassetbundle": "1.0.0",
+        "com.unity.modules.unitywebrequestaudio": "1.0.0",
+        "com.unity.modules.audio": "1.0.0",
+        "com.unity.modules.assetbundle": "1.0.0",
+        "com.unity.modules.imageconversion": "1.0.0"
+      }
+    },
+    "com.unity.modules.vehicles": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.physics": "1.0.0"
+      }
+    },
+    "com.unity.modules.video": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.audio": "1.0.0",
+        "com.unity.modules.ui": "1.0.0",
+        "com.unity.modules.unitywebrequest": "1.0.0"
+      }
+    },
+    "com.unity.modules.vr": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.jsonserialize": "1.0.0",
+        "com.unity.modules.physics": "1.0.0",
+        "com.unity.modules.xr": "1.0.0"
+      }
+    },
+    "com.unity.modules.wind": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.xr": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.physics": "1.0.0",
+        "com.unity.modules.jsonserialize": "1.0.0",
+        "com.unity.modules.subsystems": "1.0.0"
+      }
+    }
+  }
+}
