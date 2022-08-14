@@ -157,7 +157,7 @@ namespace Enderlook.Unity.Threading
                 onInitialize += callback;
         }
 
-        private static void ThrowArgumenNullException() => throw new ArgumentNullException("manager");
+        private static void ThrowArgumenNullException() => throw new ArgumentNullException("callback");
 
         private struct Pack
         {
