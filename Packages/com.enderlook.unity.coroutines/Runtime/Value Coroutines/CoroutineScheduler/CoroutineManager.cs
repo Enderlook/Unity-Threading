@@ -90,6 +90,8 @@ namespace Enderlook.Unity.Coroutines
             this.monoBehaviour = monoBehaviour;
         }
 
+        internal CoroutineManager() { }
+
         internal void SetMonoBehaviour(MonoBehaviour monoBehaviour)
         {
             Debug.Assert(monoBehaviour != null && this.monoBehaviour is null);
