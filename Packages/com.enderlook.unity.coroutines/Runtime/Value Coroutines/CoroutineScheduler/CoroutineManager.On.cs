@@ -101,18 +101,34 @@ namespace Enderlook.Unity.Coroutines
                 return;
 
             int until = DateTime.Now.Millisecond + milisecondsExecutedPerFrameOnPoll;
-            bool first = true;
-        loop:
-            // GetManagersList() is inside the loop because new managers may be added during the iterations.
             RawList<ManagerBase> managersList = GetManagersList();
             for (int i = 0; i < managersList.Count; i++)
-                managersList[i].OnPoll(until, first);
-            first = false;
-            if (DateTime.Now.Millisecond > until)
-                return;
-            for (int i = 0; i < managersList.Count; i++)
-                if (managersList[i].PollCount > 0)
-                    goto loop;
+                managersList[i].OnPoll(until, true);
+
+            while (true)
+            {
+                // GetManagersList() is inside the loop because new managers may be added during the iterations.
+                managersList = GetManagersList();
+                if (managersList.Count == 0)
+                    break;
+
+                for (int i = 0; i < managersList.Count; i++)
+                {
+                    if (DateTime.Now.Millisecond > until)
+                        break;
+                    if (managersList[i].PollCount > 0)
+                        goto next;
+                }
+                break;
+
+            next:;
+                for (int i = 0; i < managersList.Count; i++)
+                {
+                    if (DateTime.Now.Millisecond > until)
+                        break;
+                    managersList[i].OnPoll(until, false);
+                }
+            }
         }
 
         private RawList<ManagerBase> GetManagersList()
