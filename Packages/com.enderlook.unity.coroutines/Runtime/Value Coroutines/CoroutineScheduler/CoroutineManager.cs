@@ -112,6 +112,9 @@ namespace Enderlook.Unity.Coroutines
                 Manager.OnFixedUpdate += shared.OnFixedUpdate;
                 Manager.OnEndOfFrame += shared.OnEndOfFrame;
                 Manager.OnLateUpdate += shared.OnEndOfFrame;
+#if UNITY_EDITOR
+                Manager.OnStopPlaying += () => Shared = null; // Used to prevent holding the reference in the editor when stop playing.
+#endif
                 GlobalCoroutinesManagerUnit.Load();
             });
         }

@@ -50,6 +50,7 @@ namespace Enderlook.Unity.Threading
         }
 
         private static event Action onInitialize;
+        public static event Action OnStopPlaying;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Lock(ref int @lock)
@@ -87,7 +88,13 @@ namespace Enderlook.Unity.Threading
         {
             isExiting = false;
             UnityEditor.EditorApplication.playModeStateChanged +=
-                (UnityEditor.PlayModeStateChange playModeState) => isExiting = playModeState == UnityEditor.PlayModeStateChange.ExitingPlayMode;
+                (UnityEditor.PlayModeStateChange playModeState) =>
+                {
+                    bool value = playModeState == UnityEditor.PlayModeStateChange.ExitingPlayMode;
+                    isExiting = value;
+                    if (value)
+                        Interlocked.Exchange(ref OnStopPlaying, null)?.Invoke();
+                };
         }
 #endif
 
@@ -115,7 +122,11 @@ namespace Enderlook.Unity.Threading
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
-        private void OnApplicationQuit() => isExiting = true;
+        private void OnApplicationQuit()
+        {
+            isExiting = true;
+            Interlocked.Exchange(ref OnStopPlaying, null)?.Invoke();
+        }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "Used by Unity.")]
         private void OnDestroy()
