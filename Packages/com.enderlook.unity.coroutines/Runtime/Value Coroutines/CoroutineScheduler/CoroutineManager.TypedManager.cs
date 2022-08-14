@@ -21,30 +21,10 @@ namespace Enderlook.Unity.Coroutines
         {
 #if !UNITY_WEBGL
             private static readonly Action<(TypedManager<T> manager, T routine)> shortBackground =
-                e =>
-                {
-                    try
-                    {
-                        e.manager.NextBackground(e.routine, new BackgroundShortNextCallback(), ThreadMode.Short);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogException(ex);
-                    }
-                };
+                e => e.manager.NextBackground(e.routine, new BackgroundShortNextCallback(), ThreadMode.Short);
 
             private static readonly Action<(TypedManager<T> manager, T routine)> longBackground =
-                e =>
-                {
-                    try
-                    {
-                        e.manager.NextBackground(e.routine, new BackgroundShortNextCallback(), ThreadMode.Long);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogException(ex);
-                    }
-                };
+                e => e.manager.NextBackground(e.routine, new BackgroundShortNextCallback(), ThreadMode.Long);
 #endif
 
             private readonly CoroutineManager manager;
@@ -575,8 +555,18 @@ namespace Enderlook.Unity.Coroutines
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Next<U>(T routine, U callback) where U : INextCallback<T>
             {
-                start:
-                ValueYieldInstruction instruction = routine.Next();
+            start:
+                ValueYieldInstruction instruction;
+                try
+                {
+                    instruction = routine.Next();
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogException(ex);
+                    instruction = Yield.Finalized;
+                }
+
                 switch (instruction.Mode)
                 {
                     case ValueYieldInstruction.Type.ToUpdate:
@@ -737,7 +727,17 @@ namespace Enderlook.Unity.Coroutines
                         callback.ConcurrentSuspend(this, routine);
                         break;
                     case ValueCoroutineState.Continue:
-                        ValueYieldInstruction instruction = routine.ConcurrentNext(mode);
+                        ValueYieldInstruction instruction;
+                        try
+                        {
+                            instruction = routine.ConcurrentNext(mode);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.LogException(ex);
+                            instruction = Yield.Finalized;
+                        }
+
                         switch (instruction.Mode)
                         {
                             case ValueYieldInstruction.Type.ToUpdate:
