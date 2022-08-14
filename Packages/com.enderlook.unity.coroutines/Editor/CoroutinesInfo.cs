@@ -109,7 +109,10 @@ namespace Enderlook.Unity.Coroutines
                         {
                             EditorGUILayout.LabelField(title, waitLayoutOptionsMethod);
                             if (tmp.Item1 != count)
+                            {
+                                tmp.Item1 = count;
                                 tmp.Item2 = count.ToString();
+                            }
                             EditorGUILayout.LabelField(tmp.Item2, waitLayoutOptionsCountAndSize);
                         }
                         EditorGUILayout.EndHorizontal();
