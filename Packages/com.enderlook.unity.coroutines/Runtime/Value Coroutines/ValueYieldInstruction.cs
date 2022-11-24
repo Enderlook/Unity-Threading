@@ -296,7 +296,7 @@ namespace Enderlook.Unity.Coroutines
         private static void ThrowSourceIsNull() => throw new ArgumentNullException("source");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining), System.Diagnostics.Conditional("DEBUG")]
-        public void DebugAssertIsAllowedInEnumerators()
+        internal void DebugAssertIsAllowedInEnumerators()
         {
 #if DEBUG
             switch (Mode)
