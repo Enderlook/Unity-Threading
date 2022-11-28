@@ -30,7 +30,7 @@ namespace Enderlook.Unity.Jobs
 
             Rect position = window.position;
             position.width = (EditorGUIUtility.fieldWidth + EditorGUIUtility.labelWidth) * 2;
-            position.height = EditorGUIUtility.singleLineHeight * 5.5f;
+            position.height = EditorGUIUtility.singleLineHeight * 6f;
             window.position = position;
         }
 
