@@ -23,11 +23,15 @@ namespace Enderlook.Unity.Threading
         private bool hasSwitched;
 
 #if UNITY_EDITOR
+#if UNITY_WEBGL
         private bool useEditorPreference;
+#endif
 
         internal ThreadSwitcherBackground(bool useEditorPreference)
         {
+#if UNITY_WEBGL
             this.useEditorPreference = useEditorPreference;
+#endif
             hasSwitched = default;
         }
 #endif
@@ -73,9 +77,9 @@ namespace Enderlook.Unity.Threading
 #endif
             continuation();
             return;
+        other:
 #endif
 
-            other:
             hasSwitched = UnityThread.IsMainThread;
             if (hasSwitched)
                 Task.Factory.StartNew(continuation);
