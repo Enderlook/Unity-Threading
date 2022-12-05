@@ -3,7 +3,7 @@
 namespace Enderlook.Unity.Jobs
 {
     /// <summary>
-    /// Allow get awaiter from <see cref="JobHandle"/>.
+    /// Allows to get an awaiter from <see cref="JobHandle"/>.
     /// </summary>
     public static class JobHandleAwaiterExtension
     {
